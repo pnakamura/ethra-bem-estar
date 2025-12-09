@@ -1,4 +1,4 @@
-export type EmotionType = 'anxious' | 'angry' | 'tired' | 'panic' | 'meditate';
+export type EmotionType = 'anxious' | 'angry' | 'tired' | 'panic' | 'meditate' | 'wimhof' | 'alternate' | 'coherent';
 
 export interface BreathPattern {
   inhale: number;

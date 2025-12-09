@@ -16,7 +16,7 @@ interface HomeScreenProps {
 
 export function HomeScreen({ onSessionComplete }: HomeScreenProps) {
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { user, usuario, signOut } = useAuth();
   const [selectedEmotion, setSelectedEmotion] = useState<Emotion | null>(null);
   const [showMeditation, setShowMeditation] = useState(false);
 
@@ -43,6 +43,9 @@ export function HomeScreen({ onSessionComplete }: HomeScreenProps) {
     setShowMeditation(false);
   };
 
+  // Get first name from nome_completo
+  const firstName = usuario?.nome_completo?.split(' ')[0];
+
   return (
     <div className="min-h-[100dvh] flex flex-col">
       {/* Header */}
@@ -68,15 +71,22 @@ export function HomeScreen({ onSessionComplete }: HomeScreenProps) {
           
           {/* Auth button */}
           {user ? (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => signOut()}
-              className="rounded-full"
-              title="Sair"
-            >
-              <LogOut className="w-5 h-5" />
-            </Button>
+            <div className="flex items-center gap-2">
+              {firstName && (
+                <span className="text-sm text-muted-foreground hidden sm:block">
+                  Olá, {firstName}
+                </span>
+              )}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => signOut()}
+                className="rounded-full"
+                title="Sair"
+              >
+                <LogOut className="w-5 h-5" />
+              </Button>
+            </div>
           ) : (
             <Button
               variant="ghost"
@@ -102,7 +112,9 @@ export function HomeScreen({ onSessionComplete }: HomeScreenProps) {
         >
           <div className="flex items-center gap-2 mb-2">
             <Sparkles className="w-5 h-5 text-calm" />
-            <span className="text-sm font-medium text-calm">Olá!</span>
+            <span className="text-sm font-medium text-calm">
+              {firstName ? `Olá, ${firstName}!` : 'Olá!'}
+            </span>
           </div>
           <h2 className="text-2xl font-bold text-foreground leading-tight">
             Como você está se sentindo agora?

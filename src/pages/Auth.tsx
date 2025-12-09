@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Wind } from 'lucide-react';
 import { z } from 'zod';
@@ -15,16 +14,12 @@ const passwordSchema = z.string().min(6, 'Senha deve ter pelo menos 6 caracteres
 
 const Auth: React.FC = () => {
   const navigate = useNavigate();
-  const { user, signIn, signUp, loading: authLoading } = useAuth();
+  const { user, signIn, loading: authLoading } = useAuth();
   const { toast } = useToast();
   
   const [isLoading, setIsLoading] = useState(false);
-  const [loginEmail, setLoginEmail] = useState('');
-  const [loginPassword, setLoginPassword] = useState('');
-  const [signupEmail, setSignupEmail] = useState('');
-  const [signupPassword, setSignupPassword] = useState('');
-  const [signupName, setSignupName] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
   useEffect(() => {
     if (user && !authLoading) {
@@ -36,8 +31,8 @@ const Auth: React.FC = () => {
     e.preventDefault();
     
     try {
-      emailSchema.parse(loginEmail);
-      passwordSchema.parse(loginPassword);
+      emailSchema.parse(email);
+      passwordSchema.parse(password);
     } catch (err) {
       if (err instanceof z.ZodError) {
         toast({
@@ -50,11 +45,11 @@ const Auth: React.FC = () => {
     }
 
     setIsLoading(true);
-    const { error } = await signIn(loginEmail, loginPassword);
+    const { error } = await signIn(email, password);
     setIsLoading(false);
 
     if (error) {
-      let message = 'Erro ao fazer login';
+      let message = error.message;
       if (error.message.includes('Invalid login credentials')) {
         message = 'Email ou senha incorretos';
       } else if (error.message.includes('Email not confirmed')) {
@@ -64,54 +59,6 @@ const Auth: React.FC = () => {
         title: 'Erro',
         description: message,
         variant: 'destructive',
-      });
-    }
-  };
-
-  const handleSignup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    try {
-      emailSchema.parse(signupEmail);
-      passwordSchema.parse(signupPassword);
-    } catch (err) {
-      if (err instanceof z.ZodError) {
-        toast({
-          title: 'Erro de validação',
-          description: err.errors[0].message,
-          variant: 'destructive',
-        });
-        return;
-      }
-    }
-
-    if (signupPassword !== confirmPassword) {
-      toast({
-        title: 'Erro',
-        description: 'As senhas não coincidem',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setIsLoading(true);
-    const { error } = await signUp(signupEmail, signupPassword, signupName);
-    setIsLoading(false);
-
-    if (error) {
-      let message = 'Erro ao criar conta';
-      if (error.message.includes('already registered')) {
-        message = 'Este email já está cadastrado';
-      }
-      toast({
-        title: 'Erro',
-        description: message,
-        variant: 'destructive',
-      });
-    } else {
-      toast({
-        title: 'Conta criada!',
-        description: 'Verifique seu email para confirmar o cadastro',
       });
     }
   };
@@ -137,127 +84,59 @@ const Auth: React.FC = () => {
         </div>
 
         <Card className="border-border/50 shadow-lg backdrop-blur-sm bg-card/80">
-          <Tabs defaultValue="login" className="w-full">
-            <CardHeader className="pb-4">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="login">Entrar</TabsTrigger>
-                <TabsTrigger value="signup">Criar Conta</TabsTrigger>
-              </TabsList>
-            </CardHeader>
-            
-            <CardContent>
-              <TabsContent value="login" className="mt-0">
-                <form onSubmit={handleLogin} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="login-email">Email</Label>
-                    <Input
-                      id="login-email"
-                      type="email"
-                      placeholder="seu@email.com"
-                      value={loginEmail}
-                      onChange={(e) => setLoginEmail(e.target.value)}
-                      required
-                      disabled={isLoading}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="login-password">Senha</Label>
-                    <Input
-                      id="login-password"
-                      type="password"
-                      placeholder="••••••••"
-                      value={loginPassword}
-                      onChange={(e) => setLoginPassword(e.target.value)}
-                      required
-                      disabled={isLoading}
-                    />
-                  </div>
-                  <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Entrando...
-                      </>
-                    ) : (
-                      'Entrar'
-                    )}
-                  </Button>
-                </form>
-              </TabsContent>
-
-              <TabsContent value="signup" className="mt-0">
-                <form onSubmit={handleSignup} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-name">Nome completo</Label>
-                    <Input
-                      id="signup-name"
-                      type="text"
-                      placeholder="Seu nome"
-                      value={signupName}
-                      onChange={(e) => setSignupName(e.target.value)}
-                      disabled={isLoading}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email</Label>
-                    <Input
-                      id="signup-email"
-                      type="email"
-                      placeholder="seu@email.com"
-                      value={signupEmail}
-                      onChange={(e) => setSignupEmail(e.target.value)}
-                      required
-                      disabled={isLoading}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-password">Senha</Label>
-                    <Input
-                      id="signup-password"
-                      type="password"
-                      placeholder="••••••••"
-                      value={signupPassword}
-                      onChange={(e) => setSignupPassword(e.target.value)}
-                      required
-                      disabled={isLoading}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="confirm-password">Confirmar senha</Label>
-                    <Input
-                      id="confirm-password"
-                      type="password"
-                      placeholder="••••••••"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      required
-                      disabled={isLoading}
-                    />
-                  </div>
-                  <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Criando conta...
-                      </>
-                    ) : (
-                      'Criar Conta'
-                    )}
-                  </Button>
-                </form>
-              </TabsContent>
-            </CardContent>
-          </Tabs>
+          <CardHeader className="text-center">
+            <CardTitle>Bem-vindo de volta</CardTitle>
+            <CardDescription>Entre com suas credenciais para continuar</CardDescription>
+          </CardHeader>
+          
+          <CardContent>
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="seu@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  disabled={isLoading}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Senha</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  disabled={isLoading}
+                />
+              </div>
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Entrando...
+                  </>
+                ) : (
+                  'Entrar'
+                )}
+              </Button>
+            </form>
+          </CardContent>
         </Card>
 
-        {/* Continue without account */}
+        {/* Back to home */}
         <div className="text-center">
           <Button
             variant="ghost"
             onClick={() => navigate('/')}
             className="text-muted-foreground hover:text-foreground"
           >
-            Continuar sem conta
+            Voltar ao início
           </Button>
         </div>
       </div>

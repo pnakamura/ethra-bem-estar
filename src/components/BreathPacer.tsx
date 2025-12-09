@@ -27,6 +27,9 @@ const emotionGradients: Record<EmotionType, string> = {
   tired: 'bg-gradient-to-br from-energy to-energy/70',
   panic: 'bg-gradient-to-br from-panic to-panic/70',
   meditate: 'bg-gradient-to-br from-meditate to-meditate/70',
+  wimhof: 'bg-gradient-to-br from-energy to-energy/70',
+  alternate: 'bg-gradient-to-br from-calm to-calm/70',
+  coherent: 'bg-gradient-to-br from-grounding to-grounding/70',
 };
 
 const emotionShadows: Record<EmotionType, string> = {
@@ -35,6 +38,9 @@ const emotionShadows: Record<EmotionType, string> = {
   tired: 'shadow-[0_0_80px_20px_hsl(var(--energy)/0.4)]',
   panic: 'shadow-[0_0_80px_20px_hsl(var(--panic)/0.4)]',
   meditate: 'shadow-[0_0_80px_20px_hsl(var(--meditate)/0.4)]',
+  wimhof: 'shadow-[0_0_80px_20px_hsl(var(--energy)/0.4)]',
+  alternate: 'shadow-[0_0_80px_20px_hsl(var(--calm)/0.4)]',
+  coherent: 'shadow-[0_0_80px_20px_hsl(var(--grounding)/0.4)]',
 };
 
 // Audio bell sound URL (placeholder)

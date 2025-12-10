@@ -85,6 +85,84 @@ export type Database = {
         }
         Relationships: []
       }
+      breathing_techniques: {
+        Row: {
+          bg_class: string | null
+          color_class: string | null
+          created_at: string | null
+          created_by: string | null
+          cycles: number
+          deleted_at: string | null
+          description: string
+          display_order: number | null
+          emotion_id: string
+          exhale_ms: number
+          explanation: string | null
+          hold_in_ms: number
+          hold_out_ms: number
+          icon: string | null
+          id: string
+          inhale_ms: number
+          is_active: boolean | null
+          is_special_technique: boolean | null
+          label: string
+          pattern_description: string | null
+          pattern_name: string
+          special_config: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          bg_class?: string | null
+          color_class?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          cycles?: number
+          deleted_at?: string | null
+          description: string
+          display_order?: number | null
+          emotion_id: string
+          exhale_ms?: number
+          explanation?: string | null
+          hold_in_ms?: number
+          hold_out_ms?: number
+          icon?: string | null
+          id?: string
+          inhale_ms?: number
+          is_active?: boolean | null
+          is_special_technique?: boolean | null
+          label: string
+          pattern_description?: string | null
+          pattern_name: string
+          special_config?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          bg_class?: string | null
+          color_class?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          cycles?: number
+          deleted_at?: string | null
+          description?: string
+          display_order?: number | null
+          emotion_id?: string
+          exhale_ms?: number
+          explanation?: string | null
+          hold_in_ms?: number
+          hold_out_ms?: number
+          icon?: string | null
+          id?: string
+          inhale_ms?: number
+          is_active?: boolean | null
+          is_special_technique?: boolean | null
+          label?: string
+          pattern_description?: string | null
+          pattern_name?: string
+          special_config?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       categorias_refeicao: {
         Row: {
           descricao: string | null
@@ -357,6 +435,104 @@ export type Database = {
             columns: ["usuario_id"]
             isOneToOne: false
             referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meditation_categories: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          display_order: number | null
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+        }
+        Relationships: []
+      }
+      meditation_tracks: {
+        Row: {
+          background_audio_url: string | null
+          category_id: string | null
+          created_at: string | null
+          created_by: string | null
+          deleted_at: string | null
+          description: string | null
+          display_order: number | null
+          duration_display: string
+          duration_ms: number
+          has_background_music: boolean | null
+          has_narration: boolean | null
+          id: string
+          is_active: boolean | null
+          narration_audio_url: string | null
+          thumbnail_url: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          background_audio_url?: string | null
+          category_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          deleted_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          duration_display: string
+          duration_ms: number
+          has_background_music?: boolean | null
+          has_narration?: boolean | null
+          id?: string
+          is_active?: boolean | null
+          narration_audio_url?: string | null
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          background_audio_url?: string | null
+          category_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          deleted_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          duration_display?: string
+          duration_ms?: number
+          has_background_music?: boolean | null
+          has_narration?: boolean | null
+          id?: string
+          is_active?: boolean | null
+          narration_audio_url?: string | null
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meditation_tracks_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "meditation_categories"
             referencedColumns: ["id"]
           },
         ]

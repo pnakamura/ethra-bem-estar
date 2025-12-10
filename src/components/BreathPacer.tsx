@@ -187,14 +187,15 @@ export function BreathPacer({ pattern, emotionType, explanation, onClose, onComp
       setPhase(phase);
       playBell();
       
-      // Animate phase time countdown
+      // Animate phase time - PROGRESSIVE (counting up)
       const startTime = Date.now();
       const totalDuration = duration;
+      setPhaseTime(1); // Start at 1
       
       const updatePhaseTime = () => {
         const elapsed = Date.now() - startTime;
-        const remaining = Math.max(0, Math.ceil((totalDuration - elapsed) / 1000));
-        setPhaseTime(remaining);
+        const currentSecond = Math.min(Math.ceil(elapsed / 1000), Math.ceil(totalDuration / 1000));
+        setPhaseTime(currentSecond);
         
         if (elapsed < totalDuration) {
           requestAnimationFrame(updatePhaseTime);
@@ -363,6 +364,7 @@ export function BreathPacer({ pattern, emotionType, explanation, onClose, onComp
             />
 
             {/* Countdown - CENTERED ON CIRCLE */}
+            {/* Countdown before start */}
             <AnimatePresence>
               {countdown > 0 && isRunning && (
                 <motion.span
@@ -376,27 +378,27 @@ export function BreathPacer({ pattern, emotionType, explanation, onClose, onComp
                 </motion.span>
               )}
             </AnimatePresence>
+
+            {/* Phase timer - CENTERED ON CIRCLE, PROGRESSIVE */}
+            <AnimatePresence>
+              {phaseTime > 0 && isRunning && countdown === 0 && phase !== 'complete' && (
+                <motion.div
+                  key={`phase-${phase}-${phaseTime}`}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="absolute flex items-center justify-center"
+                >
+                  <span className="text-6xl font-bold text-white tabular-nums drop-shadow-[0_2px_12px_rgba(0,0,0,0.6)]">
+                    {phaseTime}
+                  </span>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
 
-        {/* BOTTOM SECTION: Timer and cycle indicator - COMPLETELY SEPARATE from circle */}
-        <div className="min-h-[120px] flex flex-col items-center justify-start pt-6 z-10">
-          {/* Phase timer */}
-          <AnimatePresence>
-            {phaseTime > 0 && isRunning && countdown === 0 && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                className="flex items-center justify-center"
-              >
-                <span className="text-6xl font-bold text-foreground tabular-nums drop-shadow-sm">
-                  {phaseTime}
-                </span>
-                <span className="text-2xl text-muted-foreground ml-1">s</span>
-              </motion.div>
-            )}
-          </AnimatePresence>
+        {/* BOTTOM SECTION: Cycle indicator only */}
+        <div className="min-h-[100px] flex flex-col items-center justify-start pt-6 z-10">
 
           {/* Cycle indicator */}
           {isRunning && countdown === 0 && phase !== 'complete' && (

@@ -109,17 +109,19 @@ export function BreathPacer({ pattern, emotionType, explanation, onClose, onComp
   const getPhaseVariants = useCallback((): Variants => {
     const baseScale = 1;
     const maxScale = 1.5;
+    const midScale = 1.25; // Scale after first inhale in physiological sigh
     
     if (isPanic) {
-      // Physiological Sigh: double inhale pattern
+      // Physiological Sigh: double inhale pattern (2s + 2s = 4s total inhale)
+      // First inhale to 1.25 (2s), pause briefly, second inhale to 1.5 (2s)
       return {
         idle: { scale: baseScale },
         inhale: { 
-          scale: [baseScale, 1.25, 1.25, maxScale],
+          scale: [baseScale, midScale, midScale, maxScale],
           transition: { 
-            duration: pattern.inhale / 1000,
-            times: [0, 0.4, 0.5, 1],
-            ease: "easeInOut"
+            duration: pattern.inhale / 1000, // 4 seconds total
+            times: [0, 0.45, 0.55, 1], // 2s up, 0.4s pause, 2s up
+            ease: ["easeOut", "linear", "easeOut"]
           }
         },
         holdIn: { 
@@ -129,7 +131,7 @@ export function BreathPacer({ pattern, emotionType, explanation, onClose, onComp
         exhale: { 
           scale: baseScale,
           transition: { 
-            duration: pattern.exhale / 1000,
+            duration: pattern.exhale / 1000, // 6 seconds
             ease: "easeOut"
           }
         },

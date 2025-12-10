@@ -298,8 +298,8 @@ export function BreathPacer({ pattern, emotionType, explanation, onClose, onComp
         </Button>
       </motion.header>
 
-      {/* Main breathing area */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 gap-6">
+      {/* Main breathing area - GRID LAYOUT for fixed separation */}
+      <div className="flex-1 grid grid-rows-[auto_1fr_auto] items-center px-6 py-4 overflow-hidden">
         {/* Countdown overlay */}
         <AnimatePresence>
           {countdown > 0 && isRunning && (
@@ -307,7 +307,7 @@ export function BreathPacer({ pattern, emotionType, explanation, onClose, onComp
               initial={{ scale: 0.5, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 1.5, opacity: 0 }}
-              className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-10"
+              className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-20"
             >
               <motion.span
                 key={countdown}
@@ -322,8 +322,8 @@ export function BreathPacer({ pattern, emotionType, explanation, onClose, onComp
           )}
         </AnimatePresence>
 
-        {/* Phase label - FIXED POSITION ABOVE CIRCLE */}
-        <div className="h-24 flex flex-col items-center justify-end">
+        {/* TOP SECTION: Phase label - COMPLETELY SEPARATE from circle */}
+        <div className="min-h-[100px] flex flex-col items-center justify-end pb-6 z-10">
           <AnimatePresence mode="wait">
             {isRunning && countdown === 0 && phase !== 'complete' && (
               <motion.div
@@ -332,15 +332,12 @@ export function BreathPacer({ pattern, emotionType, explanation, onClose, onComp
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.3 }}
-                className="flex flex-col items-center gap-2"
+                className="flex flex-col items-center gap-3"
               >
-                <div className={cn("transition-colors duration-300", emotionTextColors[emotionType])}>
+                <div className="text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)]">
                   {phaseIcons[phase]}
                 </div>
-                <span className={cn(
-                  "text-4xl font-bold tracking-wide transition-colors duration-300",
-                  emotionTextColors[emotionType]
-                )}>
+                <span className="text-5xl font-bold tracking-wide text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.6)]">
                   {phaseLabels[phase]}
                 </span>
               </motion.div>
@@ -359,35 +356,37 @@ export function BreathPacer({ pattern, emotionType, explanation, onClose, onComp
           )}
         </div>
 
-        {/* Breathing circle - CLEAN, NO TEXT INSIDE */}
-        <div className="relative flex items-center justify-center">
-          {/* Outer glow ring */}
-          <motion.div
-            className={cn(
-              'absolute w-56 h-56 rounded-full opacity-30',
-              emotionGradients[emotionType]
-            )}
-            animate={{
-              scale: phase === 'inhale' ? [1, 1.3] : phase === 'exhale' ? [1.3, 1] : 1.15,
-            }}
-            transition={{ duration: 0.5 }}
-          />
-          
-          {/* Main circle - NO TEXT INSIDE */}
-          <motion.div
-            className={cn(
-              'w-44 h-44 rounded-full',
-              emotionGradients[emotionType],
-              emotionShadows[emotionType]
-            )}
-            variants={getPhaseVariants()}
-            animate={phase}
-            initial="idle"
-          />
+        {/* MIDDLE SECTION: Breathing circle container with padding for expansion */}
+        <div className="flex items-center justify-center min-h-[280px]">
+          <div className="relative flex items-center justify-center w-72 h-72">
+            {/* Outer glow ring */}
+            <motion.div
+              className={cn(
+                'absolute w-48 h-48 rounded-full opacity-30',
+                emotionGradients[emotionType]
+              )}
+              animate={{
+                scale: phase === 'inhale' ? [1, 1.4] : phase === 'exhale' ? [1.4, 1] : 1.2,
+              }}
+              transition={{ duration: 0.5 }}
+            />
+            
+            {/* Main circle - PURE VISUAL, NO TEXT */}
+            <motion.div
+              className={cn(
+                'w-40 h-40 rounded-full',
+                emotionGradients[emotionType],
+                emotionShadows[emotionType]
+              )}
+              variants={getPhaseVariants()}
+              animate={phase}
+              initial="idle"
+            />
+          </div>
         </div>
 
-        {/* Timer and cycle indicator - FIXED POSITION BELOW CIRCLE */}
-        <div className="h-28 flex flex-col items-center justify-start gap-3">
+        {/* BOTTOM SECTION: Timer and cycle indicator - COMPLETELY SEPARATE from circle */}
+        <div className="min-h-[120px] flex flex-col items-center justify-start pt-6 z-10">
           {/* Phase timer */}
           <AnimatePresence>
             {phaseTime > 0 && isRunning && countdown === 0 && (
@@ -397,10 +396,10 @@ export function BreathPacer({ pattern, emotionType, explanation, onClose, onComp
                 exit={{ opacity: 0, scale: 0.8 }}
                 className="flex items-center justify-center"
               >
-                <span className="text-5xl font-bold text-foreground tabular-nums">
+                <span className="text-6xl font-bold text-foreground tabular-nums drop-shadow-sm">
                   {phaseTime}
                 </span>
-                <span className="text-xl text-muted-foreground ml-1">s</span>
+                <span className="text-2xl text-muted-foreground ml-1">s</span>
               </motion.div>
             )}
           </AnimatePresence>
@@ -410,23 +409,23 @@ export function BreathPacer({ pattern, emotionType, explanation, onClose, onComp
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-center"
+              className="text-center mt-3"
             >
               <p className="text-sm text-muted-foreground mb-2">
                 Ciclo {currentCycle} de {pattern.cycles}
               </p>
-              <div className="flex gap-1.5 justify-center">
+              <div className="flex gap-2 justify-center">
                 {Array.from({ length: pattern.cycles }).map((_, i) => (
                   <motion.div
                     key={i}
                     className={cn(
-                      'w-2 h-2 rounded-full transition-all duration-300',
+                      'w-2.5 h-2.5 rounded-full transition-all duration-300',
                       i < currentCycle 
                         ? emotionGradients[emotionType] 
                         : 'bg-muted'
                     )}
                     animate={{ 
-                      scale: i === currentCycle - 1 ? 1.4 : 1,
+                      scale: i === currentCycle - 1 ? 1.5 : 1,
                     }}
                   />
                 ))}
@@ -443,10 +442,10 @@ export function BreathPacer({ pattern, emotionType, explanation, onClose, onComp
                 exit={{ opacity: 0 }}
                 className="text-center"
               >
-                <p className={cn("text-2xl font-bold", emotionTextColors[emotionType])}>
+                <p className={cn("text-3xl font-bold", emotionTextColors[emotionType])}>
                   Parabéns!
                 </p>
-                <p className="text-muted-foreground mt-1">
+                <p className="text-muted-foreground mt-2">
                   Você completou a prática
                 </p>
               </motion.div>

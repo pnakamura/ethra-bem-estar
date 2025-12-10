@@ -300,27 +300,6 @@ export function BreathPacer({ pattern, emotionType, explanation, onClose, onComp
 
       {/* Main breathing area - GRID LAYOUT for fixed separation */}
       <div className="flex-1 grid grid-rows-[auto_1fr_auto] items-center px-6 py-4 overflow-hidden">
-        {/* Countdown overlay */}
-        <AnimatePresence>
-          {countdown > 0 && isRunning && (
-            <motion.div
-              initial={{ scale: 0.5, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 1.5, opacity: 0 }}
-              className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-20"
-            >
-              <motion.span
-                key={countdown}
-                initial={{ scale: 0.5, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 1.5, opacity: 0 }}
-                className="text-8xl font-bold text-primary"
-              >
-                {countdown}
-              </motion.span>
-            </motion.div>
-          )}
-        </AnimatePresence>
 
         {/* TOP SECTION: Phase label - COMPLETELY SEPARATE from circle */}
         <div className="min-h-[100px] flex flex-col items-center justify-end pb-6 z-10">
@@ -382,6 +361,21 @@ export function BreathPacer({ pattern, emotionType, explanation, onClose, onComp
               animate={phase}
               initial="idle"
             />
+
+            {/* Countdown - CENTERED ON CIRCLE */}
+            <AnimatePresence>
+              {countdown > 0 && isRunning && (
+                <motion.span
+                  key={countdown}
+                  initial={{ scale: 0.5, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 1.5, opacity: 0 }}
+                  className="absolute text-7xl font-bold text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.6)]"
+                >
+                  {countdown}
+                </motion.span>
+              )}
+            </AnimatePresence>
           </div>
         </div>
 

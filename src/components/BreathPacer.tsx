@@ -81,6 +81,7 @@ export function BreathPacer({ pattern, emotionType, explanation, onClose, onComp
   const [currentCycle, setCurrentCycle] = useState(0);
   const [countdown, setCountdown] = useState(3);
   const [phaseTime, setPhaseTime] = useState(0);
+  const [panicSubPhase, setPanicSubPhase] = useState<'inhale1' | 'pause1' | 'inhale2' | null>(null);
   const startTimeRef = useRef<number>(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -203,26 +204,59 @@ export function BreathPacer({ pattern, emotionType, explanation, onClose, onComp
       setPhase(phase);
       playBell();
       
-      // Animate phase time - PROGRESSIVE (counting up)
-      const startTime = Date.now();
-      const totalDuration = duration;
-      setPhaseTime(1); // Start at 1
-      
-      const updatePhaseTime = () => {
-        if (signal.aborted) return;
-        const elapsed = Date.now() - startTime;
-        const currentSecond = Math.min(Math.ceil(elapsed / 1000), Math.ceil(totalDuration / 1000));
-        setPhaseTime(currentSecond);
+      // For panic mode inhale phase, track sub-phases (2s inhale1, 1s pause, 2s inhale2)
+      if (isPanic && phase === 'inhale') {
+        setPanicSubPhase('inhale1');
         
-        if (elapsed < totalDuration && !signal.aborted) {
-          requestAnimationFrame(updatePhaseTime);
-        }
-      };
-      
-      updatePhaseTime();
-      await delay(duration, signal);
+        const startTime = Date.now();
+        setPhaseTime(1);
+        
+        const updatePanicPhase = () => {
+          if (signal.aborted) return;
+          const elapsed = Date.now() - startTime;
+          
+          // Sub-phase transitions: 0-2s = inhale1, 2-3s = pause1, 3-5s = inhale2
+          if (elapsed < 2000) {
+            setPanicSubPhase('inhale1');
+            setPhaseTime(Math.ceil(elapsed / 1000) || 1);
+          } else if (elapsed < 3000) {
+            setPanicSubPhase('pause1');
+            setPhaseTime(1);
+          } else {
+            setPanicSubPhase('inhale2');
+            setPhaseTime(Math.ceil((elapsed - 3000) / 1000) || 1);
+          }
+          
+          if (elapsed < duration && !signal.aborted) {
+            requestAnimationFrame(updatePanicPhase);
+          }
+        };
+        
+        updatePanicPhase();
+        await delay(duration, signal);
+        setPanicSubPhase(null);
+      } else {
+        // Normal phase time tracking
+        const startTime = Date.now();
+        const totalDuration = duration;
+        setPhaseTime(1);
+        
+        const updatePhaseTime = () => {
+          if (signal.aborted) return;
+          const elapsed = Date.now() - startTime;
+          const currentSecond = Math.min(Math.ceil(elapsed / 1000), Math.ceil(totalDuration / 1000));
+          setPhaseTime(currentSecond);
+          
+          if (elapsed < totalDuration && !signal.aborted) {
+            requestAnimationFrame(updatePhaseTime);
+          }
+        };
+        
+        updatePhaseTime();
+        await delay(duration, signal);
+      }
     }
-  }, [pattern, playBell, delay]);
+  }, [pattern, playBell, delay, isPanic]);
 
   const startBreathing = useCallback(async () => {
     // Cancel any previous session
@@ -281,6 +315,7 @@ export function BreathPacer({ pattern, emotionType, explanation, onClose, onComp
     setPhase('idle');
     setPhaseTime(0);
     setCountdown(3);
+    setPanicSubPhase(null);
   };
 
   const handleReset = () => {
@@ -292,6 +327,7 @@ export function BreathPacer({ pattern, emotionType, explanation, onClose, onComp
     setCurrentCycle(0);
     setCountdown(3);
     setPhaseTime(0);
+    setPanicSubPhase(null);
   };
 
   return (
@@ -352,7 +388,7 @@ export function BreathPacer({ pattern, emotionType, explanation, onClose, onComp
           <AnimatePresence mode="wait">
             {isRunning && countdown === 0 && phase !== 'complete' && (
               <motion.div
-                key={phase}
+                key={isPanic && phase === 'inhale' ? `panic-${panicSubPhase}` : phase}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
@@ -360,10 +396,21 @@ export function BreathPacer({ pattern, emotionType, explanation, onClose, onComp
                 className="flex flex-col items-center gap-3"
               >
                 <div className="text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)]">
-                  {phaseIcons[phase]}
+                  {isPanic && phase === 'inhale' && panicSubPhase === 'pause1' ? (
+                    <Circle className="w-8 h-8" />
+                  ) : (
+                    phaseIcons[phase]
+                  )}
                 </div>
                 <span className="text-5xl font-bold tracking-wide text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.6)]">
-                  {phaseLabels[phase]}
+                  {isPanic && phase === 'inhale' ? (
+                    panicSubPhase === 'inhale1' ? 'Inspire 1' :
+                    panicSubPhase === 'pause1' ? 'Segure' :
+                    panicSubPhase === 'inhale2' ? 'Inspire 2' :
+                    phaseLabels[phase]
+                  ) : (
+                    phaseLabels[phase]
+                  )}
                 </span>
               </motion.div>
             )}

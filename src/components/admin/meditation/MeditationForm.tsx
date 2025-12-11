@@ -20,6 +20,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ArrowLeft, Save, Loader2, Upload, Music, X } from 'lucide-react';
+import { HelpTooltip } from '@/components/admin/HelpTooltip';
 
 const formSchema = z.object({
   title: z.string().min(1, 'Título é obrigatório'),
@@ -181,7 +182,10 @@ export function MeditationForm() {
                 name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Título</FormLabel>
+                    <FormLabel className="flex items-center">
+                      Título
+                      <HelpTooltip content="Título exibido na lista de meditações. Use nomes descritivos e atraentes (ex: 5 Minutos de Calma, Meditação para Dormir, Sons da Natureza)." />
+                    </FormLabel>
                     <FormControl>
                       <Input placeholder="5 Minutos de Calma" {...field} />
                     </FormControl>
@@ -194,7 +198,10 @@ export function MeditationForm() {
                 name="category_id"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Categoria</FormLabel>
+                    <FormLabel className="flex items-center">
+                      Categoria
+                      <HelpTooltip content="Categoria para organização das meditações. Facilita a navegação do usuário. Novas categorias podem ser criadas no banco de dados." />
+                    </FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
@@ -218,7 +225,10 @@ export function MeditationForm() {
                 name="duration_display"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Duração</FormLabel>
+                    <FormLabel className="flex items-center">
+                      Duração
+                      <HelpTooltip content="Duração formatada como minutos:segundos (ex: 5:00 para 5 minutos, 10:30 para 10 minutos e 30 segundos). A duração em milissegundos é calculada automaticamente." />
+                    </FormLabel>
                     <FormControl>
                       <Input placeholder="5:00" {...field} />
                     </FormControl>
@@ -232,7 +242,10 @@ export function MeditationForm() {
                 name="display_order"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Ordem</FormLabel>
+                    <FormLabel className="flex items-center">
+                      Ordem
+                      <HelpTooltip content="Ordem de exibição na lista de meditações. Menor número = aparece primeiro. Use 0, 1, 2... para definir a ordem." />
+                    </FormLabel>
                     <FormControl>
                       <Input 
                         type="number" 
@@ -249,7 +262,10 @@ export function MeditationForm() {
                 name="description"
                 render={({ field }) => (
                   <FormItem className="sm:col-span-2">
-                    <FormLabel>Descrição</FormLabel>
+                    <FormLabel className="flex items-center">
+                      Descrição
+                      <HelpTooltip content="Descrição breve da meditação exibida para o usuário. Descreva o objetivo, benefícios ou o que o usuário pode esperar." />
+                    </FormLabel>
                     <FormControl>
                       <Textarea placeholder="Uma meditação guiada para..." {...field} />
                     </FormControl>
@@ -276,7 +292,10 @@ export function MeditationForm() {
                       <FormControl>
                         <Switch checked={field.value} onCheckedChange={field.onChange} />
                       </FormControl>
-                      <FormLabel className="!mt-0">Música de fundo</FormLabel>
+                      <FormLabel className="!mt-0 flex items-center">
+                        Música de fundo
+                        <HelpTooltip content="Ative se esta meditação possui música de fundo instrumental ou sons ambiente. A música toca durante toda a sessão." />
+                      </FormLabel>
                     </FormItem>
                   )}
                 />
@@ -288,7 +307,10 @@ export function MeditationForm() {
                       <FormControl>
                         <Switch checked={field.value} onCheckedChange={field.onChange} />
                       </FormControl>
-                      <FormLabel className="!mt-0">Narração</FormLabel>
+                      <FormLabel className="!mt-0 flex items-center">
+                        Narração
+                        <HelpTooltip content="Ative se há voz guiando a meditação. A narração é reproduzida junto ou separadamente da música de fundo." />
+                      </FormLabel>
                     </FormItem>
                   )}
                 />
@@ -297,7 +319,10 @@ export function MeditationForm() {
               <div className="grid gap-4 sm:grid-cols-2">
                 {/* Background Audio */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Música de fundo</label>
+                  <label className="text-sm font-medium flex items-center">
+                    Música de fundo
+                    <HelpTooltip content="Upload do arquivo de música de fundo. Formatos recomendados: MP3 ou AAC. Tamanho máximo: 50MB. Para melhor qualidade, use 128kbps ou superior." />
+                  </label>
                   {backgroundUrl && !backgroundFile ? (
                     <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
                       <Music className="h-4 w-4 text-muted-foreground" />
@@ -340,7 +365,10 @@ export function MeditationForm() {
 
                 {/* Narration Audio */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Narração</label>
+                  <label className="text-sm font-medium flex items-center">
+                    Narração
+                    <HelpTooltip content="Upload do arquivo de narração/voz guia. Formatos recomendados: MP3 ou AAC. Grave em ambiente silencioso para melhor qualidade." />
+                  </label>
                   {narrationUrl && !narrationFile ? (
                     <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
                       <Music className="h-4 w-4 text-muted-foreground" />
@@ -398,7 +426,10 @@ export function MeditationForm() {
                     <FormControl>
                       <Switch checked={field.value} onCheckedChange={field.onChange} />
                     </FormControl>
-                    <FormLabel className="!mt-0">Ativo</FormLabel>
+                    <FormLabel className="!mt-0 flex items-center">
+                      Ativo
+                      <HelpTooltip content="Desative para ocultar a meditação temporariamente sem excluí-la. Meditações inativas não aparecem para os usuários." />
+                    </FormLabel>
                   </FormItem>
                 )}
               />

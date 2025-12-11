@@ -14,6 +14,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ArrowLeft, Save, Loader2 } from 'lucide-react';
+import { HelpTooltip } from '@/components/admin/HelpTooltip';
 
 const formSchema = z.object({
   emotion_id: z.string().min(1, 'ID é obrigatório').regex(/^[a-z_]+$/, 'Use apenas letras minúsculas e underscore'),
@@ -176,7 +177,10 @@ export function BreathingForm() {
                 name="emotion_id"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>ID único</FormLabel>
+                    <FormLabel className="flex items-center">
+                      ID único
+                      <HelpTooltip content="Identificador único usado internamente. Use letras minúsculas e underscore (ex: anxious, tired_morning). Não pode ser alterado depois de criado." />
+                    </FormLabel>
                     <FormControl>
                       <Input placeholder="anxious" {...field} disabled={isEditing} />
                     </FormControl>
@@ -190,7 +194,10 @@ export function BreathingForm() {
                 name="label"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Nome</FormLabel>
+                    <FormLabel className="flex items-center">
+                      Nome
+                      <HelpTooltip content="Nome exibido para o usuário no botão de seleção (ex: Ansioso, Estressado, Cansado). Deve ser curto e claro." />
+                    </FormLabel>
                     <FormControl>
                       <Input placeholder="Ansioso" {...field} />
                     </FormControl>
@@ -203,7 +210,10 @@ export function BreathingForm() {
                 name="icon"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Ícone (emoji)</FormLabel>
+                    <FormLabel className="flex items-center">
+                      Ícone (emoji)
+                      <HelpTooltip content="Emoji que representa a emoção. Copie de um site de emojis como emojipedia.org (ex: 😰, 😤, 💚, 🧘)" />
+                    </FormLabel>
                     <FormControl>
                       <Input placeholder="😰" {...field} />
                     </FormControl>
@@ -216,7 +226,10 @@ export function BreathingForm() {
                 name="display_order"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Ordem</FormLabel>
+                    <FormLabel className="flex items-center">
+                      Ordem
+                      <HelpTooltip content="Ordem de exibição na tela principal. Menor número = aparece primeiro. Use 0, 1, 2... para ordenar." />
+                    </FormLabel>
                     <FormControl>
                       <Input 
                         type="number" 
@@ -233,7 +246,10 @@ export function BreathingForm() {
                 name="description"
                 render={({ field }) => (
                   <FormItem className="sm:col-span-2">
-                    <FormLabel>Descrição curta</FormLabel>
+                    <FormLabel className="flex items-center">
+                      Descrição curta
+                      <HelpTooltip content="Texto curto (1-2 frases) que o usuário vê ao selecionar esta opção. Descreva o sentimento ou situação." />
+                    </FormLabel>
                     <FormControl>
                       <Textarea placeholder="Estou me sentindo ansioso..." {...field} />
                     </FormControl>
@@ -246,7 +262,10 @@ export function BreathingForm() {
                 name="explanation"
                 render={({ field }) => (
                   <FormItem className="sm:col-span-2">
-                    <FormLabel>Explicação científica</FormLabel>
+                    <FormLabel className="flex items-center">
+                      Explicação científica
+                      <HelpTooltip content="Texto educativo sobre a técnica, exibido ao clicar no ícone de informação. Explique os benefícios e base científica da técnica." />
+                    </FormLabel>
                     <FormControl>
                       <Textarea placeholder="A técnica 4-7-8 ativa o sistema nervoso..." {...field} />
                     </FormControl>
@@ -270,7 +289,10 @@ export function BreathingForm() {
                   name="pattern_name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Nome do padrão</FormLabel>
+                      <FormLabel className="flex items-center">
+                        Nome do padrão
+                        <HelpTooltip content="Nome da técnica de respiração (ex: Respiração 4-7-8, Box Breathing, Suspiro Fisiológico). Será exibido durante a prática." />
+                      </FormLabel>
                       <FormControl>
                         <Input placeholder="Respiração 4-7-8" {...field} />
                       </FormControl>
@@ -283,7 +305,10 @@ export function BreathingForm() {
                   name="cycles"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Ciclos: {field.value}</FormLabel>
+                      <FormLabel className="flex items-center">
+                        Ciclos: {field.value}
+                        <HelpTooltip content="Quantas vezes o ciclo completo de respiração será repetido. Para iniciantes, 4-6 ciclos é ideal. Para sessões mais longas, 10-20 ciclos." />
+                      </FormLabel>
                       <FormControl>
                         <Slider
                           value={[field.value]}
@@ -304,7 +329,10 @@ export function BreathingForm() {
                 name="pattern_description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Descrição do padrão</FormLabel>
+                    <FormLabel className="flex items-center">
+                      Descrição do padrão
+                      <HelpTooltip content="Breve descrição textual do padrão (ex: Inspire por 4s, segure por 7s, expire por 8s). Ajuda o usuário a entender a técnica rapidamente." />
+                    </FormLabel>
                     <FormControl>
                       <Input placeholder="Inspire por 4s, segure por 7s..." {...field} />
                     </FormControl>
@@ -319,7 +347,10 @@ export function BreathingForm() {
                   name="inhale_ms"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Inspirar: {field.value / 1000}s</FormLabel>
+                      <FormLabel className="flex items-center">
+                        Inspirar: {field.value / 1000}s
+                        <HelpTooltip content="Tempo de inspiração em milissegundos. 4000ms = 4 segundos. Valores comuns: 3000-5000ms para respiração calma, 2000ms para técnicas energizantes." />
+                      </FormLabel>
                       <FormControl>
                         <Slider
                           value={[field.value]}
@@ -338,7 +369,10 @@ export function BreathingForm() {
                   name="hold_in_ms"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Segurar (após inspirar): {field.value / 1000}s</FormLabel>
+                      <FormLabel className="flex items-center">
+                        Segurar (após inspirar): {field.value / 1000}s
+                        <HelpTooltip content="Tempo de pausa após inspirar. 0 = sem pausa. Na técnica 4-7-8, são 7 segundos (7000ms). Em Box Breathing, são 4 segundos." />
+                      </FormLabel>
                       <FormControl>
                         <Slider
                           value={[field.value]}
@@ -357,7 +391,10 @@ export function BreathingForm() {
                   name="exhale_ms"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Expirar: {field.value / 1000}s</FormLabel>
+                      <FormLabel className="flex items-center">
+                        Expirar: {field.value / 1000}s
+                        <HelpTooltip content="Tempo de expiração em milissegundos. Expirações mais longas ativam o sistema nervoso parassimpático. Na 4-7-8, são 8 segundos." />
+                      </FormLabel>
                       <FormControl>
                         <Slider
                           value={[field.value]}
@@ -376,7 +413,10 @@ export function BreathingForm() {
                   name="hold_out_ms"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Pausa (após expirar): {field.value / 1000}s</FormLabel>
+                      <FormLabel className="flex items-center">
+                        Pausa (após expirar): {field.value / 1000}s
+                        <HelpTooltip content="Tempo de pausa após expirar. Usado em Box Breathing (4 segundos). Na maioria das técnicas é 0. Pausas longas aumentam retenção de CO2." />
+                      </FormLabel>
                       <FormControl>
                         <Slider
                           value={[field.value]}
@@ -410,7 +450,10 @@ export function BreathingForm() {
                       <FormControl>
                         <Switch checked={field.value} onCheckedChange={field.onChange} />
                       </FormControl>
-                      <FormLabel className="!mt-0">Ativo</FormLabel>
+                      <FormLabel className="!mt-0 flex items-center">
+                        Ativo
+                        <HelpTooltip content="Desative para ocultar a técnica temporariamente sem excluí-la. Técnicas inativas não aparecem para os usuários." />
+                      </FormLabel>
                     </FormItem>
                   )}
                 />
@@ -422,7 +465,10 @@ export function BreathingForm() {
                       <FormControl>
                         <Switch checked={field.value} onCheckedChange={field.onChange} />
                       </FormControl>
-                      <FormLabel className="!mt-0">Técnica especial</FormLabel>
+                      <FormLabel className="!mt-0 flex items-center">
+                        Técnica especial
+                        <HelpTooltip content="Ative para técnicas com comportamento diferenciado como Suspiro Fisiológico (dupla inspiração) ou Wim Hof. Requer configuração JSON abaixo." />
+                      </FormLabel>
                     </FormItem>
                   )}
                 />
@@ -433,7 +479,10 @@ export function BreathingForm() {
                 name="special_config"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Configuração especial (JSON)</FormLabel>
+                    <FormLabel className="flex items-center">
+                      Configuração especial (JSON)
+                      <HelpTooltip content='JSON com configurações extras para técnicas especiais. Exemplo para Suspiro Fisiológico: {"type": "physiological_sigh", "inhale1_ms": 2000, "pause_ms": 1000, "inhale2_ms": 2000, "exhale_ms": 6000}' />
+                    </FormLabel>
                     <FormControl>
                       <Textarea 
                         placeholder='{"type": "physiological_sigh", "inhale1_ms": 2000}' 
@@ -456,7 +505,10 @@ export function BreathingForm() {
                   name="color_class"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Classe de cor (texto)</FormLabel>
+                      <FormLabel className="flex items-center">
+                        Classe de cor (texto)
+                        <HelpTooltip content="Classe Tailwind para cor do texto (ex: text-primary, text-red-500, text-blue-600, text-green-500). Define a cor do texto e ícones." />
+                      </FormLabel>
                       <FormControl>
                         <Input placeholder="text-primary" {...field} />
                       </FormControl>
@@ -469,7 +521,10 @@ export function BreathingForm() {
                   name="bg_class"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Classe de cor (fundo)</FormLabel>
+                      <FormLabel className="flex items-center">
+                        Classe de cor (fundo)
+                        <HelpTooltip content="Classe Tailwind para cor de fundo (ex: bg-primary/10, bg-red-500/10, bg-blue-100). O /10 indica 10% de opacidade." />
+                      </FormLabel>
                       <FormControl>
                         <Input placeholder="bg-primary/10" {...field} />
                       </FormControl>

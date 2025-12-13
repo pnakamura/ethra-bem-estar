@@ -17,6 +17,8 @@ interface BreathPacerProps {
   pattern: BreathPattern;
   emotionType: EmotionType;
   explanation: string;
+  colorClass?: string;
+  bgClass?: string;
   onClose: () => void;
   onComplete: (durationSeconds: number) => void;
 }
@@ -75,7 +77,41 @@ const emotionTextColors: Record<EmotionType, string> = {
 // Audio bell sound URL
 const BELL_SOUND_URL = 'https://cdn.freesound.org/previews/411/411089_5121236-lq.mp3';
 
-export function BreathPacer({ pattern, emotionType, explanation, onClose, onComplete }: BreathPacerProps) {
+export function BreathPacer({ pattern, emotionType, explanation, colorClass, bgClass, onClose, onComplete }: BreathPacerProps) {
+  // Use cores dinâmicas se fornecidas, senão fallback para mappings estáticos
+  const dynamicTextColor = colorClass || emotionTextColors[emotionType];
+  const dynamicBgClass = bgClass || '';
+  
+  // Extrai a cor base do colorClass para uso nos gradientes e sombras
+  const getColorVariable = (textClass: string): string => {
+    const colorMap: Record<string, string> = {
+      'text-calm': '--calm',
+      'text-energy': '--energy',
+      'text-grounding': '--grounding',
+      'text-panic': '--panic',
+      'text-meditate': '--meditate',
+      'text-primary': '--calm',
+      'text-green-500': '--calm',
+      'text-sky-500': '--calm',
+      'text-amber-500': '--energy',
+      'text-pink-500': '--panic',
+      'text-indigo-500': '--meditate',
+      'text-red-500': '--panic',
+      'text-red-600': '--panic',
+      'text-blue-500': '--meditate',
+      'text-purple-500': '--panic',
+      'text-orange-500': '--energy',
+      'text-destructive': '--panic',
+    };
+    return colorMap[textClass] || '--calm';
+  };
+  
+  const colorVar = getColorVariable(dynamicTextColor);
+  
+  // Gera classes dinâmicas baseadas na cor
+  const dynamicGradient = `bg-gradient-to-br from-[hsl(var(${colorVar}))] to-[hsl(var(${colorVar})/0.7)]`;
+  const dynamicShadow = `shadow-[0_0_80px_20px_hsl(var(${colorVar})/0.4)]`;
+  
   const [phase, setPhase] = useState<BreathPhase>('idle');
   const [isRunning, setIsRunning] = useState(false);
   const [currentCycle, setCurrentCycle] = useState(0);
@@ -338,15 +374,15 @@ export function BreathPacer({ pattern, emotionType, explanation, onClose, onComp
       transition={{ duration: 0.4, ease: "easeOut" }}
       className="fixed inset-0 z-50 flex flex-col bg-background overflow-hidden"
     >
-      {/* Animated background gradient */}
+      {/* Animated background gradient - usa cor dinâmica */}
       <motion.div
         className="absolute inset-0 -z-10 pointer-events-none"
         animate={{
           background: phase === 'inhale' 
-            ? `radial-gradient(circle at center, hsl(var(--calm) / 0.15) 0%, transparent 60%)`
+            ? `radial-gradient(circle at center, hsl(var(${colorVar}) / 0.15) 0%, transparent 60%)`
             : phase === 'exhale'
-            ? `radial-gradient(circle at center, hsl(var(--calm) / 0.05) 0%, transparent 60%)`
-            : `radial-gradient(circle at center, hsl(var(--calm) / 0.08) 0%, transparent 60%)`
+            ? `radial-gradient(circle at center, hsl(var(${colorVar}) / 0.05) 0%, transparent 60%)`
+            : `radial-gradient(circle at center, hsl(var(${colorVar}) / 0.08) 0%, transparent 60%)`
         }}
         transition={{ duration: 1.5, ease: "easeInOut" }}
       />
@@ -371,7 +407,7 @@ export function BreathPacer({ pattern, emotionType, explanation, onClose, onComp
               </DialogTrigger>
               <DialogContent className="max-w-sm mx-4">
                 <DialogHeader>
-                  <DialogTitle className={emotionTextColors[emotionType]}>
+                  <DialogTitle className={dynamicTextColor}>
                     {pattern.name}
                   </DialogTitle>
                   <DialogDescription className="pt-3 text-base leading-relaxed">
@@ -450,18 +486,16 @@ export function BreathPacer({ pattern, emotionType, explanation, onClose, onComp
         {/* MIDDLE SECTION: Breathing circle container with padding for expansion */}
         <div className="flex items-center justify-center min-h-[280px]">
           <div className="relative flex items-center justify-center w-72 h-72">
-            {/* Concentric ripple rings */}
+            {/* Concentric ripple rings - usa cor dinâmica */}
             {isRunning && countdown === 0 && [1, 2, 3].map((ring) => (
               <motion.div
                 key={ring}
-                className={cn(
-                  'absolute rounded-full border-2 opacity-20',
-                  emotionGradients[emotionType]
-                )}
+                className="absolute rounded-full border-2 opacity-20"
                 style={{ 
                   width: 160 + ring * 50, 
                   height: 160 + ring * 50,
-                  borderColor: `hsl(var(--calm) / 0.3)`
+                  borderColor: `hsl(var(${colorVar}) / 0.3)`,
+                  background: `linear-gradient(to bottom right, hsl(var(${colorVar})), hsl(var(${colorVar}) / 0.7))`
                 }}
                 animate={{
                   scale: phase === 'inhale' ? [1, 1.3] : phase === 'exhale' ? [1.3, 1] : [1.15, 1.15],
@@ -475,12 +509,12 @@ export function BreathPacer({ pattern, emotionType, explanation, onClose, onComp
               />
             ))}
 
-            {/* Outer glow ring */}
+            {/* Outer glow ring - usa cor dinâmica */}
             <motion.div
-              className={cn(
-                'absolute w-48 h-48 rounded-full opacity-40',
-                emotionGradients[emotionType]
-              )}
+              className="absolute w-48 h-48 rounded-full opacity-40"
+              style={{
+                background: `linear-gradient(to bottom right, hsl(var(${colorVar})), hsl(var(${colorVar}) / 0.7))`
+              }}
               animate={{
                 scale: phase === 'inhale' ? [1, 1.5] : phase === 'exhale' ? [1.5, 1] : 1.25,
                 opacity: phase === 'inhale' ? [0.3, 0.5] : phase === 'exhale' ? [0.5, 0.3] : 0.4
@@ -488,21 +522,18 @@ export function BreathPacer({ pattern, emotionType, explanation, onClose, onComp
               transition={{ duration: 0.6, ease: "easeInOut" }}
             />
             
-            {/* Main circle - PURE VISUAL, NO TEXT */}
+            {/* Main circle - usa cor dinâmica */}
             <motion.div
-              className={cn(
-                'w-40 h-40 rounded-full',
-                emotionGradients[emotionType],
-                emotionShadows[emotionType]
-              )}
+              className="w-40 h-40 rounded-full"
+              style={{
+                background: `linear-gradient(to bottom right, hsl(var(${colorVar})), hsl(var(${colorVar}) / 0.7))`,
+                boxShadow: phase !== 'idle' 
+                  ? `0 0 100px 30px hsl(var(${colorVar}) / 0.4)` 
+                  : `0 0 60px 15px hsl(var(${colorVar}) / 0.3)`
+              }}
               variants={getPhaseVariants()}
               animate={phase}
               initial="idle"
-              style={{ 
-                boxShadow: phase !== 'idle' 
-                  ? `0 0 100px 30px hsl(var(--calm) / 0.4)` 
-                  : `0 0 60px 15px hsl(var(--calm) / 0.3)`
-              }}
             />
 
             {/* Countdown - CENTERED ON CIRCLE */}

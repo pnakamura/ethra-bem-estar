@@ -232,6 +232,8 @@ export function HomeScreen({ onSessionComplete }: HomeScreenProps) {
             pattern={selectedEmotion.pattern}
             emotionType={selectedEmotion.id as EmotionType}
             explanation={selectedEmotion.explanation}
+            colorClass={selectedEmotion.colorClass}
+            bgClass={selectedEmotion.bgClass}
             onClose={handleClose}
             onComplete={handleBreathComplete}
           />

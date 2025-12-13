@@ -20,12 +20,17 @@ const colorOptions: ColorOption[] = [
   { name: 'Pânico (Roxo)', textClass: 'text-panic', bgClass: 'bg-panic/15', previewColor: 'hsl(280 75% 55%)' },
   { name: 'Meditação (Azul)', textClass: 'text-meditate', bgClass: 'bg-meditate/15', previewColor: 'hsl(240 65% 55%)' },
   { name: 'Primário', textClass: 'text-primary', bgClass: 'bg-primary/15', previewColor: 'hsl(174 65% 42%)' },
+  { name: 'Destrutivo', textClass: 'text-destructive', bgClass: 'bg-destructive/10', previewColor: 'hsl(0 84% 60%)' },
   { name: 'Verde', textClass: 'text-green-500', bgClass: 'bg-green-500/15', previewColor: 'hsl(142 71% 45%)' },
   { name: 'Azul Claro', textClass: 'text-sky-500', bgClass: 'bg-sky-500/15', previewColor: 'hsl(199 89% 48%)' },
+  { name: 'Azul', textClass: 'text-blue-500', bgClass: 'bg-blue-500/15', previewColor: 'hsl(217 91% 60%)' },
   { name: 'Âmbar', textClass: 'text-amber-500', bgClass: 'bg-amber-500/15', previewColor: 'hsl(38 92% 50%)' },
+  { name: 'Laranja', textClass: 'text-orange-500', bgClass: 'bg-orange-500/15', previewColor: 'hsl(25 95% 53%)' },
   { name: 'Rosa', textClass: 'text-pink-500', bgClass: 'bg-pink-500/15', previewColor: 'hsl(330 81% 60%)' },
+  { name: 'Roxo', textClass: 'text-purple-500', bgClass: 'bg-purple-500/15', previewColor: 'hsl(271 81% 56%)' },
   { name: 'Índigo', textClass: 'text-indigo-500', bgClass: 'bg-indigo-500/15', previewColor: 'hsl(239 84% 67%)' },
   { name: 'Vermelho', textClass: 'text-red-500', bgClass: 'bg-red-500/15', previewColor: 'hsl(0 84% 60%)' },
+  { name: 'Vermelho Escuro', textClass: 'text-red-600', bgClass: 'bg-red-600/15', previewColor: 'hsl(0 72% 51%)' },
 ];
 
 interface ColorPickerProps {

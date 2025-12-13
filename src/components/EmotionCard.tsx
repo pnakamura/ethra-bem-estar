@@ -30,7 +30,7 @@ export function EmotionCard({ emotion, onClick, index }: EmotionCardProps) {
     >
       <motion.div 
         className={cn(
-          'w-16 h-16 rounded-2xl flex items-center justify-center text-4xl md:text-3xl',
+          'w-20 h-20 md:w-16 md:h-16 rounded-2xl flex items-center justify-center text-5xl md:text-3xl',
           emotion.bgClass
         )}
         whileHover={{ rotate: [0, -5, 5, 0] }}
@@ -41,25 +41,25 @@ export function EmotionCard({ emotion, onClick, index }: EmotionCardProps) {
       
       <div className="flex-1 min-w-0">
         <h3 className={cn(
-          'text-xl md:text-lg font-semibold',
+          'text-2xl md:text-lg font-semibold',
           emotion.colorClass
         )}>
           {emotion.label}
         </h3>
-        <p className="text-base md:text-sm text-muted-foreground line-clamp-2">
+        <p className="text-lg md:text-sm text-muted-foreground line-clamp-2">
           {emotion.description}
         </p>
       </div>
       
       <motion.div
         className={cn(
-          'w-8 h-8 rounded-full flex items-center justify-center',
+          'w-12 h-12 md:w-8 md:h-8 rounded-full flex items-center justify-center',
           emotion.bgClass
         )}
         whileHover={{ x: 3 }}
       >
         <svg 
-          className={cn('w-4 h-4', emotion.colorClass)} 
+          className={cn('w-6 h-6 md:w-4 md:h-4', emotion.colorClass)} 
           fill="none" 
           viewBox="0 0 24 24" 
           stroke="currentColor"

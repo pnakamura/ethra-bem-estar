@@ -345,7 +345,7 @@ export function BreathPacer({ pattern, emotionType, explanation, onClose, onComp
       >
         <div className="flex-1">
           <div className="flex items-center gap-2">
-          <h2 className="text-xl md:text-lg font-semibold text-foreground">
+            <h2 className="text-2xl md:text-lg font-semibold text-foreground">
               {pattern.name}
             </h2>
             <Dialog>
@@ -366,7 +366,7 @@ export function BreathPacer({ pattern, emotionType, explanation, onClose, onComp
               </DialogContent>
             </Dialog>
           </div>
-          <p className="text-base md:text-sm text-muted-foreground">
+          <p className="text-lg md:text-sm text-muted-foreground">
             {pattern.description}
           </p>
         </div>
@@ -421,7 +421,7 @@ export function BreathPacer({ pattern, emotionType, explanation, onClose, onComp
             <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="text-xl md:text-lg text-muted-foreground text-center"
+              className="text-2xl md:text-lg text-muted-foreground text-center"
             >
               Pressione iniciar e<br />acompanhe o ritmo
             </motion.p>
@@ -499,7 +499,7 @@ export function BreathPacer({ pattern, emotionType, explanation, onClose, onComp
               animate={{ opacity: 1, y: 0 }}
               className="text-center mt-3"
             >
-              <p className="text-base md:text-sm text-muted-foreground mb-2">
+              <p className="text-lg md:text-sm text-muted-foreground mb-2">
                 Ciclo {currentCycle} de {pattern.cycles}
               </p>
               <div className="flex gap-2 justify-center">
@@ -530,10 +530,10 @@ export function BreathPacer({ pattern, emotionType, explanation, onClose, onComp
                 exit={{ opacity: 0 }}
                 className="text-center"
               >
-                <p className={cn("text-4xl md:text-3xl font-bold", emotionTextColors[emotionType])}>
+                <p className={cn("text-5xl md:text-3xl font-bold", emotionTextColors[emotionType])}>
                   Parabéns!
                 </p>
-                <p className="text-lg md:text-base text-muted-foreground mt-2">
+                <p className="text-xl md:text-base text-muted-foreground mt-3">
                   Você completou a prática
                 </p>
               </motion.div>
@@ -555,12 +555,12 @@ export function BreathPacer({ pattern, emotionType, explanation, onClose, onComp
               onClick={handleStart}
               size="lg"
               className={cn(
-                'rounded-full px-12 py-6 text-lg font-semibold',
+                'rounded-full px-14 py-7 text-xl md:text-lg font-semibold',
                 emotionGradients[emotionType],
                 'text-primary-foreground border-0'
               )}
             >
-              <Play className="w-5 h-5 mr-2" />
+              <Play className="w-6 h-6 md:w-5 md:h-5 mr-2" />
               Iniciar
             </Button>
           )}
@@ -570,9 +570,9 @@ export function BreathPacer({ pattern, emotionType, explanation, onClose, onComp
               onClick={handlePause}
               size="lg"
               variant="outline"
-              className="rounded-full px-8 py-6"
+              className="rounded-full px-10 py-7 text-lg md:text-base"
             >
-              <Pause className="w-5 h-5 mr-2" />
+              <Pause className="w-6 h-6 md:w-5 md:h-5 mr-2" />
               Pausar
             </Button>
           )}
@@ -583,16 +583,16 @@ export function BreathPacer({ pattern, emotionType, explanation, onClose, onComp
                 onClick={handleReset}
                 size="lg"
                 variant="outline"
-                className="rounded-full px-8 py-6"
+                className="rounded-full px-10 py-7 text-lg md:text-base"
               >
-                <RotateCcw className="w-5 h-5 mr-2" />
+                <RotateCcw className="w-6 h-6 md:w-5 md:h-5 mr-2" />
                 Repetir
               </Button>
               <Button
                 onClick={onClose}
                 size="lg"
                 className={cn(
-                  'rounded-full px-8 py-6',
+                  'rounded-full px-10 py-7 text-lg md:text-base',
                   emotionGradients[emotionType],
                   'text-primary-foreground'
                 )}

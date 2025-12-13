@@ -115,10 +115,10 @@ export function MeditationPlayer({ onClose, onComplete }: MeditationPlayerProps)
         className="flex items-center justify-between p-4"
       >
         <div>
-          <h2 className="text-xl md:text-lg font-semibold text-foreground">
+          <h2 className="text-2xl md:text-lg font-semibold text-foreground">
             Meditações
           </h2>
-          <p className="text-base md:text-sm text-muted-foreground">
+          <p className="text-lg md:text-sm text-muted-foreground">
             Escolha uma prática guiada
           </p>
         </div>
@@ -156,21 +156,21 @@ export function MeditationPlayer({ onClose, onComplete }: MeditationPlayerProps)
                     'hover:shadow-lg transition-all duration-300'
                   )}
                 >
-                  <div className="w-14 h-14 rounded-xl bg-meditate-light flex items-center justify-center">
-                    <Headphones className="w-6 h-6 text-meditate" />
+                  <div className="w-16 h-16 md:w-14 md:h-14 rounded-xl bg-meditate-light flex items-center justify-center">
+                    <Headphones className="w-8 h-8 md:w-6 md:h-6 text-meditate" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-lg md:text-base font-semibold text-foreground">
+                    <h3 className="text-xl md:text-base font-semibold text-foreground">
                       {track.title}
                     </h3>
-                    <div className="flex items-center gap-2 text-base md:text-sm text-muted-foreground">
+                    <div className="flex items-center gap-2 text-lg md:text-sm text-muted-foreground">
                       <span>{track.category}</span>
                       <span>•</span>
                       <span>{track.duration}</span>
                     </div>
                   </div>
-                  <div className="w-10 h-10 rounded-full bg-meditate flex items-center justify-center">
-                    <Play className="w-4 h-4 text-primary-foreground ml-0.5" />
+                  <div className="w-12 h-12 md:w-10 md:h-10 rounded-full bg-meditate flex items-center justify-center">
+                    <Play className="w-5 h-5 md:w-4 md:h-4 text-primary-foreground ml-0.5" />
                   </div>
                 </motion.button>
               ))}
@@ -195,10 +195,10 @@ export function MeditationPlayer({ onClose, onComplete }: MeditationPlayerProps)
 
               {/* Track info */}
               <div className="mt-8 text-center">
-                <h3 className="text-2xl md:text-xl font-semibold text-foreground">
+                <h3 className="text-3xl md:text-xl font-semibold text-foreground">
                   {selectedTrack.title}
                 </h3>
-                <p className="text-lg md:text-base text-muted-foreground mt-1">
+                <p className="text-xl md:text-base text-muted-foreground mt-2">
                   {selectedTrack.category}
                 </p>
               </div>
@@ -212,7 +212,7 @@ export function MeditationPlayer({ onClose, onComplete }: MeditationPlayerProps)
                   onValueChange={handleSeek}
                   className="w-full"
                 />
-                <div className="flex justify-between mt-2 text-sm text-muted-foreground">
+                <div className="flex justify-between mt-2 text-base md:text-sm text-muted-foreground">
                   <span>{formatTime(currentTime)}</span>
                   <span>{formatTime(duration)}</span>
                 </div>
@@ -289,7 +289,7 @@ export function MeditationPlayer({ onClose, onComplete }: MeditationPlayerProps)
             onClick={onClose}
             variant="outline"
             size="lg"
-            className="w-full rounded-full py-6"
+            className="w-full rounded-full py-7 text-xl md:text-base"
           >
             Voltar
           </Button>

@@ -1,11 +1,13 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Play, Pause, SkipBack, SkipForward, Volume2, Headphones } from 'lucide-react';
+import { X, Play, Pause, SkipBack, SkipForward, Volume2, Headphones, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
-import { MeditationTrack } from '@/types/breathing';
-import { meditationTracks } from '@/data/emotions';
+import { useMeditationTracks, useMeditationCategories } from '@/hooks/useMeditationTracks';
 import { cn } from '@/lib/utils';
+import { Tables } from '@/integrations/supabase/types';
+
+type DbMeditationTrack = Tables<'meditation_tracks'>;
 
 interface MeditationPlayerProps {
   onClose: () => void;
@@ -13,7 +15,9 @@ interface MeditationPlayerProps {
 }
 
 export function MeditationPlayer({ onClose, onComplete }: MeditationPlayerProps) {
-  const [selectedTrack, setSelectedTrack] = useState<MeditationTrack | null>(null);
+  const { data: tracks, isLoading } = useMeditationTracks();
+  const { data: categories } = useMeditationCategories();
+  const [selectedTrack, setSelectedTrack] = useState<DbMeditationTrack | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -35,12 +39,29 @@ export function MeditationPlayer({ onClose, onComplete }: MeditationPlayerProps)
     }
   }, [volume]);
 
-  const handleTrackSelect = (track: MeditationTrack) => {
+  const getCategoryName = (categoryId: string | null) => {
+    if (!categoryId || !categories) return 'Meditação';
+    const category = categories.find(c => c.id === categoryId);
+    return category?.name || 'Meditação';
+  };
+
+  const getAudioUrl = (track: DbMeditationTrack) => {
+    // Prefer narration audio, fallback to background audio
+    return track.narration_audio_url || track.background_audio_url;
+  };
+
+  const handleTrackSelect = (track: DbMeditationTrack) => {
+    const audioUrl = getAudioUrl(track);
+    if (!audioUrl) {
+      console.error('No audio URL available for track:', track.title);
+      return;
+    }
+
     if (audioRef.current) {
       audioRef.current.pause();
     }
 
-    audioRef.current = new Audio(track.audioUrl);
+    audioRef.current = new Audio(audioUrl);
     audioRef.current.volume = volume;
     
     audioRef.current.onloadedmetadata = () => {
@@ -135,7 +156,18 @@ export function MeditationPlayer({ onClose, onComplete }: MeditationPlayerProps)
       {/* Track list or player */}
       <div className="flex-1 overflow-auto px-4">
         <AnimatePresence mode="wait">
-          {!selectedTrack ? (
+          {isLoading ? (
+            <motion.div
+              key="loading"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex flex-col items-center justify-center h-full gap-4"
+            >
+              <Loader2 className="w-8 h-8 animate-spin text-meditate" />
+              <p className="text-muted-foreground">Carregando meditações...</p>
+            </motion.div>
+          ) : !selectedTrack ? (
             <motion.div
               key="list"
               initial={{ opacity: 0 }}
@@ -143,37 +175,49 @@ export function MeditationPlayer({ onClose, onComplete }: MeditationPlayerProps)
               exit={{ opacity: 0 }}
               className="space-y-3 pb-6"
             >
-              {meditationTracks.map((track, index) => (
-                <motion.button
-                  key={track.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  onClick={() => handleTrackSelect(track)}
-                  className={cn(
-                    'w-full p-4 rounded-2xl glass text-left',
-                    'flex items-center gap-4',
-                    'hover:shadow-lg transition-all duration-300'
-                  )}
-                >
-                  <div className="w-16 h-16 md:w-14 md:h-14 rounded-xl bg-meditate-light flex items-center justify-center">
-                    <Headphones className="w-8 h-8 md:w-6 md:h-6 text-meditate" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-xl md:text-base font-semibold text-foreground">
-                      {track.title}
-                    </h3>
-                    <div className="flex items-center gap-2 text-lg md:text-sm text-muted-foreground">
-                      <span>{track.category}</span>
-                      <span>•</span>
-                      <span>{track.duration}</span>
+              {(!tracks || tracks.length === 0) ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <Headphones className="w-16 h-16 text-muted-foreground/50 mb-4" />
+                  <p className="text-muted-foreground">Nenhuma meditação disponível</p>
+                </div>
+              ) : (
+                tracks.filter(t => getAudioUrl(t)).map((track, index) => (
+                  <motion.button
+                    key={track.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    onClick={() => handleTrackSelect(track)}
+                    className={cn(
+                      'w-full p-4 rounded-2xl glass text-left',
+                      'flex items-center gap-4',
+                      'hover:shadow-lg transition-all duration-300'
+                    )}
+                  >
+                    <div className="w-16 h-16 md:w-14 md:h-14 rounded-xl bg-meditate-light flex items-center justify-center">
+                      <Headphones className="w-8 h-8 md:w-6 md:h-6 text-meditate" />
                     </div>
-                  </div>
-                  <div className="w-12 h-12 md:w-10 md:h-10 rounded-full bg-meditate flex items-center justify-center">
-                    <Play className="w-5 h-5 md:w-4 md:h-4 text-primary-foreground ml-0.5" />
-                  </div>
-                </motion.button>
-              ))}
+                    <div className="flex-1">
+                      <h3 className="text-xl md:text-base font-semibold text-foreground">
+                        {track.title}
+                      </h3>
+                      <div className="flex items-center gap-2 text-lg md:text-sm text-muted-foreground">
+                        <span>{getCategoryName(track.category_id)}</span>
+                        <span>•</span>
+                        <span>{track.duration_display}</span>
+                      </div>
+                      {track.description && (
+                        <p className="text-sm text-muted-foreground/80 mt-1 line-clamp-1">
+                          {track.description}
+                        </p>
+                      )}
+                    </div>
+                    <div className="w-12 h-12 md:w-10 md:h-10 rounded-full bg-meditate flex items-center justify-center">
+                      <Play className="w-5 h-5 md:w-4 md:h-4 text-primary-foreground ml-0.5" />
+                    </div>
+                  </motion.button>
+                ))
+              )}
             </motion.div>
           ) : (
             <motion.div
@@ -199,7 +243,7 @@ export function MeditationPlayer({ onClose, onComplete }: MeditationPlayerProps)
                   {selectedTrack.title}
                 </h3>
                 <p className="text-xl md:text-base text-muted-foreground mt-2">
-                  {selectedTrack.category}
+                  {getCategoryName(selectedTrack.category_id)}
                 </p>
               </div>
 

@@ -85,8 +85,8 @@ export function PlutchikWheel({
         </div>
       </motion.div>
 
-      {/* Emotion Grid - 2 columns, 4 rows */}
-      <div className="grid grid-cols-2 gap-3">
+      {/* Emotion Grid - Responsive: 2 cols mobile, 3 cols tablet, 4 cols desktop */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
         {primaryEmotions.map((emotion, index) => {
           const selected = isSelected(emotion.id);
           const selectedData = getSelectedEmotion(emotion.id);

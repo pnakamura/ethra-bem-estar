@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import type { Json } from '@/integrations/supabase/types';
 
 export interface EmotionEntry {
   id: string;
@@ -16,7 +17,7 @@ export interface EmotionEntry {
 export interface CreateEmotionEntryData {
   selected_emotions: Array<{ id: string; intensity: number }>;
   detected_dyads?: Array<{ result: string; label: string; description: string }>;
-  recommended_treatment?: Record<string, unknown> | null;
+  recommended_treatment?: unknown;
   free_text?: string;
 }
 
@@ -46,15 +47,20 @@ export function useCreateEmotionEntry() {
     mutationFn: async (entryData: CreateEmotionEntryData) => {
       if (!user) throw new Error('Usuário não autenticado');
 
+      // Convert to JSON-compatible format
+      const insertData = {
+        user_id: user.id,
+        selected_emotions: JSON.parse(JSON.stringify(entryData.selected_emotions)) as Json,
+        detected_dyads: JSON.parse(JSON.stringify(entryData.detected_dyads || [])) as Json,
+        recommended_treatment: entryData.recommended_treatment 
+          ? (JSON.parse(JSON.stringify(entryData.recommended_treatment)) as Json)
+          : null,
+        free_text: entryData.free_text || null,
+      };
+
       const { data, error } = await supabase
         .from('emotion_entries')
-        .insert([{
-          user_id: user.id,
-          selected_emotions: entryData.selected_emotions as unknown as Record<string, unknown>,
-          detected_dyads: (entryData.detected_dyads || []) as unknown as Record<string, unknown>,
-          recommended_treatment: entryData.recommended_treatment || null,
-          free_text: entryData.free_text || null,
-        }])
+        .insert(insertData)
         .select()
         .single();
 

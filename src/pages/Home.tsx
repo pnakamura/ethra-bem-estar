@@ -94,7 +94,7 @@ export default function Home() {
         const entry = await createEmotionEntry.mutateAsync({
           selected_emotions: selectedEmotions,
           detected_dyads: detectedDyads,
-          recommended_treatment: recommendedTreatment as unknown as Record<string, unknown> | null,
+          recommended_treatment: recommendedTreatment,
           free_text: freeText || undefined,
         });
         

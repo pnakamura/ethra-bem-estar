@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, PenLine } from 'lucide-react';
+import { Sparkles, PenLine, ArrowRight, Heart } from 'lucide-react';
 import { PlutchikWheel } from '@/components/emotions/PlutchikWheel';
 import { EmotionIntensitySlider } from '@/components/emotions/EmotionIntensitySlider';
 import { BottomNavigation } from '@/components/BottomNavigation';
@@ -41,6 +41,10 @@ export default function Home() {
     month: 'long'
   });
   const formattedDate = dateString.charAt(0).toUpperCase() + dateString.slice(1);
+
+  // Greeting based on time
+  const hour = today.getHours();
+  const greeting = hour < 12 ? 'Bom dia' : hour < 18 ? 'Boa tarde' : 'Boa noite';
 
   // Detectar díades baseado nas emoções selecionadas
   const detectedDyads = useMemo(() => {
@@ -109,42 +113,80 @@ export default function Home() {
   const firstTechnique = techniques?.[0];
 
   return (
-    <div className="min-h-[100dvh] flex flex-col bg-background pb-24">
+    <div className="min-h-[100dvh] flex flex-col pb-28">
+      {/* Decorative background elements */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-32 -right-32 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 -left-32 w-64 h-64 bg-secondary/5 rounded-full blur-3xl" />
+      </div>
+
       {/* Header */}
       <motion.header
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="pt-8 px-6 pb-4"
+        className="relative pt-8 px-6 pb-4"
       >
-        <div className="flex items-center gap-2 mb-1">
-          <Sparkles className="w-5 h-5 text-primary" />
-          <span className="text-base font-medium text-primary">
-            {firstName ? `Olá, ${firstName}!` : 'Olá!'}
-          </span>
+        <div className="flex items-center justify-between mb-1">
+          <div className="flex items-center gap-3">
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.2, type: 'spring' }}
+              className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center"
+            >
+              <Heart className="w-5 h-5 text-primary" fill="currentColor" />
+            </motion.div>
+            <div>
+              <motion.p 
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.1 }}
+                className="text-base font-semibold text-foreground"
+              >
+                {greeting}{firstName ? `, ${firstName}` : ''}!
+              </motion.p>
+              <motion.p 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.15 }}
+                className="text-xs text-muted-foreground"
+              >
+                {formattedDate}
+              </motion.p>
+            </div>
+          </div>
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.3 }}
+            className="w-10 h-10 rounded-full glass-card flex items-center justify-center"
+          >
+            <Sparkles className="w-5 h-5 text-primary" />
+          </motion.div>
         </div>
-        <p className="text-sm text-muted-foreground">{formattedDate}</p>
       </motion.header>
 
       {/* Main Content */}
-      <main className="flex-1 px-6 space-y-6">
-        {/* Question */}
+      <main className="flex-1 px-6 space-y-6 relative">
+        {/* Question Card */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
+          transition={{ delay: 0.15 }}
+          className="card-elevated p-5"
         >
-          <h1 className="text-2xl font-bold text-foreground leading-tight">
+          <h1 className="text-xl font-bold text-foreground leading-snug">
             Como você está se sentindo agora?
           </h1>
           <p className="text-sm text-muted-foreground mt-2">
-            Selecione até 3 emoções que representam seu estado atual
+            Selecione as emoções que representam seu estado atual
           </p>
         </motion.div>
 
         {/* Plutchik Wheel */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.2 }}
         >
           <PlutchikWheel
@@ -160,10 +202,11 @@ export default function Home() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="space-y-3"
+              className="card-elevated p-5 space-y-4"
             >
-              <h3 className="text-sm font-medium text-muted-foreground">
-                Ajuste a intensidade:
+              <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                Ajuste a intensidade
               </h3>
               {selectedEmotions.map(selected => {
                 const emotion = primaryEmotions.find(e => e.id === selected.id);
@@ -188,19 +231,21 @@ export default function Home() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="p-4 rounded-xl bg-primary/10 border border-primary/20"
+              className="card-elevated p-4 border-l-4 border-l-primary"
             >
-              <p className="text-sm text-muted-foreground mb-2">
-                Emoções combinadas detectadas:
+              <p className="text-xs font-medium text-muted-foreground mb-3">
+                Emoções combinadas detectadas
               </p>
               <div className="flex flex-wrap gap-2">
                 {detectedDyads.map(dyad => (
-                  <span
+                  <motion.span
                     key={dyad.result}
-                    className="px-3 py-1 bg-primary/20 text-primary rounded-full text-sm font-medium"
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="px-3 py-1.5 bg-primary/10 text-primary rounded-full text-sm font-semibold"
                   >
                     {dyad.label}
-                  </span>
+                  </motion.span>
                 ))}
               </div>
             </motion.div>
@@ -218,8 +263,8 @@ export default function Home() {
           <Input
             value={freeText}
             onChange={(e) => setFreeText(e.target.value)}
-            placeholder="Ou escreva como você se sente..."
-            className="pl-10 h-12 rounded-xl bg-card border-border text-foreground placeholder:text-muted-foreground"
+            placeholder="Ou descreva como você se sente..."
+            className="pl-11 h-14 rounded-2xl bg-card border-border/50 text-foreground placeholder:text-muted-foreground input-premium text-sm"
           />
         </motion.div>
 
@@ -230,14 +275,21 @@ export default function Home() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              className="p-4 rounded-xl bg-muted/50"
+              className="card-elevated p-4 bg-gradient-to-r from-primary/5 to-secondary/5"
             >
-              <p className="text-xs text-muted-foreground mb-1">
-                Recomendação baseada no seu estado:
-              </p>
-              <p className="text-sm font-medium text-foreground">
-                {recommendedTreatment.label}: {recommendedTreatment.techniques[0]?.name}
-              </p>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <Sparkles className="w-5 h-5 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-xs text-muted-foreground">
+                    Recomendação para você
+                  </p>
+                  <p className="text-sm font-semibold text-foreground">
+                    {recommendedTreatment.techniques[0]?.name}
+                  </p>
+                </div>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
@@ -247,13 +299,15 @@ export default function Home() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
+          className="pt-2 pb-4"
         >
           <Button
             onClick={handleContinue}
             disabled={selectedEmotions.length === 0 && !freeText.trim()}
-            className="w-full h-14 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-base"
+            className="w-full h-14 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-base shadow-lg shadow-primary/20 btn-glow group transition-all duration-300 disabled:opacity-50 disabled:shadow-none"
           >
-            Continuar
+            <span>Continuar</span>
+            <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
           </Button>
         </motion.div>
       </main>

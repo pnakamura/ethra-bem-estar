@@ -17,7 +17,6 @@ interface PlutchikWheelProps {
 export function PlutchikWheel({ 
   selectedEmotions, 
   onSelect,
-  onIntensityChange 
 }: PlutchikWheelProps) {
   const getSelectedEmotion = (id: string) => 
     selectedEmotions.find(e => e.id === id);
@@ -26,22 +25,34 @@ export function PlutchikWheel({
     selectedEmotions.some(e => e.id === id);
 
   return (
-    <div className="w-full max-w-md mx-auto">
-      {/* Roda circular */}
+    <div className="w-full max-w-sm mx-auto">
+      {/* Wheel Container */}
       <div className="relative aspect-square">
-        {/* Centro da roda */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center">
-            <span className="text-sm text-muted-foreground text-center px-2">
-              Como você se sente?
-            </span>
+        {/* Decorative rings */}
+        <div className="absolute inset-4 rounded-full border border-border/30" />
+        <div className="absolute inset-12 rounded-full border border-border/20" />
+        
+        {/* Center hub with glow effect */}
+        <motion.div 
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
+          className="absolute inset-0 flex items-center justify-center z-10"
+        >
+          <div className="relative">
+            <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl animate-pulse-soft" />
+            <div className="relative w-24 h-24 rounded-full glass-card flex items-center justify-center p-2">
+              <span className="text-xs font-medium text-center text-muted-foreground leading-tight">
+                Como você<br />se sente?
+              </span>
+            </div>
           </div>
-        </div>
+        </motion.div>
 
-        {/* Emoções em círculo */}
+        {/* Emotion Petals */}
         {primaryEmotions.map((emotion, index) => {
-          const angle = (index * 360) / 8 - 90; // Começando do topo
-          const radius = 42; // % do container
+          const angle = (index * 360) / 8 - 90;
+          const radius = 40;
           const x = 50 + radius * Math.cos((angle * Math.PI) / 180);
           const y = 50 + radius * Math.sin((angle * Math.PI) / 180);
           const selected = isSelected(emotion.id);
@@ -52,78 +63,124 @@ export function PlutchikWheel({
               key={emotion.id}
               initial={{ opacity: 0, scale: 0 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: index * 0.05 }}
+              transition={{ 
+                delay: 0.1 + index * 0.05,
+                type: 'spring',
+                stiffness: 260,
+                damping: 20
+              }}
               onClick={() => onSelect(emotion.id)}
-              className="absolute transform -translate-x-1/2 -translate-y-1/2"
+              className="absolute transform -translate-x-1/2 -translate-y-1/2 group"
               style={{
                 left: `${x}%`,
                 top: `${y}%`,
               }}
             >
-              <div
+              {/* Glow effect for selected */}
+              {selected && (
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="absolute inset-0 rounded-full blur-lg opacity-50"
+                  style={{ backgroundColor: emotion.color }}
+                />
+              )}
+              
+              {/* Main petal */}
+              <motion.div
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
                 className={cn(
-                  'relative flex flex-col items-center justify-center w-16 h-16 rounded-full transition-all duration-300',
+                  'relative flex flex-col items-center justify-center w-[4.5rem] h-[4.5rem] rounded-full transition-all duration-300',
                   selected 
-                    ? 'ring-2 ring-primary ring-offset-2 ring-offset-background scale-110' 
-                    : 'hover:scale-105'
+                    ? 'ring-2 ring-offset-2 ring-offset-background shadow-lg ring-primary' 
+                    : 'shadow-md hover:shadow-lg'
                 )}
                 style={{
                   backgroundColor: selected ? emotion.color : emotion.bgColor,
                 }}
               >
+                {/* Selection indicator */}
                 {selected && (
                   <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="absolute -top-1 -right-1 w-5 h-5 bg-primary rounded-full flex items-center justify-center z-10"
+                    initial={{ scale: 0, rotate: -180 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    className="absolute -top-1 -right-1 w-6 h-6 bg-primary rounded-full flex items-center justify-center shadow-md z-20"
                   >
-                    <Check className="w-3 h-3 text-primary-foreground" />
+                    <Check className="w-3.5 h-3.5 text-primary-foreground" strokeWidth={3} />
                   </motion.div>
                 )}
-                <span className="text-2xl">{emotion.icon}</span>
-              </div>
-              <span 
+                
+                {/* Emoji */}
+                <motion.span 
+                  className="text-3xl"
+                  animate={selected ? { scale: [1, 1.1, 1] } : {}}
+                  transition={{ duration: 0.3 }}
+                >
+                  {emotion.icon}
+                </motion.span>
+              </motion.div>
+              
+              {/* Label */}
+              <motion.span 
                 className={cn(
-                  'text-xs font-medium mt-1 block text-center whitespace-nowrap',
-                  selected ? 'text-foreground' : 'text-muted-foreground'
+                  'absolute -bottom-6 left-1/2 -translate-x-1/2 text-[11px] font-semibold whitespace-nowrap transition-colors duration-200',
+                  selected ? 'text-foreground' : 'text-muted-foreground group-hover:text-foreground'
                 )}
               >
                 {selectedData 
                   ? getIntensityLabel(emotion, selectedData.intensity)
                   : emotion.label
                 }
-              </span>
+              </motion.span>
             </motion.button>
           );
         })}
       </div>
 
-      {/* Legenda das emoções selecionadas */}
+      {/* Selected Emotions Pills */}
       {selectedEmotions.length > 0 && (
         <motion.div 
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-4 flex flex-wrap gap-2 justify-center"
+          className="mt-8 flex flex-wrap gap-2 justify-center"
         >
-          {selectedEmotions.map(selected => {
+          {selectedEmotions.map((selected, index) => {
             const emotion = primaryEmotions.find(e => e.id === selected.id);
             if (!emotion) return null;
             
             return (
-              <div
+              <motion.div
                 key={selected.id}
-                className="flex items-center gap-1 px-3 py-1 rounded-full text-sm"
-                style={{ backgroundColor: emotion.bgColor }}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                transition={{ delay: index * 0.05 }}
+                className="flex items-center gap-2 px-4 py-2 rounded-full text-sm shadow-sm"
+                style={{ 
+                  backgroundColor: `${emotion.color}20`,
+                  border: `1px solid ${emotion.color}40`
+                }}
               >
-                <span>{emotion.icon}</span>
-                <span className="font-medium">
+                <span className="text-lg">{emotion.icon}</span>
+                <span className="font-medium text-foreground">
                   {getIntensityLabel(emotion, selected.intensity)}
                 </span>
-              </div>
+              </motion.div>
             );
           })}
         </motion.div>
       )}
+
+      {/* Helper text */}
+      <motion.p 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.5 }}
+        className="mt-4 text-center text-xs text-muted-foreground"
+      >
+        Toque para selecionar • Até 3 emoções
+      </motion.p>
     </div>
   );
 }

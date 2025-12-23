@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { User, Settings, LogOut, Bell, Moon, ChevronRight, Shield } from 'lucide-react';
+import { User, Settings, LogOut, Bell, Moon, ChevronRight, Shield, Sparkles } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -26,7 +26,7 @@ export default function Profile() {
   ];
 
   return (
-    <div className="min-h-[100dvh] flex flex-col bg-background pb-20">
+    <div className="min-h-[100dvh] flex flex-col pb-28">
       {/* Header */}
       <motion.header
         initial={{ y: -20, opacity: 0 }}
@@ -37,28 +37,31 @@ export default function Profile() {
       </motion.header>
 
       {/* Main Content */}
-      <main className="flex-1 px-6 space-y-6">
+      <main className="flex-1 px-6 space-y-5">
         {/* User Card */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-card rounded-2xl p-6 flex items-center gap-4"
+          className="card-elevated p-5 flex items-center gap-4"
         >
-          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-            <User className="w-8 h-8 text-primary" />
+          <div className="relative">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+              <User className="w-7 h-7 text-primary" />
+            </div>
+            <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+              <Sparkles className="w-3 h-3 text-primary-foreground" />
+            </div>
           </div>
-          <div className="flex-1">
-            <h2 className="text-lg font-semibold text-foreground">{firstName}</h2>
-            <p className="text-sm text-muted-foreground">{email}</p>
+          <div className="flex-1 min-w-0">
+            <h2 className="text-lg font-bold text-foreground">{firstName}</h2>
+            <p className="text-sm text-muted-foreground truncate">{email}</p>
             {usuario?.tipo_usuario && (
-              <span className="inline-block mt-1 px-2 py-0.5 bg-primary/10 text-primary text-xs rounded-full capitalize">
+              <span className="inline-block mt-2 px-3 py-1 bg-primary/10 text-primary text-xs font-semibold rounded-full capitalize">
                 {usuario.tipo_usuario}
               </span>
             )}
           </div>
-          <Button variant="ghost" size="icon" className="rounded-full">
-            <ChevronRight className="w-5 h-5 text-muted-foreground" />
-          </Button>
+          <ChevronRight className="w-5 h-5 text-muted-foreground" />
         </motion.div>
 
         {/* Admin Link for socios */}
@@ -69,9 +72,11 @@ export default function Profile() {
             transition={{ delay: 0.1 }}
           >
             <Link to="/admin">
-              <div className="bg-panic/10 rounded-xl p-4 flex items-center gap-3">
-                <Settings className="w-5 h-5 text-panic" />
-                <span className="flex-1 text-sm font-medium text-foreground">
+              <div className="card-elevated p-4 flex items-center gap-3 border-l-4 border-l-secondary">
+                <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center">
+                  <Settings className="w-5 h-5 text-secondary" />
+                </div>
+                <span className="flex-1 text-sm font-semibold text-foreground">
                   Painel Administrativo
                 </span>
                 <ChevronRight className="w-4 h-4 text-muted-foreground" />
@@ -85,14 +90,16 @@ export default function Profile() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="bg-card rounded-2xl divide-y divide-border"
+          className="card-elevated divide-y divide-border/50 overflow-hidden"
         >
-          {menuItems.map((item, index) => (
+          {menuItems.map((item) => (
             <div
               key={item.label}
-              className="flex items-center gap-3 p-4"
+              className="flex items-center gap-3 p-4 hover:bg-muted/30 transition-colors cursor-pointer"
             >
-              <item.icon className="w-5 h-5 text-muted-foreground" />
+              <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center">
+                <item.icon className="w-4 h-4 text-muted-foreground" />
+              </div>
               <span className="flex-1 text-sm font-medium text-foreground">
                 {item.label}
               </span>
@@ -115,7 +122,7 @@ export default function Profile() {
             <Button
               variant="outline"
               onClick={handleSignOut}
-              className="w-full h-12 rounded-xl border-destructive/20 text-destructive hover:bg-destructive/5"
+              className="w-full h-12 rounded-2xl border-destructive/30 text-destructive hover:bg-destructive/5"
             >
               <LogOut className="w-5 h-5 mr-2" />
               Sair da Conta
@@ -129,7 +136,7 @@ export default function Profile() {
           >
             <Button
               onClick={() => navigate('/auth')}
-              className="w-full h-12 rounded-xl bg-primary text-primary-foreground"
+              className="w-full h-14 rounded-2xl bg-primary text-primary-foreground font-semibold shadow-lg shadow-primary/20"
             >
               <User className="w-5 h-5 mr-2" />
               Entrar ou Criar Conta

@@ -1,13 +1,13 @@
-import { Home, BookOpen, BarChart3, User, Utensils } from 'lucide-react';
+import { Home, BookOpen, BarChart3, User, Utensils, Compass } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 const navItems = [
   { path: '/', label: 'Início', icon: Home },
+  { path: '/journeys', label: 'Jornadas', icon: Compass },
   { path: '/nutrition', label: 'Nutrição', icon: Utensils },
   { path: '/journal', label: 'Diário', icon: BookOpen },
-  { path: '/insights', label: 'Insights', icon: BarChart3 },
   { path: '/profile', label: 'Perfil', icon: User },
 ];
 

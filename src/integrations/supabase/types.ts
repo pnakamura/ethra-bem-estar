@@ -564,6 +564,186 @@ export type Database = {
           },
         ]
       }
+      journey_day_completions: {
+        Row: {
+          challenge_done: boolean | null
+          completed_at: string | null
+          day_number: number
+          id: string
+          mood_after: string | null
+          mood_before: string | null
+          practice_done: boolean | null
+          reflection_note: string | null
+          teaching_read: boolean | null
+          user_journey_id: string
+        }
+        Insert: {
+          challenge_done?: boolean | null
+          completed_at?: string | null
+          day_number: number
+          id?: string
+          mood_after?: string | null
+          mood_before?: string | null
+          practice_done?: boolean | null
+          reflection_note?: string | null
+          teaching_read?: boolean | null
+          user_journey_id: string
+        }
+        Update: {
+          challenge_done?: boolean | null
+          completed_at?: string | null
+          day_number?: number
+          id?: string
+          mood_after?: string | null
+          mood_before?: string | null
+          practice_done?: boolean | null
+          reflection_note?: string | null
+          teaching_read?: boolean | null
+          user_journey_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journey_day_completions_user_journey_id_fkey"
+            columns: ["user_journey_id"]
+            isOneToOne: false
+            referencedRelation: "user_journeys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      journey_days: {
+        Row: {
+          activity_description: string | null
+          activity_type: string | null
+          bonus_tip: string | null
+          challenge_description: string | null
+          challenge_title: string | null
+          created_at: string | null
+          day_number: number
+          id: string
+          journey_id: string
+          reflection_prompt: string | null
+          suggested_breathing_id: string | null
+          suggested_meditation_id: string | null
+          teaching_author: string | null
+          teaching_text: string
+          title: string
+        }
+        Insert: {
+          activity_description?: string | null
+          activity_type?: string | null
+          bonus_tip?: string | null
+          challenge_description?: string | null
+          challenge_title?: string | null
+          created_at?: string | null
+          day_number: number
+          id?: string
+          journey_id: string
+          reflection_prompt?: string | null
+          suggested_breathing_id?: string | null
+          suggested_meditation_id?: string | null
+          teaching_author?: string | null
+          teaching_text: string
+          title: string
+        }
+        Update: {
+          activity_description?: string | null
+          activity_type?: string | null
+          bonus_tip?: string | null
+          challenge_description?: string | null
+          challenge_title?: string | null
+          created_at?: string | null
+          day_number?: number
+          id?: string
+          journey_id?: string
+          reflection_prompt?: string | null
+          suggested_breathing_id?: string | null
+          suggested_meditation_id?: string | null
+          teaching_author?: string | null
+          teaching_text?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journey_days_journey_id_fkey"
+            columns: ["journey_id"]
+            isOneToOne: false
+            referencedRelation: "journeys"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journey_days_suggested_breathing_id_fkey"
+            columns: ["suggested_breathing_id"]
+            isOneToOne: false
+            referencedRelation: "breathing_techniques"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journey_days_suggested_meditation_id_fkey"
+            columns: ["suggested_meditation_id"]
+            isOneToOne: false
+            referencedRelation: "meditation_tracks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      journeys: {
+        Row: {
+          benefits: Json | null
+          category: string | null
+          cover_image_url: string | null
+          created_at: string | null
+          description: string
+          difficulty: string | null
+          display_order: number | null
+          duration_days: number
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          is_premium: boolean | null
+          subtitle: string | null
+          theme_color: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          benefits?: Json | null
+          category?: string | null
+          cover_image_url?: string | null
+          created_at?: string | null
+          description: string
+          difficulty?: string | null
+          display_order?: number | null
+          duration_days?: number
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_premium?: boolean | null
+          subtitle?: string | null
+          theme_color?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          benefits?: Json | null
+          category?: string | null
+          cover_image_url?: string | null
+          created_at?: string | null
+          description?: string
+          difficulty?: string | null
+          display_order?: number | null
+          duration_days?: number
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_premium?: boolean | null
+          subtitle?: string | null
+          theme_color?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       lembretes_automaticos: {
         Row: {
           ativo: boolean | null
@@ -1219,6 +1399,53 @@ export type Database = {
             columns: ["usuario_id"]
             isOneToOne: false
             referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_journeys: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          current_day: number | null
+          id: string
+          is_active: boolean | null
+          journey_id: string
+          last_activity_at: string | null
+          started_at: string | null
+          streak_count: number | null
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          current_day?: number | null
+          id?: string
+          is_active?: boolean | null
+          journey_id: string
+          last_activity_at?: string | null
+          started_at?: string | null
+          streak_count?: number | null
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          current_day?: number | null
+          id?: string
+          is_active?: boolean | null
+          journey_id?: string
+          last_activity_at?: string | null
+          started_at?: string | null
+          streak_count?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_journeys_journey_id_fkey"
+            columns: ["journey_id"]
+            isOneToOne: false
+            referencedRelation: "journeys"
             referencedColumns: ["id"]
           },
         ]

@@ -11,6 +11,7 @@ import {
   Sparkles,
   Headphones,
   Utensils,
+  Compass,
 } from 'lucide-react';
 import { BottomNavigation } from '@/components/BottomNavigation';
 import { BreathPacer } from '@/components/BreathPacer';
@@ -21,9 +22,11 @@ import { StreakWidget } from '@/components/dashboard/StreakWidget';
 import { MoodCheckModal } from '@/components/dashboard/MoodCheckModal';
 import { BreathingTechniqueSelector } from '@/components/dashboard/BreathingTechniqueSelector';
 import { MealCheckModal } from '@/components/nutrition/MealCheckModal';
+import { ActiveJourneyBanner } from '@/components/journeys/ActiveJourneyBanner';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBreathingTechniques } from '@/hooks/useBreathingTechniques';
 import { useGamificationStats } from '@/hooks/useGamificationStats';
+import { useActiveUserJourney } from '@/hooks/useUserJourney';
 import { toast } from 'sonner';
 import type { EmotionType } from '@/types/breathing';
 
@@ -34,6 +37,7 @@ export default function Home() {
   const navigate = useNavigate();
   const { usuario } = useAuth();
   const { data: gamificationStats, isLoading: isLoadingStats } = useGamificationStats();
+  const { data: activeJourney } = useActiveUserJourney();
   
   const [showMoodModal, setShowMoodModal] = useState(false);
   const [showBreathingSelector, setShowBreathingSelector] = useState(false);
@@ -85,6 +89,7 @@ export default function Home() {
   const handleNutrition = () => setShowMealModal(true);
   const handleJournal = () => navigate('/journal');
   const handleInsights = () => navigate('/insights');
+  const handleJourneys = () => navigate('/journeys');
 
   return (
     <div className="min-h-[100dvh] flex flex-col pb-28">
@@ -143,6 +148,19 @@ export default function Home() {
 
       {/* Main Content */}
       <main className="flex-1 px-6 space-y-5 relative">
+        {/* Active Journey Banner */}
+        {activeJourney && (
+          <ActiveJourneyBanner
+            journeyTitle={activeJourney.journey.title}
+            journeyIcon={activeJourney.journey.icon}
+            currentDay={activeJourney.current_day}
+            totalDays={activeJourney.journey.duration_days}
+            streak={activeJourney.streak_count}
+            themeColor={activeJourney.journey.theme_color}
+            onClick={handleJourneys}
+          />
+        )}
+
         {/* Streak Widget */}
         <StreakWidget
           currentStreak={gamificationStats?.sequencia_atual ?? 0}
@@ -210,6 +228,14 @@ export default function Home() {
               color="accent"
               onClick={handleInsights}
               delay={0.35}
+            />
+            <QuickActionCard
+              emoji="🧭"
+              icon={Compass}
+              label="Jornadas"
+              color="accent"
+              onClick={handleJourneys}
+              delay={0.4}
             />
           </div>
         </motion.div>

@@ -1,4 +1,4 @@
-import { Home, BookOpen, User, Utensils, Compass } from 'lucide-react';
+import { Home, BookOpen, User, Utensils, Compass, BarChart3 } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -8,6 +8,7 @@ const navItems = [
   { path: '/journeys', label: 'Jornadas', icon: Compass },
   { path: '/nutrition', label: 'Nutrição', icon: Utensils },
   { path: '/journal', label: 'Diário', icon: BookOpen },
+  { path: '/insights', label: 'Insights', icon: BarChart3 },
   { path: '/profile', label: 'Perfil', icon: User },
 ];
 

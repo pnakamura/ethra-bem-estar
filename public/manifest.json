@@ -1,7 +1,7 @@
 {
-  "name": "Respira - Breathwork & Meditação",
-  "short_name": "Respira",
-  "description": "Encontre calma através da respiração guiada e meditação",
+  "name": "ETHRA - Meditação & Bem-Estar",
+  "short_name": "ETHRA",
+  "description": "Encontre paz interior através da meditação guiada e práticas de bem-estar",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#F8F9FA",
@@ -9,9 +9,10 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/favicon.ico",
-      "sizes": "64x64",
-      "type": "image/x-icon"
+      "src": "/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ],
   "categories": ["health", "lifestyle", "wellness"],

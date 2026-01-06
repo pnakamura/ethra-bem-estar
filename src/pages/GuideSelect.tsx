@@ -1,25 +1,99 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, ArrowRight, Sparkles } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Sparkles, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { GuideCard } from '@/components/guide/GuideCard';
 import { useGuides, useSetPreferredGuide, type SpiritualGuide } from '@/hooks/useGuides';
 import { Skeleton } from '@/components/ui/skeleton';
-import { safeGoBack } from '@/lib/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function GuideSelect() {
   const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
   const { data: guides, isLoading } = useGuides();
   const setPreferredGuide = useSetPreferredGuide();
   const [selectedGuide, setSelectedGuide] = useState<SpiritualGuide | null>(null);
 
+  const isAuthenticated = !!user;
+
   const handleContinue = async () => {
-    if (!selectedGuide) return;
+    if (!selectedGuide || !isAuthenticated) return;
     
     await setPreferredGuide.mutateAsync(selectedGuide.id);
     navigate('/guide', { state: { guideId: selectedGuide.id } });
   };
+
+  const handleBack = () => {
+    navigate('/');
+  };
+
+  // Show loading state
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-pulse text-muted-foreground">Carregando...</div>
+      </div>
+    );
+  }
+
+  // Show login required message if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-background">
+        {/* Header */}
+        <div className="sticky top-0 z-10 glass border-b border-border/50">
+          <div className="flex items-center gap-3 px-4 py-4 safe-top">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleBack}
+              className="rounded-full"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <div className="flex-1">
+              <h1 className="text-lg font-semibold">Escolha seu Guia</h1>
+            </div>
+          </div>
+        </div>
+
+        {/* Login Required Message */}
+        <div className="px-4 py-12 flex flex-col items-center justify-center text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="max-w-sm"
+          >
+            <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-muted/50 flex items-center justify-center">
+              <LogIn className="w-10 h-10 text-muted-foreground" />
+            </div>
+            <h2 className="text-xl font-semibold mb-3">Login Necessário</h2>
+            <p className="text-muted-foreground mb-8">
+              Para escolher um guia espiritual e iniciar sua jornada de autoconhecimento, 
+              é necessário estar conectado à sua conta.
+            </p>
+            <div className="flex flex-col gap-3">
+              <Button
+                onClick={() => navigate('/auth')}
+                className="w-full h-12 text-base font-semibold rounded-xl gap-2"
+              >
+                <LogIn className="w-5 h-5" />
+                Fazer Login
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handleBack}
+                className="w-full h-12 text-base rounded-xl"
+              >
+                Voltar para Início
+              </Button>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -29,7 +103,7 @@ export default function GuideSelect() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => safeGoBack(navigate, '/')}
+            onClick={handleBack}
             className="rounded-full"
           >
             <ArrowLeft className="w-5 h-5" />

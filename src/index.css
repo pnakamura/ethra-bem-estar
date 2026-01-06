@@ -66,6 +66,14 @@
     --anger: 15 85% 55%;
     --anticipation: 28 90% 55%;
 
+    /* Onboarding Purple Theme */
+    --onboarding-primary: 270 65% 55%;
+    --onboarding-primary-light: 270 50% 92%;
+    --onboarding-secondary: 285 60% 60%;
+    --onboarding-accent: 255 70% 65%;
+    --onboarding-glow: 0 0 40px hsl(270 65% 55% / 0.3);
+    --gradient-onboarding: linear-gradient(135deg, hsl(270 65% 55%) 0%, hsl(285 60% 60%) 50%, hsl(255 70% 65%) 100%);
+
     /* Premium Gradients */
     --gradient-primary: linear-gradient(135deg, hsl(168 65% 38%) 0%, hsl(185 60% 45%) 100%);
     --gradient-secondary: linear-gradient(135deg, hsl(12 80% 62%) 0%, hsl(28 85% 65%) 100%);
@@ -151,6 +159,14 @@
     --disgust: 280 45% 58%;
     --anger: 15 80% 55%;
     --anticipation: 28 85% 55%;
+
+    /* Onboarding Purple Theme (Dark) */
+    --onboarding-primary: 270 60% 60%;
+    --onboarding-primary-light: 270 40% 15%;
+    --onboarding-secondary: 285 55% 62%;
+    --onboarding-accent: 255 65% 68%;
+    --onboarding-glow: 0 0 50px hsl(270 60% 60% / 0.25);
+    --gradient-onboarding: linear-gradient(135deg, hsl(270 60% 60%) 0%, hsl(285 55% 62%) 50%, hsl(255 65% 68%) 100%);
 
     --gradient-primary: linear-gradient(135deg, hsl(168 60% 50%) 0%, hsl(185 55% 55%) 100%);
     --gradient-secondary: linear-gradient(135deg, hsl(12 75% 58%) 0%, hsl(28 80% 62%) 100%);

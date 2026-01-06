@@ -159,6 +159,25 @@ export default {
         "bounce-subtle": {
           "0%, 100%": { transform: "translateY(0)" },
           "50%": { transform: "translateY(-4px)" }
+        },
+        "glow-pulse-purple": {
+          "0%, 100%": { 
+            boxShadow: "0 0 20px hsl(270 65% 55% / 0.3)",
+            transform: "scale(1)"
+          },
+          "50%": { 
+            boxShadow: "0 0 40px hsl(270 65% 55% / 0.5)",
+            transform: "scale(1.03)"
+          }
+        },
+        "float-subtle": {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-4px)" }
+        },
+        "scale-bounce": {
+          "0%": { transform: "scale(0.8)", opacity: "0" },
+          "60%": { transform: "scale(1.05)" },
+          "100%": { transform: "scale(1)", opacity: "1" }
         }
       },
       animation: {
@@ -174,6 +193,9 @@ export default {
         "float-gentle": "float-gentle 4s ease-in-out infinite",
         "spin-slow": "spin-slow 8s linear infinite",
         "bounce-subtle": "bounce-subtle 2s ease-in-out infinite",
+        "glow-pulse-purple": "glow-pulse-purple 3s ease-in-out infinite",
+        "float-subtle": "float-subtle 3s ease-in-out infinite",
+        "scale-bounce": "scale-bounce 0.4s ease-out",
       },
       backdropBlur: {
         xs: '2px',

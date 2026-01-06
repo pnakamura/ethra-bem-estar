@@ -8,6 +8,7 @@ interface ExperienceOption {
   label: string;
   description: string;
   icon: React.ReactNode;
+  color: string;
 }
 
 const EXPERIENCES: ExperienceOption[] = [
@@ -15,19 +16,22 @@ const EXPERIENCES: ExperienceOption[] = [
     id: 'beginner', 
     label: 'Iniciante', 
     description: 'Nunca pratiquei meditação',
-    icon: <Sprout className="w-8 h-8" />
+    icon: <Sprout className="w-8 h-8" />,
+    color: '#34D399'
   },
   { 
     id: 'intermediate', 
     label: 'Intermediário', 
     description: 'Já experimentei algumas vezes',
-    icon: <Flower2 className="w-8 h-8" />
+    icon: <Flower2 className="w-8 h-8" />,
+    color: '#A78BFA'
   },
   { 
     id: 'advanced', 
     label: 'Experiente', 
     description: 'Pratico regularmente',
-    icon: <TreePine className="w-8 h-8" />
+    icon: <TreePine className="w-8 h-8" />,
+    color: '#8B5CF6'
   },
 ];
 
@@ -47,38 +51,57 @@ export function ExperienceLevelSelector({ selected, onChange }: ExperienceLevelP
             key={exp.id}
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: index * 0.1 }}
+            transition={{ 
+              delay: index * 0.12,
+              type: 'spring',
+              stiffness: 300,
+              damping: 25
+            }}
+            whileHover={{ scale: 1.02, x: 4 }}
+            whileTap={{ scale: 0.98 }}
             onClick={() => onChange(exp.id)}
             className={`
-              w-full p-5 rounded-2xl border-2 transition-all duration-200
+              w-full p-5 rounded-2xl border-2 transition-all duration-300
               flex items-center gap-4 text-left
               ${isSelected 
-                ? 'border-primary bg-primary/10' 
-                : 'border-border bg-card hover:border-primary/50'
+                ? 'border-[#9B87F5] bg-[#9B87F5]/10' 
+                : 'border-border bg-card hover:border-[#9B87F5]/50'
               }
             `}
+            style={{
+              boxShadow: isSelected ? `0 0 25px ${exp.color}25` : undefined,
+            }}
           >
-            <div className={`
-              w-14 h-14 rounded-xl flex items-center justify-center
-              ${isSelected ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}
-            `}>
+            <motion.div 
+              className="w-14 h-14 rounded-xl flex items-center justify-center"
+              style={{ 
+                backgroundColor: isSelected ? exp.color : 'hsl(var(--muted))',
+                color: isSelected ? 'white' : exp.color
+              }}
+              animate={isSelected ? { rotate: [0, -5, 5, 0] } : {}}
+              transition={{ duration: 0.4 }}
+            >
               {exp.icon}
-            </div>
+            </motion.div>
             <div className="flex-1">
-              <h3 className={`font-semibold ${isSelected ? 'text-primary' : 'text-foreground'}`}>
+              <h3 className={`font-semibold ${isSelected ? 'text-foreground' : 'text-foreground'}`}>
                 {exp.label}
               </h3>
               <p className="text-sm text-muted-foreground">{exp.description}</p>
             </div>
-            <div className={`
-              w-6 h-6 rounded-full border-2 flex items-center justify-center
-              ${isSelected ? 'border-primary bg-primary' : 'border-muted-foreground/30'}
-            `}>
+            <div 
+              className={`
+                w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-300
+                ${isSelected ? 'border-[#9B87F5]' : 'border-muted-foreground/30'}
+              `}
+              style={{ backgroundColor: isSelected ? exp.color : 'transparent' }}
+            >
               {isSelected && (
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
-                  className="w-3 h-3 rounded-full bg-primary-foreground"
+                  transition={{ type: 'spring', stiffness: 400 }}
+                  className="w-3 h-3 rounded-full bg-white"
                 />
               )}
             </div>

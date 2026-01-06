@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Clock, Sparkles, Check, Play, ChevronRight } from 'lucide-react';
+import { X, Clock, Sparkles, Check, Play, Wind, Music } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { Journey, JourneyDay } from '@/hooks/useJourneys';
@@ -30,6 +30,14 @@ const difficultyLabels = {
   'avançado': 'Avançado',
 };
 
+const activityTypeLabels: Record<string, { label: string; icon: string }> = {
+  'mental': { label: 'Mental', icon: '🧠' },
+  'physical': { label: 'Físico', icon: '🏃' },
+  'social': { label: 'Social', icon: '👥' },
+  'creative': { label: 'Criativo', icon: '🎨' },
+  'spiritual': { label: 'Espiritual', icon: '✨' },
+};
+
 export function JourneyDetails({
   journey,
   days,
@@ -40,6 +48,18 @@ export function JourneyDetails({
   hasActiveJourney,
 }: JourneyDetailsProps) {
   const gradientClass = themeColors[journey.theme_color] || themeColors.primary;
+
+  // Calculate activity counts
+  const activityCounts = days.reduce((acc, day) => {
+    if (day.activity_type) {
+      acc[day.activity_type] = (acc[day.activity_type] || 0) + 1;
+    }
+    return acc;
+  }, {} as Record<string, number>);
+
+  // Check for practices
+  const hasBreathing = days.some(d => d.suggested_breathing_id);
+  const hasMeditation = days.some(d => d.suggested_meditation_id);
 
   return (
     <AnimatePresence>
@@ -109,27 +129,84 @@ export function JourneyDetails({
                 </div>
               )}
 
+              {/* What this journey includes */}
+              <div>
+                <h3 className="font-semibold mb-3">O que esta jornada inclui</h3>
+                <div className="flex flex-wrap gap-2">
+                  {Object.entries(activityCounts).map(([type, count]) => {
+                    const activity = activityTypeLabels[type];
+                    if (!activity) return null;
+                    return (
+                      <span
+                        key={type}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted text-sm"
+                      >
+                        <span>{activity.icon}</span>
+                        <span>{count} {activity.label}</span>
+                      </span>
+                    );
+                  })}
+                  {hasBreathing && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-calm/20 text-calm text-sm">
+                      <Wind className="w-4 h-4" />
+                      <span>Respirações</span>
+                    </span>
+                  )}
+                  {hasMeditation && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-trust/20 text-trust text-sm">
+                      <Music className="w-4 h-4" />
+                      <span>Meditações</span>
+                    </span>
+                  )}
+                </div>
+              </div>
+
               {/* Preview of days */}
               <div>
                 <h3 className="font-semibold mb-3">Prévia da jornada</h3>
                 <div className="space-y-2">
-                  {days.slice(0, 3).map((day) => (
-                    <div
-                      key={day.id}
-                      className="flex items-center gap-3 p-3 rounded-xl bg-muted/30"
-                    >
-                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-medium text-primary">
-                        {day.day_number}
+                  {days.slice(0, 3).map((day) => {
+                    const activityInfo = day.activity_type ? activityTypeLabels[day.activity_type] : null;
+                    return (
+                      <div
+                        key={day.id}
+                        className="flex items-center gap-3 p-3 rounded-xl bg-muted/30"
+                      >
+                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-medium text-primary">
+                          {day.day_number}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm truncate">{day.title}</p>
+                          <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground">
+                            {activityInfo && (
+                              <span className="flex items-center gap-1">
+                                <span>{activityInfo.icon}</span>
+                                <span>{activityInfo.label}</span>
+                              </span>
+                            )}
+                            {day.challenge_title && (
+                              <>
+                                <span>•</span>
+                                <span className="truncate">{day.challenge_title}</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex gap-1.5 flex-shrink-0">
+                          {day.suggested_breathing_id && (
+                            <span className="w-6 h-6 rounded-full bg-calm/20 flex items-center justify-center" title="Inclui respiração">
+                              <Wind className="w-3.5 h-3.5 text-calm" />
+                            </span>
+                          )}
+                          {day.suggested_meditation_id && (
+                            <span className="w-6 h-6 rounded-full bg-trust/20 flex items-center justify-center" title="Inclui meditação">
+                              <Music className="w-3.5 h-3.5 text-trust" />
+                            </span>
+                          )}
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm truncate">{day.title}</p>
-                        <p className="text-xs text-muted-foreground truncate">
-                          {day.teaching_author ? `${day.teaching_author}` : 'Ensinamento do dia'}
-                        </p>
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                    </div>
-                  ))}
+                    );
+                  })}
                   {days.length > 3 && (
                     <p className="text-xs text-muted-foreground text-center pt-2">
                       + {days.length - 3} dias restantes

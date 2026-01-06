@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.87.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -36,15 +36,13 @@ serve(async (req) => {
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    // Create auth client with user's token to validate
-    const authClient = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } }
-    });
-
     const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await authClient.auth.getUser(token);
-    
-    if (claimsError || !claimsData?.user) {
+
+    // Validate JWT using signing keys (recommended when verify_jwt=false)
+    const authClient = createClient(supabaseUrl, supabaseAnonKey);
+    const { data: claimsData, error: claimsError } = await authClient.auth.getClaims(token);
+
+    if (claimsError || !claimsData?.claims?.sub) {
       console.error("Auth error:", claimsError);
       return new Response(
         JSON.stringify({ error: "Invalid token" }),
@@ -52,7 +50,7 @@ serve(async (req) => {
       );
     }
 
-    const user = claimsData.user;
+    const userId = claimsData.claims.sub;
 
     // Service client for database operations
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
@@ -82,7 +80,7 @@ serve(async (req) => {
       const { data: newConversation, error: convError } = await supabase
         .from("guide_conversations")
         .insert({
-          user_id: user.id,
+          user_id: userId,
           guide_id: guideId,
           title: `Conversa com ${guide.name}`,
         })

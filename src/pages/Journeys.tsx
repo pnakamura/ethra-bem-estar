@@ -8,6 +8,8 @@ import { JourneyDetails } from '@/components/journeys/JourneyDetails';
 import { JourneyDayContent } from '@/components/journeys/JourneyDayContent';
 import { JourneyProgress } from '@/components/journeys/JourneyProgress';
 import { JourneyCompletionCelebration } from '@/components/journeys/JourneyCompletionCelebration';
+import { BreathPacer } from '@/components/BreathPacer';
+import { MeditationPlayer } from '@/components/MeditationPlayer';
 import { useJourneys, useJourneyDays, type Journey } from '@/hooks/useJourneys';
 import { 
   useActiveUserJourney, 
@@ -17,9 +19,12 @@ import {
   useCompleteDay,
   useCompleteJourney,
 } from '@/hooks/useUserJourney';
+import { useBreathingTechniques } from '@/hooks/useBreathingTechniques';
+import { useCreateBreathingSession } from '@/hooks/useBreathingSessions';
 import { useAuth } from '@/contexts/AuthContext';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
+import type { BreathingTechnique } from '@/types/admin';
 
 export default function Journeys() {
   const navigate = useNavigate();
@@ -35,11 +40,18 @@ export default function Journeys() {
   const completeDayMutation = useCompleteDay();
   const completeJourneyMutation = useCompleteJourney();
 
+  const { data: breathingTechniques } = useBreathingTechniques();
+  const createBreathingSession = useCreateBreathingSession();
+
   const [selectedJourney, setSelectedJourney] = useState<Journey | null>(null);
   const [showDetails, setShowDetails] = useState(false);
   const [showDayContent, setShowDayContent] = useState(false);
   const [currentViewingDay, setCurrentViewingDay] = useState<number>(1);
   const [showCelebration, setShowCelebration] = useState(false);
+  const [showBreathPacer, setShowBreathPacer] = useState(false);
+  const [showMeditation, setShowMeditation] = useState(false);
+  const [selectedTechnique, setSelectedTechnique] = useState<BreathingTechnique | null>(null);
+  const [breathingStartTime, setBreathingStartTime] = useState<number>(0);
 
   const { data: selectedJourneyDays } = useJourneyDays(selectedJourney?.id);
 
@@ -94,6 +106,42 @@ export default function Journeys() {
     } catch (error) {
       toast.error('Erro ao salvar progresso');
     }
+  };
+
+  const handleOpenBreathing = (breathingId: string) => {
+    const technique = breathingTechniques?.find(t => t.id === breathingId);
+    if (technique) {
+      setSelectedTechnique(technique);
+      setBreathingStartTime(Date.now());
+      setShowDayContent(false);
+      setShowBreathPacer(true);
+    } else {
+      toast.error('Técnica de respiração não encontrada');
+    }
+  };
+
+  const handleOpenMeditation = (_meditationId: string) => {
+    setShowDayContent(false);
+    setShowMeditation(true);
+  };
+
+  const handleBreathingComplete = () => {
+    if (selectedTechnique) {
+      const durationMs = Date.now() - breathingStartTime;
+      createBreathingSession.mutate({
+        technique_name: selectedTechnique.pattern_name,
+        technique_id: selectedTechnique.id,
+        duration_ms: durationMs,
+        cycles_completed: selectedTechnique.cycles,
+      });
+    }
+    setShowBreathPacer(false);
+    setSelectedTechnique(null);
+  };
+
+  const handleMeditationComplete = () => {
+    setShowMeditation(false);
+    toast.success('Meditação concluída!');
   };
 
   const getJourneyProgress = (journeyId: string) => {
@@ -248,9 +296,48 @@ export default function Journeys() {
           isOpen={showDayContent}
           onClose={() => setShowDayContent(false)}
           onComplete={handleCompleteDay}
+          onOpenBreathing={handleOpenBreathing}
+          onOpenMeditation={handleOpenMeditation}
           isCompleting={completeDayMutation.isPending}
         />
       )}
+
+      {/* Breathing Pacer Overlay */}
+      <AnimatePresence>
+        {showBreathPacer && selectedTechnique && (
+          <BreathPacer
+            pattern={{
+              inhale: selectedTechnique.inhale_ms,
+              holdIn: selectedTechnique.hold_in_ms,
+              exhale: selectedTechnique.exhale_ms,
+              holdOut: selectedTechnique.hold_out_ms,
+              name: selectedTechnique.pattern_name,
+              description: selectedTechnique.description,
+              cycles: selectedTechnique.cycles,
+            }}
+            emotionType="meditate"
+            colorClass={selectedTechnique.color_class || undefined}
+            bgClass={selectedTechnique.bg_class || undefined}
+            backgroundAudioUrl={selectedTechnique.background_audio_url || undefined}
+            explanation={selectedTechnique.explanation || undefined}
+            onClose={() => {
+              setShowBreathPacer(false);
+              setSelectedTechnique(null);
+            }}
+            onComplete={handleBreathingComplete}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Meditation Player Overlay */}
+      <AnimatePresence>
+        {showMeditation && (
+          <MeditationPlayer
+            onClose={() => setShowMeditation(false)}
+            onComplete={handleMeditationComplete}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Celebration Modal */}
       {activeJourney && (

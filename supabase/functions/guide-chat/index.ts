@@ -36,13 +36,27 @@ serve(async (req) => {
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    const token = authHeader.replace("Bearer ", "");
+    const token = authHeader.replace("Bearer ", "").trim();
+    console.log("Auth header present:", Boolean(authHeader), "token length:", token.length);
 
     // Validate user using the provided JWT (do NOT rely on stored session in edge runtime)
     const authClient = createClient(supabaseUrl, supabaseAnonKey);
-    const { data: { user }, error: userError } = await authClient.auth.getUser(token);
+    let user: { id: string } | null = null;
 
-    if (userError || !user) {
+    // Prefer explicit JWT param (avoids session dependency)
+    const { data: userData, error: userError } = await authClient.auth.getUser(token);
+    user = userData?.user ?? null;
+
+    // Fallback: pass Authorization header via client (some runtimes behave differently)
+    if (!user && !userError) {
+      const authClientHeader = createClient(supabaseUrl, supabaseAnonKey, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const { data: userData2 } = await authClientHeader.auth.getUser();
+      user = userData2?.user ?? null;
+    }
+
+    if (!user) {
       console.error("Auth error:", userError);
       return new Response(
         JSON.stringify({ error: "Invalid token" }),

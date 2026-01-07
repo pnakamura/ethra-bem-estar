@@ -1,23 +1,13 @@
 import { motion } from 'framer-motion';
-import { User, Settings, LogOut, Bell, Moon, ChevronRight, Shield, Sparkles, Sun } from 'lucide-react';
+import { User, Settings, LogOut, ChevronRight, Sparkles } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
 import { BottomNavigation } from '@/components/BottomNavigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { useEffect, useState } from 'react';
 
 export default function Profile() {
   const navigate = useNavigate();
   const { user, usuario, signOut } = useAuth();
-  const { resolvedTheme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-  
-  // Avoid hydration mismatch
-  useEffect(() => {
-    setMounted(true);
-  }, []);
   
   const firstName = usuario?.nome_completo?.split(' ')[0] || 'Usuário';
   const email = usuario?.email || user?.email || '';
@@ -26,8 +16,6 @@ export default function Profile() {
     await signOut();
     navigate('/auth');
   };
-
-  const isDarkMode = mounted && resolvedTheme === 'dark';
 
   return (
     <div className="min-h-[100dvh] flex flex-col pb-28">
@@ -65,7 +53,6 @@ export default function Profile() {
               </span>
             )}
           </div>
-          <ChevronRight className="w-5 h-5 text-muted-foreground" />
         </motion.div>
 
         {/* Admin Link for socios */}
@@ -89,60 +76,18 @@ export default function Profile() {
           </motion.div>
         )}
 
-        {/* Menu Items */}
+        {/* Settings Link */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="card-elevated divide-y divide-border/50 overflow-hidden"
         >
-          {/* Notifications */}
-          <div className="flex items-center gap-3 p-4 hover:bg-muted/30 transition-colors cursor-pointer">
-            <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center">
-              <Bell className="w-4 h-4 text-muted-foreground" />
-            </div>
-            <span className="flex-1 text-sm font-medium text-foreground">
-              Notificações
-            </span>
-            <Switch />
-          </div>
-
-          {/* Dark Mode Toggle */}
-          <div className="flex items-center gap-3 p-4 hover:bg-muted/30 transition-colors cursor-pointer">
-            <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center">
-              {isDarkMode ? (
-                <Moon className="w-4 h-4 text-muted-foreground" />
-              ) : (
-                <Sun className="w-4 h-4 text-muted-foreground" />
-              )}
-            </div>
-            <span className="flex-1 text-sm font-medium text-foreground">
-              Modo Escuro
-            </span>
-            <Switch
-              checked={isDarkMode}
-              onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
-            />
-          </div>
-
-          {/* Privacy */}
-          <div className="flex items-center gap-3 p-4 hover:bg-muted/30 transition-colors cursor-pointer">
-            <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center">
-              <Shield className="w-4 h-4 text-muted-foreground" />
-            </div>
-            <span className="flex-1 text-sm font-medium text-foreground">
-              Privacidade
-            </span>
-            <ChevronRight className="w-4 h-4 text-muted-foreground" />
-          </div>
-
-          {/* Settings Link */}
           <Link to="/settings" className="block">
-            <div className="flex items-center gap-3 p-4 hover:bg-muted/30 transition-colors cursor-pointer">
-              <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center">
-                <Settings className="w-4 h-4 text-muted-foreground" />
+            <div className="card-elevated p-4 flex items-center gap-3 hover:bg-muted/30 transition-colors">
+              <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
+                <Settings className="w-5 h-5 text-muted-foreground" />
               </div>
-              <span className="flex-1 text-sm font-medium text-foreground">
+              <span className="flex-1 text-sm font-semibold text-foreground">
                 Configurações
               </span>
               <ChevronRight className="w-4 h-4 text-muted-foreground" />

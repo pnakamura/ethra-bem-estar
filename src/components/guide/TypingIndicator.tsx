@@ -12,10 +12,10 @@ export function TypingIndicator({
 }: TypingIndicatorProps) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12, filter: 'blur(6px)', scale: 0.95 }}
+      initial={{ opacity: 0, y: 16, filter: 'blur(8px)', scale: 0.92 }}
       animate={{ opacity: 1, y: 0, filter: 'blur(0px)', scale: 1 }}
-      exit={{ opacity: 0, y: -8, filter: 'blur(6px)', scale: 0.96 }}
-      transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+      exit={{ opacity: 0, y: -10, filter: 'blur(8px)', scale: 0.94 }}
+      transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
       className="flex gap-3 max-w-[85%] mr-auto"
     >
       <GuideAvatar emoji={guideEmoji} state="thinking" />

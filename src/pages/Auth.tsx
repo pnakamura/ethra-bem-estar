@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, ArrowLeft } from 'lucide-react';
 import { z } from 'zod';
+import { PWAInstallPrompt } from '@/components/PWAInstallPrompt';
 
 const emailSchema = z.string().email('Email inválido');
 const passwordSchema = z.string().min(6, 'Senha deve ter pelo menos 6 caracteres');
@@ -130,6 +131,9 @@ const Auth: React.FC = () => {
           </div>
           <p className="text-muted-foreground">Meditação & Bem-Estar</p>
         </div>
+
+        {/* PWA Install Prompt */}
+        <PWAInstallPrompt />
 
         <Card className="border-border/50 shadow-lg backdrop-blur-sm bg-card/80">
           {mode === 'login' ? (

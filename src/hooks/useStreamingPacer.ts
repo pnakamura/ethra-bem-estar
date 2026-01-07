@@ -20,41 +20,44 @@ export function useStreamingPacer() {
   const totalCharsRef = useRef(0);
 
   const getDelay = (char: string, displayedLength: number): number => {
-    // Progressive acceleration after 400 chars to avoid being too slow
-    const accelerationFactor = displayedLength > 400 
-      ? Math.max(0.4, 1 - (displayedLength - 400) / 1000)
+    // Slower start - first 150 chars are slower for more human feel
+    const startSlowdown = displayedLength < 150 ? 1.5 : 1;
+    
+    // Progressive acceleration after 500 chars to avoid being too slow
+    const accelerationFactor = displayedLength > 500 
+      ? Math.max(0.35, 1 - (displayedLength - 500) / 800)
       : 1;
 
     let baseDelay = 0;
 
     // End of sentence - longer pause
     if (char === '.' || char === '!' || char === '?') {
-      baseDelay = 140 + Math.random() * 120; // 140-260ms
+      baseDelay = 180 + Math.random() * 180; // 180-360ms
     }
     // Paragraph break - longest pause
     else if (char === '\n') {
       // Check if it's a double newline (paragraph)
       const recentText = displayedRef.current.slice(-3);
       if (recentText.endsWith('\n')) {
-        baseDelay = 350 + Math.random() * 200; // 350-550ms for paragraph
+        baseDelay = 450 + Math.random() * 350; // 450-800ms for paragraph
       } else {
-        baseDelay = 180 + Math.random() * 100; // 180-280ms for line break
+        baseDelay = 220 + Math.random() * 150; // 220-370ms for line break
       }
     }
     // Comma, semicolon - medium pause
     else if (char === ',' || char === ';' || char === ':') {
-      baseDelay = 60 + Math.random() * 50; // 60-110ms
+      baseDelay = 80 + Math.random() * 70; // 80-150ms
     }
     // Ellipsis indicator
     else if (char === '…' || (char === '.' && displayedRef.current.endsWith('..'))) {
-      baseDelay = 200 + Math.random() * 150; // 200-350ms for "..."
+      baseDelay = 280 + Math.random() * 200; // 280-480ms for "..."
     }
-    // Regular character - fast
+    // Regular character - natural typing speed
     else {
-      baseDelay = 8 + Math.random() * 12; // 8-20ms
+      baseDelay = 12 + Math.random() * 18; // 12-30ms
     }
 
-    return baseDelay * accelerationFactor;
+    return baseDelay * accelerationFactor * startSlowdown;
   };
 
   const processBuffer = useCallback(async () => {
@@ -65,15 +68,18 @@ export function useStreamingPacer() {
       const nextIndex = displayedRef.current.length;
       const nextChar = bufferRef.current[nextIndex];
       
-      // Process in small chunks (1-4 chars) for efficiency, but respect punctuation
+      // Process in small chunks - smaller at start for more deliberate feel
       let chunkSize = 1;
       if (nextChar && !/[.!?,;:\n…]/.test(nextChar)) {
         // Look ahead for non-punctuation chars
         const remaining = bufferRef.current.slice(nextIndex);
         const punctuationMatch = remaining.match(/[.!?,;:\n…]/);
         const charsUntilPunctuation = punctuationMatch?.index || remaining.length;
+        
+        // Smaller chunks at the start (1-2), larger later (1-5)
+        const maxChunk = displayedRef.current.length < 100 ? 2 : 5;
         chunkSize = Math.min(
-          Math.floor(1 + Math.random() * 3), // 1-4 chars
+          Math.floor(1 + Math.random() * (maxChunk - 1)),
           charsUntilPunctuation
         );
       }

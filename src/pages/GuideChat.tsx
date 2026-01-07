@@ -38,8 +38,8 @@ export default function GuideChat() {
 
   // Callback when stream starts - delay before triggering transition phase
   const handleStreamStart = useCallback(() => {
-    // Keep indicator visible for 400-600ms more before starting exit
-    const transitionDelay = 400 + Math.random() * 200;
+    // Keep indicator visible for 600-1000ms more before starting exit
+    const transitionDelay = 600 + Math.random() * 400;
     setTimeout(() => {
       setPhase('transitioning');
     }, transitionDelay);
@@ -98,14 +98,21 @@ export default function GuideChat() {
   // Reading phase -> Thinking phase
   useEffect(() => {
     if (phase === 'reading') {
-      // Reading delay: 1200-2000ms
-      const readingDelay = 1200 + Math.random() * 800;
+      // Reading delay based on user message length (1600-3500ms)
+      const lastUserMessage = messages.filter(m => m.role === 'user').pop();
+      const userMessageLength = lastUserMessage?.content.length || 0;
+      const baseReading = 1600; // 1.6s minimum
+      const perCharReading = 12; // 12ms per character
+      const readingDelay = Math.min(
+        baseReading + userMessageLength * perCharReading + Math.random() * 600,
+        3500 // Max 3.5s reading
+      );
       const timeout = setTimeout(() => {
         setPhase('thinking');
       }, readingDelay);
       return () => clearTimeout(timeout);
     }
-  }, [phase]);
+  }, [phase, messages]);
 
   // Thinking phase - rotate phrases
   useEffect(() => {
@@ -133,12 +140,12 @@ export default function GuideChat() {
         phraseIntervalRef.current = null;
       }
       
-      // Safety timeout - if transition takes too long, force reveal
+      // Safety timeout - if transition takes too long, force reveal (2s max)
       const safetyTimeout = setTimeout(() => {
         console.warn('Safety timeout: forcing assistant reveal');
         setCanRevealAssistant(true);
         setPhase('responding');
-      }, 1500);
+      }, 2000);
       
       return () => clearTimeout(safetyTimeout);
     }
@@ -151,12 +158,15 @@ export default function GuideChat() {
     }
   }, [isSending, isStreaming, phase]);
 
-  // Handle typing indicator exit complete - immediately reveal assistant
+  // Handle typing indicator exit complete - add small buffer before reveal
   const handleTypingIndicatorExitComplete = useCallback(() => {
-    setCanRevealAssistant(true);
-    if (phase === 'transitioning') {
-      setPhase('responding');
-    }
+    // Small additional delay after exit animation completes for smooth transition
+    setTimeout(() => {
+      setCanRevealAssistant(true);
+      if (phase === 'transitioning') {
+        setPhase('responding');
+      }
+    }, 100); // 100ms buffer
   }, [phase]);
 
   const handleSend = () => {
@@ -347,8 +357,8 @@ export default function GuideChat() {
             ))}
           </AnimatePresence>
 
-          {/* Typing indicator with synchronized exit */}
-          <AnimatePresence onExitComplete={handleTypingIndicatorExitComplete}>
+          {/* Typing indicator with synchronized exit - mode="wait" ensures exit completes before new element */}
+          <AnimatePresence mode="wait" onExitComplete={handleTypingIndicatorExitComplete}>
             {showTypingIndicator && (
               <TypingIndicator 
                 guideEmoji={guide?.avatar_emoji} 

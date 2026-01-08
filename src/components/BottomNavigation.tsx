@@ -46,20 +46,20 @@ export function BottomNavigation() {
                   isActive && 'nav-item-active'
                 )}
               >
-                {/* Active glow */}
+                {/* Active glow - Enhanced neon */}
                 {isActive && (
                   <motion.div
                     layoutId="nav-glow"
-                    className="absolute inset-0 bg-primary/15 rounded-2xl dark:bg-primary/20 dark:nav-glow-active"
+                    className="absolute inset-0 bg-primary/15 rounded-2xl dark:bg-primary/25 dark:glow-neon-teal"
                     transition={{ type: 'spring', bounce: 0.15, duration: 0.5 }}
                   />
                 )}
                 
-                {/* Active indicator line */}
+                {/* Active indicator line - Neon glow */}
                 {isActive && (
                   <motion.div
                     layoutId="nav-indicator"
-                    className="absolute -top-1 left-1/2 -translate-x-1/2 w-8 h-1 rounded-full bg-primary dark:animate-glow-pulse"
+                    className="absolute -top-1 left-1/2 -translate-x-1/2 w-8 h-1 rounded-full bg-primary dark:animate-glow-pulse dark:shadow-[0_0_12px_hsl(168_80%_55%/0.8)]"
                     transition={{ type: 'spring', bounce: 0.15, duration: 0.5 }}
                   />
                 )}
@@ -68,7 +68,7 @@ export function BottomNavigation() {
                   className={cn(
                     'w-7 h-7 transition-all duration-200 relative z-10',
                     isActive 
-                      ? 'text-primary dark:icon-glow' 
+                      ? 'text-primary dark:icon-neon' 
                       : 'text-muted-foreground'
                   )}
                   strokeWidth={isActive ? 2.5 : 1.75}
@@ -76,7 +76,7 @@ export function BottomNavigation() {
                 <span
                   className={cn(
                     'text-sm font-semibold transition-colors relative z-10 mt-0.5',
-                    isActive ? 'text-primary dark:text-glow' : 'text-muted-foreground'
+                    isActive ? 'text-primary dark:text-glow dark:animate-text-glow' : 'text-muted-foreground'
                   )}
                 >
                   {item.label}

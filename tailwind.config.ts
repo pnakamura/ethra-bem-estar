@@ -189,11 +189,27 @@ export default {
         },
         "border-glow-pulse": {
           "0%, 100%": { 
-            boxShadow: "0 0 8px hsl(168 60% 50% / 0.3)",
+            boxShadow: "0 0 12px hsl(168 80% 55% / 0.4)",
           },
           "50%": { 
-            boxShadow: "0 0 18px hsl(168 60% 50% / 0.5)",
+            boxShadow: "0 0 25px hsl(168 80% 55% / 0.65)",
           }
+        },
+        "glow-pulse-intense": {
+          "0%, 100%": { 
+            boxShadow: "0 0 35px hsl(168 80% 55% / 0.5)",
+          },
+          "50%": { 
+            boxShadow: "0 0 70px hsl(168 80% 55% / 0.8)",
+          }
+        },
+        "neon-flicker": {
+          "0%, 100%": { opacity: "1" },
+          "48%": { opacity: "1" },
+          "50%": { opacity: "0.85" },
+          "52%": { opacity: "1" },
+          "75%": { opacity: "0.92" },
+          "77%": { opacity: "1" }
         },
       },
       animation: {
@@ -214,6 +230,8 @@ export default {
         "scale-bounce": "scale-bounce 0.4s ease-out",
         "glow-pulse-teal": "glow-pulse-teal 2.5s ease-in-out infinite",
         "border-glow-pulse": "border-glow-pulse 2s ease-in-out infinite",
+        "glow-pulse-intense": "glow-pulse-intense 2.5s ease-in-out infinite",
+        "neon-flicker": "neon-flicker 4s ease-in-out infinite",
       },
       backdropBlur: {
         xs: '2px',

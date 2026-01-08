@@ -107,9 +107,11 @@ export default function Home() {
     <div className="min-h-[100dvh] flex flex-col pb-32">
       {/* Decorative background elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-32 -right-32 w-96 h-96 bg-primary/8 rounded-full blur-3xl" />
-        <div className="absolute top-1/3 -left-32 w-80 h-80 bg-secondary/8 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-0 w-64 h-64 bg-accent/5 rounded-full blur-3xl" />
+        <div className="absolute -top-32 -right-32 w-96 h-96 bg-primary/8 dark:bg-[hsl(270_85%_65%/0.1)] rounded-full blur-3xl dark:animate-pulse" />
+        <div className="absolute top-1/3 -left-32 w-80 h-80 bg-secondary/8 dark:bg-[hsl(168_80%_55%/0.08)] rounded-full blur-3xl dark:animate-float-gentle" />
+        <div className="absolute bottom-1/4 right-0 w-64 h-64 bg-accent/5 dark:bg-[hsl(320_90%_62%/0.06)] rounded-full blur-3xl" />
+        {/* Extra neon orbs for dark mode */}
+        <div className="hidden dark:block absolute top-1/2 left-1/4 w-72 h-72 bg-[hsl(185_100%_58%/0.05)] rounded-full blur-3xl animate-float-subtle" />
       </div>
 
       {/* Header - improved for mobile */}
@@ -133,7 +135,7 @@ export default function Home() {
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.1 }}
-                className="text-xl font-bold text-foreground"
+                className="text-xl font-bold text-foreground dark:text-glow"
               >
                 {greeting}{firstName ? `, ${firstName}` : ''}!
               </motion.p>
@@ -283,9 +285,9 @@ export default function Home() {
           transition={{ delay: 0.5, type: 'spring' }}
           whileTap={{ scale: 0.9 }}
           onClick={handleMoodCheck}
-          className="fixed bottom-28 right-5 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-xl shadow-primary/25 flex items-center justify-center z-40 active:shadow-lg"
+          className="fixed bottom-28 right-5 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-xl shadow-primary/25 dark:glow-neon-teal dark:glow-breathe flex items-center justify-center z-40 active:shadow-lg"
         >
-          <Plus className="w-6 h-6" />
+          <Plus className="w-6 h-6 dark:icon-neon" />
         </motion.button>
       </main>
 

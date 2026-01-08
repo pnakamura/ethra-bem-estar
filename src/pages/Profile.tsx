@@ -25,7 +25,7 @@ export default function Profile() {
         animate={{ y: 0, opacity: 1 }}
         className="pt-8 px-6 pb-6"
       >
-        <h1 className="text-2xl font-bold text-foreground">Perfil</h1>
+        <h1 className="text-2xl font-bold text-foreground dark:text-glow dark:animate-text-glow">Perfil</h1>
       </motion.header>
 
       {/* Main Content */}
@@ -34,13 +34,13 @@ export default function Profile() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="card-elevated p-5 flex items-center gap-4"
+          className="card-elevated p-5 flex items-center gap-4 dark:card-neon"
         >
           <div className="relative">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-              <User className="w-7 h-7 text-primary" />
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 dark:from-primary/30 dark:to-primary/10 flex items-center justify-center dark:animate-glow-pulse-purple">
+              <User className="w-7 h-7 text-primary dark:icon-glow" />
             </div>
-            <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+            <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-primary flex items-center justify-center dark:glow-neon-teal">
               <Sparkles className="w-3 h-3 text-primary-foreground" />
             </div>
           </div>

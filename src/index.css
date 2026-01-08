@@ -108,112 +108,130 @@
   }
 
   .dark {
-    --background: 222 25% 8%;
+    /* === NEON DARK MODE PALETTE === */
+    --background: 260 20% 6%;
     --foreground: 220 15% 92%;
 
-    --card: 222 20% 11%;
+    --card: 260 18% 10%;
     --card-foreground: 220 15% 92%;
 
-    --popover: 222 20% 11%;
+    --popover: 260 18% 10%;
     --popover-foreground: 220 15% 92%;
 
-    --primary: 168 60% 50%;
-    --primary-foreground: 222 25% 8%;
+    --primary: 168 70% 52%;
+    --primary-foreground: 260 20% 6%;
 
-    --secondary: 12 75% 58%;
-    --secondary-foreground: 222 25% 8%;
+    --secondary: 12 80% 60%;
+    --secondary-foreground: 260 20% 6%;
 
-    --accent: 210 50% 45%;
+    --accent: 210 55% 50%;
     --accent-foreground: 0 0% 100%;
 
-    --muted: 222 15% 16%;
-    --muted-foreground: 220 12% 60%;
+    --muted: 260 15% 14%;
+    --muted-foreground: 220 12% 55%;
 
-    --destructive: 0 65% 55%;
+    --destructive: 0 70% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 222 15% 18%;
-    --input: 222 15% 18%;
-    --ring: 168 60% 50%;
+    --border: 260 15% 16%;
+    --input: 260 15% 16%;
+    --ring: 168 70% 52%;
 
-    --calm: 168 60% 50%;
-    --calm-light: 168 40% 15%;
-    --energy: 35 90% 55%;
-    --energy-light: 35 50% 15%;
-    --grounding: 210 50% 45%;
-    --grounding-light: 210 30% 15%;
-    --panic: 280 60% 58%;
-    --panic-light: 280 40% 15%;
-    --meditate: 250 55% 58%;
-    --meditate-light: 250 35% 15%;
-    --nutrition: 28 80% 55%;
-    --nutrition-light: 28 50% 15%;
-    --water: 200 75% 55%;
-    --water-light: 200 45% 15%;
+    /* Emotion colors - more vibrant for neon */
+    --calm: 168 70% 52%;
+    --calm-light: 168 45% 14%;
+    --energy: 35 95% 58%;
+    --energy-light: 35 55% 14%;
+    --grounding: 210 55% 50%;
+    --grounding-light: 210 35% 14%;
+    --panic: 280 70% 62%;
+    --panic-light: 280 45% 14%;
+    --meditate: 250 65% 62%;
+    --meditate-light: 250 40% 14%;
+    --nutrition: 28 85% 58%;
+    --nutrition-light: 28 55% 14%;
+    --water: 200 80% 58%;
+    --water-light: 200 50% 14%;
 
-    --joy: 48 90% 55%;
-    --trust: 145 45% 48%;
-    --fear: 155 50% 38%;
-    --surprise: 185 65% 52%;
-    --sadness: 225 60% 58%;
-    --disgust: 280 45% 58%;
-    --anger: 15 80% 55%;
-    --anticipation: 28 85% 55%;
+    /* Plutchik - enhanced saturation */
+    --joy: 48 95% 58%;
+    --trust: 145 55% 52%;
+    --fear: 155 55% 42%;
+    --surprise: 185 75% 55%;
+    --sadness: 225 70% 62%;
+    --disgust: 280 55% 62%;
+    --anger: 15 85% 58%;
+    --anticipation: 28 90% 58%;
 
-    /* Onboarding Purple Theme (Dark) */
-    --onboarding-primary: 270 60% 60%;
-    --onboarding-primary-light: 270 40% 15%;
-    --onboarding-secondary: 285 55% 62%;
-    --onboarding-accent: 255 65% 68%;
-    --onboarding-glow: 0 0 50px hsl(270 60% 60% / 0.25);
-    --gradient-onboarding: linear-gradient(135deg, hsl(270 60% 60%) 0%, hsl(285 55% 62%) 50%, hsl(255 65% 68%) 100%);
+    /* Onboarding Purple Theme (Dark) - intensified */
+    --onboarding-primary: 270 70% 62%;
+    --onboarding-primary-light: 270 45% 14%;
+    --onboarding-secondary: 285 65% 65%;
+    --onboarding-accent: 255 75% 70%;
+    --onboarding-glow: 0 0 60px hsl(270 70% 62% / 0.35);
+    --gradient-onboarding: linear-gradient(135deg, hsl(270 70% 62%) 0%, hsl(285 65% 65%) 50%, hsl(255 75% 70%) 100%);
 
-    --gradient-primary: linear-gradient(135deg, hsl(168 60% 50%) 0%, hsl(185 55% 55%) 100%);
-    --gradient-secondary: linear-gradient(135deg, hsl(12 75% 58%) 0%, hsl(28 80% 62%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(210 50% 45%) 0%, hsl(225 45% 52%) 100%);
-    --gradient-background: linear-gradient(180deg, hsl(222 25% 8%) 0%, hsl(222 20% 10%) 50%, hsl(210 25% 12%) 100%);
-    --gradient-card: linear-gradient(145deg, hsl(222 20% 12%) 0%, hsl(222 18% 10%) 100%);
-    --gradient-glow: radial-gradient(ellipse at center, hsl(168 60% 50% / 0.1) 0%, transparent 70%);
+    /* Gradients - with purple tint for neon ambiance */
+    --gradient-primary: linear-gradient(135deg, hsl(168 70% 52%) 0%, hsl(185 65% 58%) 100%);
+    --gradient-secondary: linear-gradient(135deg, hsl(12 80% 60%) 0%, hsl(28 85% 65%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(210 55% 50%) 0%, hsl(225 50% 58%) 100%);
+    --gradient-background: linear-gradient(180deg, hsl(260 20% 6%) 0%, hsl(270 18% 8%) 50%, hsl(250 20% 7%) 100%);
+    --gradient-card: linear-gradient(145deg, hsl(260 18% 11%) 0%, hsl(260 16% 9%) 100%);
+    --gradient-glow: radial-gradient(ellipse at center, hsl(168 70% 52% / 0.12) 0%, transparent 70%);
 
-    --shadow-xs: 0 1px 2px hsl(0 0% 0% / 0.2);
-    --shadow-sm: 0 2px 8px hsl(0 0% 0% / 0.25);
-    --shadow-md: 0 4px 16px hsl(0 0% 0% / 0.3);
-    --shadow-lg: 0 8px 32px hsl(0 0% 0% / 0.35);
-    --shadow-xl: 0 16px 48px hsl(0 0% 0% / 0.4);
-    --shadow-glow: 0 0 50px hsl(168 60% 50% / 0.15);
-    --shadow-glow-strong: 0 0 80px hsl(168 60% 50% / 0.25);
+    /* Shadows - deeper for neon contrast */
+    --shadow-xs: 0 1px 2px hsl(0 0% 0% / 0.25);
+    --shadow-sm: 0 2px 8px hsl(0 0% 0% / 0.3);
+    --shadow-md: 0 4px 16px hsl(0 0% 0% / 0.35);
+    --shadow-lg: 0 8px 32px hsl(0 0% 0% / 0.4);
+    --shadow-xl: 0 16px 48px hsl(0 0% 0% / 0.45);
+    --shadow-glow: 0 0 60px hsl(168 70% 52% / 0.2);
+    --shadow-glow-strong: 0 0 100px hsl(168 70% 52% / 0.35);
 
-    --glass-bg: hsl(222 20% 12% / 0.8);
-    --glass-border: hsl(222 15% 20% / 0.5);
-    --glass-blur: 20px;
+    /* Glass - darker for neon pop */
+    --glass-bg: hsl(260 18% 10% / 0.85);
+    --glass-border: hsl(260 15% 18% / 0.6);
+    --glass-blur: 24px;
 
-    --sidebar-background: 222 20% 10%;
+    /* Sidebar */
+    --sidebar-background: 260 18% 8%;
     --sidebar-foreground: 220 15% 90%;
-    --sidebar-primary: 168 60% 50%;
-    --sidebar-primary-foreground: 222 25% 8%;
-    --sidebar-accent: 222 15% 15%;
+    --sidebar-primary: 168 70% 52%;
+    --sidebar-primary-foreground: 260 20% 6%;
+    --sidebar-accent: 260 15% 13%;
     --sidebar-accent-foreground: 220 15% 90%;
-    --sidebar-border: 222 15% 16%;
-    --sidebar-ring: 168 60% 50%;
+    --sidebar-border: 260 15% 14%;
+    --sidebar-ring: 168 70% 52%;
 
-    /* === GLOW EFFECTS === */
-    --glow-primary: 0 0 20px hsl(168 60% 50% / 0.4);
-    --glow-primary-strong: 0 0 40px hsl(168 60% 50% / 0.6);
-    --glow-secondary: 0 0 20px hsl(12 75% 58% / 0.4);
-    --glow-accent: 0 0 20px hsl(210 50% 50% / 0.4);
-    --glow-purple: 0 0 20px hsl(270 60% 60% / 0.4);
-    --glow-joy: 0 0 15px hsl(48 90% 55% / 0.5);
-    --glow-trust: 0 0 15px hsl(145 45% 48% / 0.5);
-    --glow-calm: 0 0 15px hsl(168 60% 50% / 0.5);
+    /* === NEON PALETTE - VIBRANT === */
+    --neon-teal: 168 80% 55%;
+    --neon-purple: 270 85% 65%;
+    --neon-magenta: 320 90% 62%;
+    --neon-cyan: 185 100% 58%;
+    --neon-orange: 28 100% 62%;
+    --neon-green: 145 90% 52%;
+
+    /* === INTENSIFIED GLOW EFFECTS === */
+    --glow-primary: 0 0 35px hsl(168 80% 55% / 0.5);
+    --glow-primary-strong: 0 0 70px hsl(168 80% 55% / 0.7);
+    --glow-secondary: 0 0 35px hsl(12 80% 60% / 0.5);
+    --glow-accent: 0 0 35px hsl(210 55% 55% / 0.5);
+    --glow-purple: 0 0 40px hsl(270 85% 65% / 0.6);
+    --glow-magenta: 0 0 40px hsl(320 90% 62% / 0.5);
+    --glow-cyan: 0 0 40px hsl(185 100% 58% / 0.5);
+    --glow-joy: 0 0 25px hsl(48 95% 58% / 0.6);
+    --glow-trust: 0 0 25px hsl(145 55% 52% / 0.6);
+    --glow-calm: 0 0 25px hsl(168 70% 52% / 0.6);
     
-    /* Text Glow */
-    --text-glow-primary: 0 0 12px hsl(168 60% 50% / 0.6);
-    --text-glow-secondary: 0 0 12px hsl(12 75% 58% / 0.5);
-    --text-glow-accent: 0 0 12px hsl(210 50% 50% / 0.5);
+    /* Text Glow - stronger */
+    --text-glow-primary: 0 0 20px hsl(168 80% 55% / 0.8);
+    --text-glow-secondary: 0 0 18px hsl(12 80% 60% / 0.7);
+    --text-glow-accent: 0 0 18px hsl(210 55% 55% / 0.7);
+    --text-glow-purple: 0 0 20px hsl(270 85% 65% / 0.75);
     
-    /* Border Glow */
-    --border-glow: 0 0 10px hsl(168 60% 50% / 0.3);
-    --border-glow-hover: 0 0 16px hsl(168 60% 50% / 0.5);
+    /* Border Glow - enhanced */
+    --border-glow: 0 0 15px hsl(168 80% 55% / 0.4);
+    --border-glow-hover: 0 0 25px hsl(168 80% 55% / 0.6);
   }
 }
 
@@ -450,9 +468,9 @@
     100% { background-position: -200% 0; }
   }
 
-  /* === DARK MODE GLOW EFFECTS === */
+  /* === ENHANCED NEON GLOW EFFECTS === */
   
-  /* Text Glow */
+  /* Text Glow - Multi-color */
   .dark .text-glow {
     text-shadow: var(--text-glow-primary);
   }
@@ -461,91 +479,246 @@
     text-shadow: var(--text-glow-secondary);
   }
   
-  .dark .text-glow-strong {
-    text-shadow: 0 0 20px hsl(168 60% 50% / 0.8);
+  .dark .text-glow-purple {
+    text-shadow: var(--text-glow-purple);
   }
   
-  /* Border Glow */
+  .dark .text-glow-strong {
+    text-shadow: 
+      0 0 10px hsl(168 80% 55% / 0.9),
+      0 0 25px hsl(168 80% 55% / 0.7),
+      0 0 45px hsl(168 80% 55% / 0.5);
+  }
+  
+  /* Neon Text Effect */
+  .dark .text-neon {
+    text-shadow: 
+      0 0 8px currentColor,
+      0 0 20px currentColor,
+      0 0 40px currentColor;
+  }
+  
+  .dark .text-neon-strong {
+    text-shadow: 
+      0 0 5px hsl(168 80% 55% / 1),
+      0 0 15px hsl(168 80% 55% / 0.9),
+      0 0 35px hsl(168 80% 55% / 0.7),
+      0 0 60px hsl(168 80% 55% / 0.5);
+  }
+  
+  .dark .text-neon-purple {
+    text-shadow: 
+      0 0 5px hsl(270 85% 65% / 1),
+      0 0 15px hsl(270 85% 65% / 0.9),
+      0 0 35px hsl(270 85% 65% / 0.7),
+      0 0 60px hsl(270 85% 65% / 0.5);
+  }
+  
+  /* Border Glow - Enhanced */
   .dark .border-glow {
     box-shadow: var(--border-glow);
-    border-color: hsl(168 60% 50% / 0.25);
+    border-color: hsl(168 80% 55% / 0.35);
   }
   
   .dark .border-glow:hover {
     box-shadow: var(--border-glow-hover);
-    border-color: hsl(168 60% 50% / 0.4);
+    border-color: hsl(168 80% 55% / 0.55);
   }
   
-  /* Card Glow */
+  /* Card Neon Effect */
+  .dark .card-neon {
+    border: 1px solid hsl(168 80% 55% / 0.25);
+    box-shadow: 
+      inset 0 0 25px hsl(168 80% 55% / 0.05),
+      0 0 25px hsl(168 80% 55% / 0.15);
+    transition: all 0.3s ease;
+  }
+  
+  .dark .card-neon:hover {
+    border-color: hsl(168 80% 55% / 0.45);
+    box-shadow: 
+      inset 0 0 35px hsl(168 80% 55% / 0.1),
+      0 0 45px hsl(168 80% 55% / 0.3);
+  }
+  
+  .dark .card-neon-purple {
+    border: 1px solid hsl(270 85% 65% / 0.25);
+    box-shadow: 
+      inset 0 0 25px hsl(270 85% 65% / 0.05),
+      0 0 25px hsl(270 85% 65% / 0.15);
+    transition: all 0.3s ease;
+  }
+  
+  .dark .card-neon-purple:hover {
+    border-color: hsl(270 85% 65% / 0.45);
+    box-shadow: 
+      inset 0 0 35px hsl(270 85% 65% / 0.1),
+      0 0 45px hsl(270 85% 65% / 0.3);
+  }
+  
+  /* Multi-color Neon Glows */
+  .dark .glow-neon-teal {
+    box-shadow: 
+      0 0 40px hsl(168 80% 55% / 0.6),
+      0 0 80px hsl(168 80% 55% / 0.35);
+  }
+  
+  .dark .glow-neon-purple {
+    box-shadow: 
+      0 0 40px hsl(270 85% 65% / 0.6),
+      0 0 80px hsl(270 85% 65% / 0.35);
+  }
+  
+  .dark .glow-neon-magenta {
+    box-shadow: 
+      0 0 40px hsl(320 90% 62% / 0.55),
+      0 0 80px hsl(320 90% 62% / 0.3);
+  }
+  
+  .dark .glow-neon-cyan {
+    box-shadow: 
+      0 0 40px hsl(185 100% 58% / 0.55),
+      0 0 80px hsl(185 100% 58% / 0.3);
+  }
+  
+  /* Animated Glow Breathing */
+  .dark .glow-breathe {
+    animation: glow-breathe-neon 3s ease-in-out infinite;
+  }
+  
+  @keyframes glow-breathe-neon {
+    0%, 100% {
+      box-shadow: 0 0 30px hsl(168 80% 55% / 0.45);
+      filter: brightness(1);
+    }
+    50% {
+      box-shadow: 0 0 60px hsl(168 80% 55% / 0.75);
+      filter: brightness(1.15);
+    }
+  }
+  
+  /* Rainbow Glow - Color Shift */
+  .dark .glow-rainbow {
+    animation: glow-rainbow 8s ease-in-out infinite;
+  }
+  
+  @keyframes glow-rainbow {
+    0%, 100% { box-shadow: 0 0 45px hsl(168 80% 55% / 0.55); }
+    33% { box-shadow: 0 0 45px hsl(270 85% 65% / 0.55); }
+    66% { box-shadow: 0 0 45px hsl(320 90% 62% / 0.55); }
+  }
+  
+  /* Icon Neon - Enhanced */
+  .dark .icon-glow {
+    filter: drop-shadow(0 0 10px hsl(168 80% 55% / 0.7));
+  }
+  
+  .dark .icon-glow-secondary {
+    filter: drop-shadow(0 0 10px hsl(12 80% 60% / 0.7));
+  }
+  
+  .dark .icon-neon {
+    filter: 
+      drop-shadow(0 0 8px currentColor)
+      drop-shadow(0 0 20px currentColor);
+  }
+  
+  .dark .icon-neon-strong {
+    filter: 
+      drop-shadow(0 0 6px currentColor)
+      drop-shadow(0 0 15px currentColor)
+      drop-shadow(0 0 30px currentColor);
+  }
+  
+  /* Card Glow - Improved */
   .dark .card-glow {
     transition: box-shadow 0.3s ease, border-color 0.3s ease;
   }
   
   .dark .card-glow:hover {
     box-shadow: var(--glow-primary);
-    border-color: hsl(168 60% 50% / 0.3);
+    border-color: hsl(168 80% 55% / 0.4);
   }
   
-  /* Icon Glow */
-  .dark .icon-glow {
-    filter: drop-shadow(0 0 6px hsl(168 60% 50% / 0.6));
-  }
-  
-  .dark .icon-glow-secondary {
-    filter: drop-shadow(0 0 6px hsl(12 75% 58% / 0.6));
-  }
-  
-  /* Button Glow Primary */
+  /* Button Glow Primary - Stronger */
   .dark .btn-glow-primary {
-    box-shadow: 0 0 18px hsl(168 60% 50% / 0.35);
+    box-shadow: 0 0 28px hsl(168 80% 55% / 0.45);
   }
   
   .dark .btn-glow-primary:hover {
-    box-shadow: 0 0 28px hsl(168 60% 50% / 0.55);
+    box-shadow: 0 0 45px hsl(168 80% 55% / 0.65);
   }
   
-  /* Navigation Glow */
+  /* Navigation Glow - Intensified */
   .dark .nav-glow-active {
-    box-shadow: 0 0 12px hsl(168 60% 50% / 0.4);
+    box-shadow: 0 0 20px hsl(168 80% 55% / 0.5);
   }
   
-  /* Input Glow Focus */
+  /* Input Glow Focus - Enhanced */
   .dark .input-glow:focus {
-    box-shadow: 0 0 0 3px hsl(168 60% 50% / 0.15), 0 0 15px hsl(168 60% 50% / 0.2);
-    border-color: hsl(168 60% 50% / 0.5);
+    box-shadow: 0 0 0 3px hsl(168 80% 55% / 0.2), 0 0 25px hsl(168 80% 55% / 0.3);
+    border-color: hsl(168 80% 55% / 0.6);
   }
   
-  /* Badge Glow */
+  /* Badge Glow - Brighter */
   .dark .badge-glow {
-    box-shadow: 0 0 10px hsl(168 60% 50% / 0.4);
+    box-shadow: 0 0 18px hsl(168 80% 55% / 0.5);
   }
   
-  /* Animated Glow Pulse */
+  /* Animated Glow Pulse - Intense */
   .dark .animate-glow-pulse {
-    animation: glow-pulse-dark 2.5s ease-in-out infinite;
+    animation: glow-pulse-neon 2.5s ease-in-out infinite;
   }
   
-  @keyframes glow-pulse-dark {
+  @keyframes glow-pulse-neon {
     0%, 100% {
-      box-shadow: 0 0 15px hsl(168 60% 50% / 0.3);
+      box-shadow: 0 0 25px hsl(168 80% 55% / 0.4);
     }
     50% {
-      box-shadow: 0 0 30px hsl(168 60% 50% / 0.5);
+      box-shadow: 0 0 50px hsl(168 80% 55% / 0.7);
     }
   }
   
-  /* Text Glow Pulse Animation */
+  /* Glow Pulse Purple */
+  .dark .animate-glow-pulse-purple {
+    animation: glow-pulse-purple-neon 2.5s ease-in-out infinite;
+  }
+  
+  @keyframes glow-pulse-purple-neon {
+    0%, 100% {
+      box-shadow: 0 0 25px hsl(270 85% 65% / 0.4);
+    }
+    50% {
+      box-shadow: 0 0 50px hsl(270 85% 65% / 0.7);
+    }
+  }
+  
+  /* Text Glow Pulse Animation - Enhanced */
   .dark .animate-text-glow {
-    animation: text-glow-pulse 2s ease-in-out infinite;
+    animation: text-glow-pulse-neon 2s ease-in-out infinite;
   }
   
-  @keyframes text-glow-pulse {
+  @keyframes text-glow-pulse-neon {
     0%, 100% {
-      text-shadow: 0 0 8px hsl(168 60% 50% / 0.5);
+      text-shadow: 0 0 12px hsl(168 80% 55% / 0.6);
     }
     50% {
-      text-shadow: 0 0 18px hsl(168 60% 50% / 0.8);
+      text-shadow: 0 0 28px hsl(168 80% 55% / 0.9);
     }
+  }
+  
+  /* Neon Flicker Effect */
+  .dark .neon-flicker {
+    animation: neon-flicker 4s ease-in-out infinite;
+  }
+  
+  @keyframes neon-flicker {
+    0%, 100% { opacity: 1; }
+    48% { opacity: 1; }
+    50% { opacity: 0.85; }
+    52% { opacity: 1; }
+    75% { opacity: 0.92; }
+    77% { opacity: 1; }
   }
 }
 

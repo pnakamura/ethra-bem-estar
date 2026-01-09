@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ArrowRight, PenLine, Sparkles } from 'lucide-react';
+import { X, ArrowRight, PenLine, Sparkles, HelpCircle } from 'lucide-react';
+import { ContextualHelp } from '@/components/ui/ContextualHelp';
 import { useNavigate } from 'react-router-dom';
 import { PlutchikWheel } from '@/components/emotions/PlutchikWheel';
 import { EmotionIntensitySlider } from '@/components/emotions/EmotionIntensitySlider';
@@ -169,15 +170,21 @@ export function MoodCheckModal({ isOpen, onClose }: MoodCheckModalProps) {
 
             {/* Header - more compact */}
             <div className="sticky top-0 z-10 flex items-center justify-between px-5 py-3 border-b border-border/30 bg-card">
-              <div>
-                <h2 className="text-base font-bold text-foreground">
-                  {step === 'select' ? 'Como você está?' : 'Ajuste a intensidade'}
-                </h2>
-                <p className="text-xs text-muted-foreground">
-                  {step === 'select'
-                    ? 'Selecione até 3 emoções'
-                    : 'Defina o quanto você sente cada emoção'}
-                </p>
+              <div className="flex items-center gap-2">
+                <div>
+                  <h2 className="text-base font-bold text-foreground">
+                    {step === 'select' ? 'Como você está?' : 'Ajuste a intensidade'}
+                  </h2>
+                  <p className="text-xs text-muted-foreground">
+                    {step === 'select'
+                      ? 'Selecione até 3 emoções'
+                      : 'Defina o quanto você sente cada emoção'}
+                  </p>
+                </div>
+                <ContextualHelp 
+                  helpKey={step === 'select' ? 'emotion-wheel' : 'emotion-intensity'} 
+                  size="sm" 
+                />
               </div>
               <button
                 onClick={resetAndClose}

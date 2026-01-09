@@ -22,14 +22,14 @@ import { BreathPacer } from '@/components/BreathPacer';
 import { MeditationPlayer } from '@/components/MeditationPlayer';
 import { QuickActionCard } from '@/components/dashboard/QuickActionCard';
 import { DailyGuidanceCard } from '@/components/dashboard/DailyGuidanceCard';
-import { StreakWidget } from '@/components/dashboard/StreakWidget';
+import { GardenWidget } from '@/components/dashboard/GardenWidget';
+import { ContextualHelp } from '@/components/ui/ContextualHelp';
 import { MoodCheckModal } from '@/components/dashboard/MoodCheckModal';
 import { BreathingTechniqueSelector } from '@/components/dashboard/BreathingTechniqueSelector';
 import { MealCheckModal } from '@/components/nutrition/MealCheckModal';
 import { ActiveJourneyBanner } from '@/components/journeys/ActiveJourneyBanner';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBreathingTechniques } from '@/hooks/useBreathingTechniques';
-import { useGamificationStats } from '@/hooks/useGamificationStats';
 import { useActiveUserJourney } from '@/hooks/useUserJourney';
 import { useOnboarding } from '@/hooks/useOnboarding';
 import { toast } from 'sonner';
@@ -41,7 +41,6 @@ type BreathingTechnique = NonNullable<ReturnType<typeof useBreathingTechniques>[
 export default function Home() {
   const navigate = useNavigate();
   const { usuario, loading: authLoading, signOut } = useAuth();
-  const { data: gamificationStats, isLoading: isLoadingStats } = useGamificationStats();
   const { data: activeJourney } = useActiveUserJourney();
   const { isComplete: onboardingComplete, isLoading: onboardingLoading } = useOnboarding();
   
@@ -211,14 +210,8 @@ export default function Home() {
           />
         )}
 
-        {/* Streak Widget */}
-        <StreakWidget
-          currentStreak={gamificationStats?.sequencia_atual ?? 0}
-          bestStreak={gamificationStats?.melhor_sequencia ?? 0}
-          level={gamificationStats?.nivel ?? 1}
-          totalPoints={gamificationStats?.total_pontos ?? 0}
-          isLoading={isLoadingStats}
-        />
+        {/* Garden Widget - Gamification */}
+        <GardenWidget />
 
         {/* Quick Actions Grid - 2x3 with Journeys included */}
         <motion.div
@@ -226,10 +219,13 @@ export default function Home() {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
         >
-          <h2 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2 uppercase tracking-wide">
-            <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-            Ações rápidas
-          </h2>
+          <div className="flex items-center gap-2 mb-3">
+            <h2 className="text-sm font-semibold text-muted-foreground flex items-center gap-2 uppercase tracking-wide">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+              Ações rápidas
+            </h2>
+            <ContextualHelp helpKey="quick-actions" size="sm" variant="subtle" />
+          </div>
           <div className="grid grid-cols-3 gap-3">
             <QuickActionCard
               emoji="😊"

@@ -3,6 +3,7 @@ import { Sparkles, ChevronRight } from 'lucide-react';
 import { useMemo } from 'react';
 import { usePreferredGuide } from '@/hooks/useGuides';
 import { useAuth } from '@/contexts/AuthContext';
+import { ContextualHelp } from '@/components/ui/ContextualHelp';
 
 interface DailyGuidanceCardProps {
   onGuideClick?: () => void;
@@ -87,6 +88,7 @@ export function DailyGuidanceCard({ onGuideClick }: DailyGuidanceCardProps) {
               <span className="text-xs font-semibold text-primary uppercase tracking-wide">
                 Guia do dia
               </span>
+              <ContextualHelp helpKey="daily-guidance" size="sm" variant="subtle" />
             </div>
             <h3 className="text-base font-bold text-foreground truncate">
               {todayMessage.title}

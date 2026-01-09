@@ -5,6 +5,7 @@ import { Heart, ChevronLeft, Wind, Music, Compass, Sparkles } from 'lucide-react
 import { BottomNavigation } from '@/components/BottomNavigation';
 import { BreathPacer } from '@/components/BreathPacer';
 import { MeditationPlayer } from '@/components/MeditationPlayer';
+import { BreathingTechniqueSelector } from '@/components/dashboard/BreathingTechniqueSelector';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FavoriteButton } from '@/components/FavoriteButton';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -27,6 +28,7 @@ export default function Favorites() {
 
   const [showBreathPacer, setShowBreathPacer] = useState(false);
   const [showMeditation, setShowMeditation] = useState(false);
+  const [showBreathingSelector, setShowBreathingSelector] = useState(false);
   const [selectedTechnique, setSelectedTechnique] = useState<BreathingTechnique | null>(null);
   const [breathingStartTime, setBreathingStartTime] = useState<number>(0);
   const [selectedMeditationId, setSelectedMeditationId] = useState<string | null>(null);
@@ -180,8 +182,8 @@ export default function Favorites() {
                 icon={<Wind className="w-12 h-12" />}
                 title="Nenhuma respiração favorita"
                 description="Explore técnicas de respiração e salve as suas preferidas"
-                actionLabel="Explorar"
-                onAction={() => navigate('/')}
+                actionLabel="Explorar Técnicas"
+                onAction={() => setShowBreathingSelector(true)}
               />
             )}
           </TabsContent>
@@ -217,8 +219,8 @@ export default function Favorites() {
                 icon={<Music className="w-12 h-12" />}
                 title="Nenhuma meditação favorita"
                 description="Explore meditações guiadas e salve as suas preferidas"
-                actionLabel="Explorar"
-                onAction={() => navigate('/')}
+                actionLabel="Explorar Meditações"
+                onAction={() => setShowMeditation(true)}
               />
             )}
           </TabsContent>
@@ -309,6 +311,16 @@ export default function Favorites() {
           />
         )}
       </AnimatePresence>
+
+      {/* Breathing Technique Selector */}
+      <BreathingTechniqueSelector
+        isOpen={showBreathingSelector}
+        onClose={() => setShowBreathingSelector(false)}
+        onSelect={(technique) => {
+          setShowBreathingSelector(false);
+          handleBreathingClick(technique as BreathingTechnique);
+        }}
+      />
     </div>
   );
 }

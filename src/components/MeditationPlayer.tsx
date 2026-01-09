@@ -6,6 +6,8 @@ import { Slider } from '@/components/ui/slider';
 import { useMeditationTracks, useMeditationCategories } from '@/hooks/useMeditationTracks';
 import { cn } from '@/lib/utils';
 import { Tables } from '@/integrations/supabase/types';
+import { FavoriteButton } from '@/components/FavoriteButton';
+import { useFavoriteMeditations } from '@/hooks/useFavorites';
 
 type DbMeditationTrack = Tables<'meditation_tracks'>;
 
@@ -18,7 +20,9 @@ interface MeditationPlayerProps {
 export function MeditationPlayer({ onClose, onComplete, initialTrackId }: MeditationPlayerProps) {
   const { data: tracks, isLoading } = useMeditationTracks();
   const { data: categories } = useMeditationCategories();
+  const { data: favorites } = useFavoriteMeditations();
   const [selectedTrack, setSelectedTrack] = useState<DbMeditationTrack | null>(null);
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -154,14 +158,30 @@ export function MeditationPlayer({ onClose, onComplete, initialTrackId }: Medita
             Escolha uma prática guiada
           </p>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onClose}
-          className="rounded-full"
-        >
-          <X className="w-5 h-5" />
-        </Button>
+        <div className="flex items-center gap-2">
+          {!selectedTrack && (
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+              className={cn(
+                'px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-1.5 transition-all',
+                showFavoritesOnly 
+                  ? 'bg-rose-500/20 text-rose-500' 
+                  : 'bg-muted/50 text-muted-foreground'
+              )}
+            >
+              ❤️ Favoritas
+            </motion.button>
+          )}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onClose}
+            className="rounded-full"
+          >
+            <X className="w-5 h-5" />
+          </Button>
+        </div>
       </motion.header>
 
       {/* Track list or player */}
@@ -192,42 +212,70 @@ export function MeditationPlayer({ onClose, onComplete, initialTrackId }: Medita
                   <p className="text-muted-foreground">Nenhuma meditação disponível</p>
                 </div>
               ) : (
-                tracks.filter(t => getAudioUrl(t)).map((track, index) => (
-                  <motion.button
-                    key={track.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    onClick={() => handleTrackSelect(track)}
-                    className={cn(
-                      'w-full p-4 rounded-2xl glass text-left',
-                      'flex items-center gap-4',
-                      'hover:shadow-lg transition-all duration-300'
-                    )}
-                  >
-                    <div className="w-16 h-16 md:w-14 md:h-14 rounded-xl bg-meditate-light flex items-center justify-center">
-                      <Headphones className="w-8 h-8 md:w-6 md:h-6 text-meditate" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-xl md:text-base font-semibold text-foreground">
-                        {track.title}
-                      </h3>
-                      <div className="flex items-center gap-2 text-lg md:text-sm text-muted-foreground">
-                        <span>{getCategoryName(track.category_id)}</span>
-                        <span>•</span>
-                        <span>{track.duration_display}</span>
-                      </div>
-                      {track.description && (
-                        <p className="text-sm text-muted-foreground/80 mt-1 line-clamp-1">
-                          {track.description}
+                (() => {
+                  const favoriteIds = favorites?.map(f => f.meditation_id) || [];
+                  const displayTracks = tracks.filter(t => {
+                    if (!getAudioUrl(t)) return false;
+                    if (showFavoritesOnly) return favoriteIds.includes(t.id);
+                    return true;
+                  });
+
+                  if (displayTracks.length === 0) {
+                    return (
+                      <div className="flex flex-col items-center justify-center py-12 text-center">
+                        <Headphones className="w-16 h-16 text-muted-foreground/50 mb-4" />
+                        <p className="text-muted-foreground">
+                          {showFavoritesOnly ? 'Nenhuma meditação favorita' : 'Nenhuma meditação disponível'}
                         </p>
+                      </div>
+                    );
+                  }
+
+                  return displayTracks.map((track, index) => (
+                    <motion.div
+                      key={track.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className={cn(
+                        'w-full p-4 rounded-2xl glass text-left relative',
+                        'flex items-center gap-4',
+                        'hover:shadow-lg transition-all duration-300'
                       )}
-                    </div>
-                    <div className="w-12 h-12 md:w-10 md:h-10 rounded-full bg-meditate flex items-center justify-center">
-                      <Play className="w-5 h-5 md:w-4 md:h-4 text-primary-foreground ml-0.5" />
-                    </div>
-                  </motion.button>
-                ))
+                    >
+                      {/* Favorite button */}
+                      <div className="absolute top-2 right-2 z-10">
+                        <FavoriteButton type="meditation" itemId={track.id} size="sm" />
+                      </div>
+                      <button
+                        onClick={() => handleTrackSelect(track)}
+                        className="flex items-center gap-4 flex-1"
+                      >
+                        <div className="w-16 h-16 md:w-14 md:h-14 rounded-xl bg-meditate-light flex items-center justify-center">
+                          <Headphones className="w-8 h-8 md:w-6 md:h-6 text-meditate" />
+                        </div>
+                        <div className="flex-1 text-left">
+                          <h3 className="text-xl md:text-base font-semibold text-foreground pr-8">
+                            {track.title}
+                          </h3>
+                          <div className="flex items-center gap-2 text-lg md:text-sm text-muted-foreground">
+                            <span>{getCategoryName(track.category_id)}</span>
+                            <span>•</span>
+                            <span>{track.duration_display}</span>
+                          </div>
+                          {track.description && (
+                            <p className="text-sm text-muted-foreground/80 mt-1 line-clamp-1">
+                              {track.description}
+                            </p>
+                          )}
+                        </div>
+                        <div className="w-12 h-12 md:w-10 md:h-10 rounded-full bg-meditate flex items-center justify-center shrink-0">
+                          <Play className="w-5 h-5 md:w-4 md:h-4 text-primary-foreground ml-0.5" />
+                        </div>
+                      </button>
+                    </motion.div>
+                  ));
+                })()
               )}
             </motion.div>
           ) : (

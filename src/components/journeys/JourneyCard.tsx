@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { Clock, Sparkles, ChevronRight, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Journey } from '@/hooks/useJourneys';
+import { FavoriteButton } from '@/components/FavoriteButton';
 
 interface JourneyCardProps {
   journey: Journey;
@@ -31,19 +32,27 @@ export function JourneyCard({ journey, onClick, progress, isCompleted, delay = 0
   const colorClass = themeColors[journey.theme_color] || themeColors.primary;
 
   return (
-    <motion.button
+    <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.3 }}
-      whileHover={{ scale: 1.02, y: -2 }}
-      whileTap={{ scale: 0.98 }}
-      onClick={onClick}
       className={cn(
-        'w-full p-4 rounded-2xl bg-gradient-to-br border text-left transition-shadow',
+        'w-full p-4 rounded-2xl bg-gradient-to-br border text-left transition-shadow relative',
         colorClass,
         'hover:shadow-lg'
       )}
     >
+      {/* Favorite button */}
+      <div className="absolute top-2 right-2 z-10">
+        <FavoriteButton type="journey" itemId={journey.id} size="sm" />
+      </div>
+
+      <motion.button
+        whileHover={{ scale: 1.02, y: -2 }}
+        whileTap={{ scale: 0.98 }}
+        onClick={onClick}
+        className="w-full text-left"
+      >
       <div className="flex items-start gap-3">
         {/* Icon */}
         <div className="text-3xl flex-shrink-0">{journey.icon}</div>
@@ -97,6 +106,7 @@ export function JourneyCard({ journey, onClick, progress, isCompleted, delay = 0
         {/* Arrow */}
         <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
       </div>
-    </motion.button>
+      </motion.button>
+    </motion.div>
   );
 }

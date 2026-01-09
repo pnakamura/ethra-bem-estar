@@ -1551,6 +1551,84 @@ export type Database = {
         }
         Relationships: []
       }
+      user_favorite_breathings: {
+        Row: {
+          breathing_id: string
+          created_at: string | null
+          user_id: string
+        }
+        Insert: {
+          breathing_id: string
+          created_at?: string | null
+          user_id: string
+        }
+        Update: {
+          breathing_id?: string
+          created_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_favorite_breathings_breathing_id_fkey"
+            columns: ["breathing_id"]
+            isOneToOne: false
+            referencedRelation: "breathing_techniques"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_favorite_journeys: {
+        Row: {
+          created_at: string | null
+          journey_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          journey_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          journey_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_favorite_journeys_journey_id_fkey"
+            columns: ["journey_id"]
+            isOneToOne: false
+            referencedRelation: "journeys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_favorite_meditations: {
+        Row: {
+          created_at: string | null
+          meditation_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          meditation_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          meditation_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_favorite_meditations_meditation_id_fkey"
+            columns: ["meditation_id"]
+            isOneToOne: false
+            referencedRelation: "meditation_tracks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_guide_preferences: {
         Row: {
           created_at: string | null

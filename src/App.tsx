@@ -21,6 +21,7 @@ import EmotionResult from "./pages/EmotionResult";
 import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
 import Journeys from "./pages/Journeys";
+import Favorites from "./pages/Favorites";
 import WellnessReport from "./pages/WellnessReport";
 import GuideChat from "./pages/GuideChat";
 import GuideSelect from "./pages/GuideSelect";
@@ -53,6 +54,7 @@ const App: React.FC = () => (
               <Route path="/emotion-result" element={<EmotionResult />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/journeys" element={<Journeys />} />
+              <Route path="/favorites" element={<Favorites />} />
               <Route path="/report" element={<WellnessReport />} />
               <Route path="/guide" element={<GuideChat />} />
               <Route path="/guide/select" element={<GuideSelect />} />

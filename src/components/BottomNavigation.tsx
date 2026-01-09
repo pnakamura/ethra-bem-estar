@@ -1,4 +1,4 @@
-import { Home, BookOpen, User, Compass, MessageCircle } from 'lucide-react';
+import { Home, BookOpen, User, Heart, MessageCircle } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 const navItems = [
   { path: '/', label: 'Início', icon: Home },
   { path: '/guide', label: 'Guia', icon: MessageCircle },
-  { path: '/journeys', label: 'Jornadas', icon: Compass },
+  { path: '/favorites', label: 'Favoritos', icon: Heart },
   { path: '/journal', label: 'Diário', icon: BookOpen },
   { path: '/profile', label: 'Perfil', icon: User },
 ];

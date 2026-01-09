@@ -2,22 +2,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import type { BreathingTechnique } from '@/types/admin';
 
 export type FavoriteType = 'breathing' | 'meditation' | 'journey';
 
-const tableMap: Record<FavoriteType, string> = {
-  breathing: 'user_favorite_breathings',
-  meditation: 'user_favorite_meditations',
-  journey: 'user_favorite_journeys',
-};
-
-const columnMap: Record<FavoriteType, string> = {
-  breathing: 'breathing_id',
-  meditation: 'meditation_id',
-  journey: 'journey_id',
-};
-
-// Hook para listar favoritos de respiração
+// Hook para listar favoritos de respiração (apenas IDs)
 export function useFavoriteBreathings() {
   const { user } = useAuth();
 
@@ -39,7 +28,35 @@ export function useFavoriteBreathings() {
   });
 }
 
-// Hook para listar favoritos de meditação
+// Hook para listar favoritos de respiração COM detalhes completos
+export function useFavoriteBreathingsWithDetails() {
+  const { user } = useAuth();
+
+  return useQuery({
+    queryKey: ['favorite-breathings-details', user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+
+      const { data, error } = await supabase
+        .from('user_favorite_breathings')
+        .select(`
+          breathing_id,
+          created_at,
+          breathing_techniques (*)
+        `)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return (data || [])
+        .map(item => item.breathing_techniques)
+        .filter(Boolean) as BreathingTechnique[];
+    },
+    enabled: !!user,
+  });
+}
+
+// Hook para listar favoritos de meditação (apenas IDs)
 export function useFavoriteMeditations() {
   const { user } = useAuth();
 
@@ -61,7 +78,44 @@ export function useFavoriteMeditations() {
   });
 }
 
-// Hook para listar favoritos de jornadas
+// Hook para listar favoritos de meditação COM detalhes completos
+export function useFavoriteMeditationsWithDetails() {
+  const { user } = useAuth();
+
+  return useQuery({
+    queryKey: ['favorite-meditations-details', user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+
+      const { data, error } = await supabase
+        .from('user_favorite_meditations')
+        .select(`
+          meditation_id,
+          created_at,
+          meditation_tracks (*)
+        `)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return (data || [])
+        .map(item => item.meditation_tracks)
+        .filter(Boolean) as Array<{
+          id: string;
+          title: string;
+          description: string | null;
+          duration_ms: number;
+          duration_display: string;
+          narration_audio_url: string | null;
+          background_audio_url: string | null;
+          thumbnail_url: string | null;
+        }>;
+    },
+    enabled: !!user,
+  });
+}
+
+// Hook para listar favoritos de jornadas (apenas IDs)
 export function useFavoriteJourneys() {
   const { user } = useAuth();
 
@@ -78,6 +132,44 @@ export function useFavoriteJourneys() {
 
       if (error) throw error;
       return data || [];
+    },
+    enabled: !!user,
+  });
+}
+
+// Hook para listar favoritos de jornadas COM detalhes completos
+export function useFavoriteJourneysWithDetails() {
+  const { user } = useAuth();
+
+  return useQuery({
+    queryKey: ['favorite-journeys-details', user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+
+      const { data, error } = await supabase
+        .from('user_favorite_journeys')
+        .select(`
+          journey_id,
+          created_at,
+          journeys (*)
+        `)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return (data || [])
+        .map(item => item.journeys)
+        .filter(Boolean) as Array<{
+          id: string;
+          title: string;
+          subtitle: string | null;
+          description: string;
+          icon: string | null;
+          duration_days: number;
+          difficulty: string | null;
+          is_premium: boolean | null;
+          theme_color: string | null;
+        }>;
     },
     enabled: !!user,
   });
@@ -158,8 +250,8 @@ export function useToggleFavorite() {
     },
     onSuccess: (_, { type, isFavorite }) => {
       // Invalidar queries relacionadas
-      const queryKey = `favorite-${type}s`;
-      queryClient.invalidateQueries({ queryKey: [queryKey] });
+      queryClient.invalidateQueries({ queryKey: [`favorite-${type}s`] });
+      queryClient.invalidateQueries({ queryKey: [`favorite-${type}s-details`] });
 
       toast.success(isFavorite ? 'Removido dos favoritos' : 'Adicionado aos favoritos', {
         duration: 2000,

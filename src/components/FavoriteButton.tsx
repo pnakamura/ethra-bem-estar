@@ -53,6 +53,7 @@ export function FavoriteButton({ type, itemId, size = 'md', className }: Favorit
       whileTap={{ scale: 0.85 }}
       onClick={handleClick}
       disabled={isPending}
+      data-contentlock-allow="true"
       className={cn(
         'flex items-center justify-center rounded-full transition-colors',
         'hover:bg-muted/50 active:bg-muted',

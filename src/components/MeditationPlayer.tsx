@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Play, Pause, SkipBack, SkipForward, Volume2, Headphones, Loader2, Lock, Sparkles } from 'lucide-react';
+import { X, Play, Pause, SkipBack, SkipForward, Volume2, Headphones, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { useMeditationTracks, useMeditationCategories } from '@/hooks/useMeditationTracks';
@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { FavoriteButton } from '@/components/FavoriteButton';
 import { useFavoriteMeditations } from '@/hooks/useFavorites';
 import { ContentLock } from '@/components/access/ContentLock';
+import { ExpandableExplanation } from '@/components/ui/ExpandableExplanation';
 
 // Usar tipo inferido do hook para compatibilidade
 type MeditationTrack = NonNullable<ReturnType<typeof useMeditationTracks>['data']>[number];
@@ -271,10 +272,18 @@ export function MeditationPlayer({ onClose, onComplete, initialTrackId }: Medita
                               <span>•</span>
                               <span>{track.duration_display}</span>
                             </div>
-                            {track.description && (
-                              <p className="text-sm text-muted-foreground/80 mt-1 line-clamp-1">
-                                {track.description}
-                              </p>
+                            {(track.short_description || track.description) && (
+                              <div className="flex items-center gap-2 mt-1">
+                                <p className="text-sm text-muted-foreground/80 line-clamp-1 flex-1">
+                                  {track.short_description || track.description}
+                                </p>
+                                {track.explanation && (
+                                  <ExpandableExplanation
+                                    explanation={track.explanation}
+                                    triggerType="icon"
+                                  />
+                                )}
+                              </div>
                             )}
                           </div>
                           <div className="w-12 h-12 md:w-10 md:h-10 rounded-full bg-meditate flex items-center justify-center shrink-0">

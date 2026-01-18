@@ -27,7 +27,9 @@ import { AccessLevelSelect } from '@/components/admin/AccessLevelSelect';
 
 const formSchema = z.object({
   title: z.string().min(1, 'Título é obrigatório'),
+  short_description: z.string().max(150, 'Máximo 150 caracteres').optional(),
   description: z.string().optional(),
+  explanation: z.string().optional(),
   category_id: z.string().optional(),
   duration_display: z.string().min(1, 'Duração é obrigatória').regex(/^\d{1,2}:\d{2}$/, 'Formato: 5:00'),
   has_background_music: z.boolean().default(false),
@@ -68,7 +70,9 @@ export function MeditationForm() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: '',
+      short_description: '',
       description: '',
+      explanation: '',
       category_id: '',
       duration_display: '5:00',
       has_background_music: false,
@@ -83,7 +87,9 @@ export function MeditationForm() {
     if (track) {
       form.reset({
         title: track.title,
+        short_description: track.short_description || '',
         description: track.description || '',
+        explanation: track.explanation || '',
         category_id: track.category_id || '',
         duration_display: track.duration_display,
         has_background_music: track.has_background_music,
@@ -138,6 +144,8 @@ export function MeditationForm() {
     const payload = {
       title: data.title,
       description: data.description || null,
+      short_description: data.short_description || null,
+      explanation: data.explanation || null,
       category_id: data.category_id || null,
       duration_display: data.duration_display,
       duration_ms: parseDuration(data.duration_display),
@@ -278,16 +286,54 @@ export function MeditationForm() {
               />
               <FormField
                 control={form.control}
+                name="short_description"
+                render={({ field }) => (
+                  <FormItem className="sm:col-span-2">
+                    <FormLabel className="flex items-center">
+                      Descrição Curta
+                      <HelpTooltip content="Texto curto (1-2 linhas) exibido no card da meditação. Máximo 150 caracteres. Use para chamar atenção do usuário." />
+                    </FormLabel>
+                    <FormControl>
+                      <Input placeholder="Relaxe e encontre paz interior" maxLength={150} {...field} />
+                    </FormControl>
+                    <FormDescription>Exibida no card de seleção (máx. 150 caracteres)</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
                 name="description"
                 render={({ field }) => (
                   <FormItem className="sm:col-span-2">
                     <FormLabel className="flex items-center">
-                      Descrição
-                      <HelpTooltip content="Descrição breve da meditação exibida para o usuário. Descreva o objetivo, benefícios ou o que o usuário pode esperar." />
+                      Descrição Completa
+                      <HelpTooltip content="Descrição detalhada da meditação. Descreva o objetivo, benefícios ou o que o usuário pode esperar." />
                     </FormLabel>
                     <FormControl>
                       <Textarea placeholder="Uma meditação guiada para..." {...field} />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="explanation"
+                render={({ field }) => (
+                  <FormItem className="sm:col-span-2">
+                    <FormLabel className="flex items-center">
+                      Explicação Científica
+                      <HelpTooltip content="Fundamentação científica ou metodológica da técnica. Será exibida quando o usuário clicar em 'Saiba mais'. Opcional." />
+                    </FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Esta técnica foi desenvolvida por... Os estudos mostram que..."
+                        className="min-h-[100px]"
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormDescription>Exibida ao clicar no ícone de informação (opcional)</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}

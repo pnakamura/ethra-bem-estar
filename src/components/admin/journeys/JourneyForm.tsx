@@ -20,6 +20,7 @@ const formSchema = z.object({
   title: z.string().min(1, 'Título é obrigatório'),
   subtitle: z.string().optional(),
   description: z.string().min(1, 'Descrição é obrigatória'),
+  explanation: z.string().optional(),
   icon: z.string().min(1, 'Ícone é obrigatório'),
   theme_color: z.string().default('primary'),
   cover_image_url: z.string().optional(),
@@ -72,6 +73,7 @@ export function JourneyForm() {
       title: '',
       subtitle: '',
       description: '',
+      explanation: '',
       icon: '🧭',
       theme_color: 'primary',
       cover_image_url: '',
@@ -97,6 +99,7 @@ export function JourneyForm() {
         title: journey.title,
         subtitle: journey.subtitle || '',
         description: journey.description,
+        explanation: journey.explanation || '',
         icon: journey.icon,
         theme_color: journey.theme_color,
         cover_image_url: journey.cover_image_url || '',
@@ -120,6 +123,7 @@ export function JourneyForm() {
       title: data.title,
       subtitle: data.subtitle || null,
       description: data.description,
+      explanation: data.explanation || null,
       icon: data.icon,
       theme_color: data.theme_color,
       cover_image_url: data.cover_image_url || null,
@@ -393,6 +397,33 @@ export function JourneyForm() {
                       />
                     </FormControl>
                     <FormDescription>Digite um benefício por linha</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </CardContent>
+          </Card>
+
+          {/* Explanation */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Fundamentação</CardTitle>
+              <CardDescription>Explicação científica ou metodológica (opcional)</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <FormField
+                control={form.control}
+                name="explanation"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Esta jornada é baseada no protocolo MBSR desenvolvido por Jon Kabat-Zinn na Universidade de Massachusetts em 1979..."
+                        className="min-h-[150px]"
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormDescription>Será exibida quando o usuário clicar em "Saiba mais sobre o método"</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}

@@ -3,6 +3,7 @@ import { X, Clock, Sparkles, Check, Play, Wind, Music } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { Journey, JourneyDay } from '@/hooks/useJourneys';
+import { ExpandableExplanation } from '@/components/ui/ExpandableExplanation';
 
 interface JourneyDetailsProps {
   journey: Journey;
@@ -112,6 +113,16 @@ export function JourneyDetails({
               {/* Description */}
               <div>
                 <p className="text-muted-foreground leading-relaxed">{journey.description}</p>
+                
+                {/* Scientific Explanation */}
+                {journey.explanation && (
+                  <ExpandableExplanation
+                    explanation={journey.explanation}
+                    triggerType="button"
+                    title="Saiba mais sobre o método"
+                    className="mt-3"
+                  />
+                )}
               </div>
 
               {/* Benefits */}

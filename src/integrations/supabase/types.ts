@@ -797,6 +797,7 @@ export type Database = {
           difficulty: string | null
           display_order: number | null
           duration_days: number
+          explanation: string | null
           icon: string | null
           id: string
           is_active: boolean | null
@@ -815,6 +816,7 @@ export type Database = {
           difficulty?: string | null
           display_order?: number | null
           duration_days?: number
+          explanation?: string | null
           icon?: string | null
           id?: string
           is_active?: boolean | null
@@ -833,6 +835,7 @@ export type Database = {
           difficulty?: string | null
           display_order?: number | null
           duration_days?: number
+          explanation?: string | null
           icon?: string | null
           id?: string
           is_active?: boolean | null
@@ -927,11 +930,13 @@ export type Database = {
           display_order: number | null
           duration_display: string
           duration_ms: number
+          explanation: string | null
           has_background_music: boolean | null
           has_narration: boolean | null
           id: string
           is_active: boolean | null
           narration_audio_url: string | null
+          short_description: string | null
           thumbnail_url: string | null
           title: string
           updated_at: string | null
@@ -947,11 +952,13 @@ export type Database = {
           display_order?: number | null
           duration_display: string
           duration_ms: number
+          explanation?: string | null
           has_background_music?: boolean | null
           has_narration?: boolean | null
           id?: string
           is_active?: boolean | null
           narration_audio_url?: string | null
+          short_description?: string | null
           thumbnail_url?: string | null
           title: string
           updated_at?: string | null
@@ -967,11 +974,13 @@ export type Database = {
           display_order?: number | null
           duration_display?: string
           duration_ms?: number
+          explanation?: string | null
           has_background_music?: boolean | null
           has_narration?: boolean | null
           id?: string
           is_active?: boolean | null
           narration_audio_url?: string | null
+          short_description?: string | null
           thumbnail_url?: string | null
           title?: string
           updated_at?: string | null

@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Wind, Loader2, Clock, Repeat, Lock, Sparkles } from 'lucide-react';
+import { X, Wind, Loader2, Clock, Repeat } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useBreathingTechniques } from '@/hooks/useBreathingTechniques';
 import { cn } from '@/lib/utils';
 import { FavoriteButton } from '@/components/FavoriteButton';
 import { useFavoriteBreathings } from '@/hooks/useFavorites';
 import { ContentLock } from '@/components/access/ContentLock';
+import { ExpandableExplanation } from '@/components/ui/ExpandableExplanation';
 // Use the return type from the hook instead of Tables
 type BreathingTechnique = NonNullable<ReturnType<typeof useBreathingTechniques>['data']>[number];
 
@@ -215,9 +216,17 @@ export function BreathingTechniqueSelector({ isOpen, onClose, onSelect }: Breath
                             </span>
                           </div>
                           
-                          <p className="text-xs text-muted-foreground line-clamp-2 mb-1.5">
-                            {technique.description}
-                          </p>
+                          <div className="flex items-center gap-2 mb-1.5">
+                            <p className="text-xs text-muted-foreground line-clamp-2 flex-1">
+                              {technique.description}
+                            </p>
+                            {technique.explanation && (
+                              <ExpandableExplanation
+                                explanation={technique.explanation}
+                                triggerType="icon"
+                              />
+                            )}
+                          </div>
                           
                           {/* Meta info */}
                           <div className="flex items-center gap-3 text-[10px] text-muted-foreground">

@@ -43,6 +43,7 @@ export function ExpandableExplanation({
           tabIndex={0}
           onClick={handleOpen}
           onKeyDown={handleKeyDown}
+          data-contentlock-allow="true"
           className={cn(
             'inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full cursor-pointer select-none',
             'bg-primary/10 hover:bg-primary/20 active:scale-95 transition-all',

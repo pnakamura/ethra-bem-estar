@@ -58,6 +58,13 @@ export function ContentLock({
   };
 
   const handleLockedClick = (e: React.MouseEvent) => {
+    // Permitir cliques em elementos marcados como "permitidos" (ex: Saiba mais, Favorito)
+    const allowedElement = (e.target as HTMLElement).closest('[data-contentlock-allow="true"]');
+    if (allowedElement) {
+      // Deixar o clique seguir normalmente para o elemento permitido
+      return;
+    }
+    
     e.stopPropagation();
     e.preventDefault();
     setShowUpgradeModal(true);
@@ -66,10 +73,10 @@ export function ContentLock({
   return (
     <div 
       className={cn('relative', className)}
-      onClick={isLocked ? handleLockedClick : undefined}
+      onClickCapture={isLocked ? handleLockedClick : undefined}
     >
-      {/* Conteúdo com interação bloqueada se necessário */}
-      <div className={cn(isLocked && 'pointer-events-none')}>
+      {/* Conteúdo visível - sem pointer-events-none para permitir ações de preview */}
+      <div>
         {children}
       </div>
 

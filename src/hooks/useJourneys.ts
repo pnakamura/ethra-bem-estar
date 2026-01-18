@@ -6,6 +6,7 @@ export interface Journey {
   title: string;
   subtitle: string | null;
   description: string;
+  explanation: string | null;
   icon: string;
   theme_color: string;
   cover_image_url: string | null;

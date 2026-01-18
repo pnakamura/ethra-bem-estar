@@ -42,6 +42,8 @@ export interface MeditationTrack {
   id: string;
   title: string;
   description: string | null;
+  short_description: string | null;
+  explanation: string | null;
   category_id: string | null;
   duration_display: string;
   duration_ms: number;

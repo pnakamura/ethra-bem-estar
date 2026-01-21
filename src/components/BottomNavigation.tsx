@@ -1,3 +1,4 @@
+import { useRef, useLayoutEffect } from 'react';
 import { Home, BookOpen, User, Heart, MessageCircle } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -13,9 +14,34 @@ const navItems = [
 
 export function BottomNavigation() {
   const location = useLocation();
+  const navRef = useRef<HTMLElement>(null);
+
+  // Measure and expose nav height as CSS variable for other components
+  useLayoutEffect(() => {
+    const nav = navRef.current;
+    if (!nav) return;
+
+    const updateHeight = () => {
+      const height = nav.getBoundingClientRect().height;
+      document.documentElement.style.setProperty('--bottom-nav-height', `${height}px`);
+    };
+
+    // Initial measurement
+    updateHeight();
+
+    // Observe size changes (font scaling, safe-area updates, etc.)
+    const observer = new ResizeObserver(updateHeight);
+    observer.observe(nav);
+
+    return () => {
+      observer.disconnect();
+      document.documentElement.style.removeProperty('--bottom-nav-height');
+    };
+  }, []);
 
   return (
     <motion.nav 
+      ref={navRef}
       initial={{ y: 100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ delay: 0.3, type: 'spring', stiffness: 200, damping: 25 }}

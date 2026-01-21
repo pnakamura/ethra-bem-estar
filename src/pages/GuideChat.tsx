@@ -262,7 +262,7 @@ export default function GuideChat() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-[100dvh] bg-background flex flex-col">
       {/* Subtle animated background for emotional tone */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <motion.div 
@@ -350,7 +350,7 @@ export default function GuideChat() {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 pb-56">
+      <div className="flex-1 overflow-y-auto px-4 py-4" style={{ paddingBottom: 'calc(var(--bottom-nav-height, 88px) + 144px)' }}>
         <div className="max-w-2xl mx-auto space-y-4">
           <AnimatePresence mode="popLayout">
             {visibleMessages.map((message, index) => (
@@ -395,7 +395,7 @@ export default function GuideChat() {
       </div>
 
       {/* Input */}
-      <div className="fixed bottom-[120px] left-0 right-0 p-4 glass border-t border-border/50">
+      <div className="fixed left-0 right-0 p-4 glass border-t border-border/50" style={{ bottom: 'calc(var(--bottom-nav-height, 88px) + 12px)' }}>
         <div className="max-w-2xl mx-auto flex gap-2">
           <Textarea
             ref={inputRef}

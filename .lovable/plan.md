@@ -1,232 +1,239 @@
 
 
-## Plano: Ajustar Pausas e Mensagens Entre Chunks
+# Análise do Módulo de Nutrição (Alimentação Consciente)
 
-### Problemas Identificados
+## Visão Geral Atual
 
-1. **Indicador inconsistente**: O estado `pausing` não está sendo gerenciado de forma consistente, fazendo com que o indicador de "digitando..." às vezes não apareça entre chunks.
-
-2. **Frases genéricas demais**: Frases como "deixe-me me preparar..." aparecem em todos os contextos, quando deveriam aparecer principalmente após perguntas do usuário.
-
-3. **Lógica de pausas inadequada**: O bônus de reticências (`ellipsisBonus`) verifica o chunk anterior do assistente, não o contexto da mensagem do usuário.
+O módulo de Nutrição é focado em **Mindful Eating** (Alimentação Consciente), integrando estado emocional com alimentação. É uma funcionalidade diferenciada que conecta nutrição ao bem-estar emocional.
 
 ---
 
-### Solução
+## Componentes Atuais
 
-Criar um sistema de pausas contextual que:
-- Mostra indicador de "digitando..." consistentemente entre chunks
-- Usa frases reflexivas apenas após perguntas do usuário
-- Entre chunks normais, mostra apenas os pontos animados (sem frase)
-
----
-
-### 1. Atualizar Frases por Tipo de Pausa
-
-**Arquivo:** `src/hooks/useThinkingDelay.ts`
-
-Adicionar nova categoria `pause` para pausas entre chunks (sem frases elaboradas):
-
-```text
-thinkingPhrasesByContext:
-  pause: ['', '...']  // Mínimo ou vazio - apenas indicador visual
-  
-  // Manter as outras categorias existentes para uso antes da primeira resposta
-```
+| Componente | Função |
+|------------|--------|
+| `Nutrition.tsx` | Página principal com timeline de refeições |
+| `MealCheckModal.tsx` | Fluxo de check-in: humor → tipo de fome → categoria |
+| `WaterTracker.tsx` | Registro de hidratação com meta diária |
+| `NutritionSummary.tsx` | Resumo de macros (calorias, proteínas, carboidratos, gorduras) |
+| `MealCard.tsx` | Card individual de registro de refeição |
 
 ---
 
-### 2. Diferenciar Tipos de Pausa
+## Estrutura do Banco de Dados
 
-**Arquivo:** `src/hooks/useMessageChunker.ts`
-
-Adicionar propriedade `pauseType` aos chunks para indicar quando usar frase ou não:
-
-```text
-ChunkInfo:
-  pauseType: 'simple' | 'reflective'
-  
-Lógica:
-- Primeiro chunk após pergunta (?) do usuário: 'reflective'
-- Todos os outros chunks: 'simple' (apenas pontos animados)
+### Tabela Principal: `emotion_nutrition_context`
 ```
+| Campo                | Tipo      | Uso Atual               |
+|----------------------|-----------|-------------------------|
+| mood_before          | text      | ✅ Capturado            |
+| hunger_type          | text      | ✅ Capturado            |
+| meal_category        | text      | ✅ Capturado            |
+| energy_after         | text      | ❌ Não utilizado        |
+| mindful_eating_notes | text      | ❌ Não utilizado        |
+| nutrition_entry_id   | uuid      | ❌ Nunca vinculado      |
+```
+
+### Tabelas Relacionadas (Leitura)
+- `informacoes_nutricionais`: Macros de refeições (vem de app externo)
+- `registro_hidratacao`: Registro de água (funcional)
+- `categorias_refeicao`: 6 categorias (Café, Lanche Manhã, Almoço, etc.)
+- `metas_usuario`: Metas de calorias, água e peso (não utilizado no ETHRA)
+
+### Tipos de Líquidos Disponíveis
+`água`, `café`, `chá`, `suco`, `outro`
 
 ---
 
-### 3. Propagar Contexto do Usuário
+## Análise de Uso
 
-**Arquivo:** `src/hooks/useGuideChat.ts`
-
-Passar o contexto da última mensagem do usuário para `processResponseIntoChunks`:
-
-```text
-const userQuestion = lastUserMessage?.content?.trim().endsWith('?');
-
-processResponseIntoChunks(fullContent, baseMessageId, { 
-  isAfterQuestion: userQuestion 
-});
-```
+**Dados atuais:**
+- 5 registros de emotion_nutrition_context
+- 1 usuário ativo
+- 2 registros de fome emocional, 1 física, 2 desconhecido
+- Campos `energy_after` e `mindful_eating_notes` nunca utilizados
 
 ---
 
-### 4. Atualizar TypingIndicator para Pausas Simples
+## Problemas Identificados
 
-**Arquivo:** `src/components/guide/TypingIndicator.tsx`
+### 1. Campos Subutilizados
+O modal de check-in não coleta `energy_after` (energia após comer) nem `mindful_eating_notes` (reflexões), ambos já suportados no banco.
 
-Modificar para aceitar prop `variant`:
-- `thinking`: Mostra frase + pontos (comportamento atual para leitura/pensamento inicial)
-- `simple`: Mostra apenas pontos animados (para pausas entre chunks)
+### 2. Falta de Feedback Pós-Refeição
+O fluxo termina após selecionar a categoria. Não há registro de como a pessoa se sentiu depois de comer.
 
-```text
-interface TypingIndicatorProps {
-  variant?: 'thinking' | 'simple';
-  // ...
-}
-```
+### 3. Hidratação Limitada
+- Apenas registra "água" (tipo fixo)
+- Tipos de líquidos disponíveis (café, chá, suco) não são utilizados na UI
+- Sem lembretes ou notificações
 
----
+### 4. Sem Correlações nos Insights
+O hook `useInsightsData` processa hidratação, mas não integra dados de `emotion_nutrition_context` para correlacionar fome emocional com estados emocionais.
 
-### 5. Atualizar Lógica de Exibição
+### 5. Resumo de Macros Desconectado
+`NutritionSummary` lê de `informacoes_nutricionais` (app externo), mas essa tabela não tem dados para a maioria dos usuários do ETHRA.
 
-**Arquivo:** `src/pages/GuideChat.tsx`
+### 6. Sem Histórico Visual Rico
+Timeline mostra apenas cards básicos, sem gráficos de tendências ou padrões.
 
-Diferenciar o tipo de indicador baseado na fase e contexto:
-
-```text
-// Para fase 'pausing':
-// - Se última mensagem do usuário foi pergunta E é o primeiro chunk: mostrar frase reflexiva
-// - Senão: mostrar apenas pontos
-
-const pauseVariant = phase === 'pausing' 
-  ? (lastUserMessageContext === 'question' && currentChunkIndex === 0 ? 'thinking' : 'simple')
-  : 'thinking';
-```
+### 7. Sem Gamificação
+O módulo não contribui para pontos ou conquistas do sistema de gamificação.
 
 ---
 
-### 6. Remover Bônus de Reticências Desnecessário
+## Oportunidades de Melhoria
 
-**Arquivo:** `src/hooks/useMessageChunker.ts`
+### Nível 1: Melhorias Imediatas (Usar o que já existe)
 
-Remover ou reduzir o `ellipsisBonus` que adiciona pausa extra quando chunk anterior termina com "...":
+#### 1.1 Adicionar Etapa "Como você se sente agora?"
+Após selecionar categoria, perguntar `energy_after`:
+- 😴 Sonolento
+- 😌 Satisfeito
+- ⚡ Energizado
+- 🤢 Desconfortável
+- 😐 Normal
 
-```text
-// Antes:
-const ellipsisBonus = prevChunk?.endsWith('...') ? 800 : 0;
+**Impacto:** Coletar dados já suportados no banco para análises futuras.
 
-// Depois:
-// Remover - não é necessário pausar extra por reticências do assistente
-```
+#### 1.2 Campo de Reflexão Opcional
+Adicionar textarea opcional para `mindful_eating_notes`:
+*"Gostaria de anotar algo sobre essa experiência?"*
 
----
+**Impacto:** Promove consciência alimentar real.
 
-### 7. Garantir Consistência do Estado
+#### 1.3 Expandir WaterTracker com Tipos de Líquido
+Permitir registrar café, chá, suco além de água:
+- Ícones diferenciados
+- Contagem separada
 
-**Arquivo:** `src/hooks/useGuideChat.ts`
-
-Garantir que `setIsPausing(true)` seja chamado ANTES do delay e `setIsPausing(false)` DEPOIS:
-
-```text
-// Antes de cada chunk subsequente:
-setIsPausing(true);
-onChunkPause?.(i, chunks.length);
-await new Promise(resolve => setTimeout(resolve, chunk.delay));
-setIsPausing(false);
-```
+**Impacto:** Melhor acompanhamento de hidratação real.
 
 ---
 
-### Arquivos a Modificar
+### Nível 2: Melhorias de Engajamento
 
-| Arquivo | Alteração |
-|---------|-----------|
-| `src/hooks/useThinkingDelay.ts` | Adicionar categoria `pause` com frases mínimas |
-| `src/hooks/useMessageChunker.ts` | Adicionar `pauseType`, remover `ellipsisBonus`, aceitar contexto |
-| `src/hooks/useGuideChat.ts` | Passar contexto do usuário para chunker |
-| `src/components/guide/TypingIndicator.tsx` | Adicionar variante `simple` (só pontos) |
-| `src/pages/GuideChat.tsx` | Usar variante correta do indicador baseado em contexto |
+#### 2.1 Lembretes Inteligentes de Refeição
+Sugerir check-in de alimentação baseado no horário:
+- 7-9h: "Hora do café da manhã?"
+- 12-14h: "Como está sua fome para o almoço?"
 
----
+**Impacto:** Aumenta consistência de registros.
 
-### Comportamento Esperado
+#### 2.2 Padrões de Fome Emocional
+Correlacionar registros de fome emocional com:
+- Horário do dia
+- Emoções do dia anterior
+- Ciclo semanal
 
-**Cenário 1: Usuário faz pergunta**
-```text
-[Usuário] Como posso meditar melhor?
+Exibir insight: *"Você tende a sentir fome emocional às sextas à noite"*
 
-[Indicador: "Boa pergunta..." + pontos] (3-5s)
-[Guia] Existem várias técnicas que podem ajudar.
+**Impacto:** Autoconhecimento profundo sobre gatilhos.
 
-[Indicador: apenas pontos] (2-3s)
-[Guia] Primeiro, encontre um lugar calmo...
+#### 2.3 Sugestões Contextuais de Respiração
+Se usuário registra fome emocional frequente:
+- Sugerir técnica de respiração específica
+- Oferecer meditação de 3 min para "fome consciente"
 
-[Indicador: apenas pontos] (2-3s)
-[Guia] Com prática, ficará mais natural.
-```
-
-**Cenário 2: Usuário faz afirmação**
-```text
-[Usuário] Estou me sentindo melhor hoje.
-
-[Indicador: "Acolhendo suas palavras..." + pontos] (3-5s)
-[Guia] Que bom ouvir isso!
-
-[Indicador: apenas pontos] (2-3s)
-[Guia] É importante celebrar essas vitórias.
-```
+**Impacto:** Integração com outros módulos do app.
 
 ---
 
-### Seção Técnica
+### Nível 3: Visualizações e Insights
 
-**Estrutura do ChunkInfo atualizada:**
-```typescript
-interface ChunkInfo {
-  id: string;
-  content: string;
-  delay: number;
-  isFirst: boolean;
-  isLast: boolean;
-  pauseType: 'simple' | 'reflective';
-}
-```
+#### 3.1 Dashboard de Nutrição Consciente
+Adicionar gráficos:
+- Proporção fome física vs emocional (pizza)
+- Energia após refeições (linha temporal)
+- Humor antes vs após (comparativo)
 
-**Nova lógica de delay sem ellipsisBonus:**
-```typescript
-export function getChunkDelay(
-  chunk: string, 
-  index: number, 
-  options?: { isAfterQuestion?: boolean }
-): number {
-  const baseDelay = index === 0 ? 1500 : 2500;
-  const lengthBonus = Math.min(chunk.length * 6, 1800);
-  const emotionalBonus = hasEmotionalContent(chunk) ? 1200 : 0;
-  const transitionBonus = index > 0 ? 500 : 0;
-  const randomVariation = Math.random() * 1000;
-  
-  // Bônus apenas para primeiro chunk após pergunta
-  const questionBonus = (index === 0 && options?.isAfterQuestion) ? 1000 : 0;
-  
-  return baseDelay + lengthBonus + emotionalBonus + transitionBonus + randomVariation + questionBonus;
-}
-```
+#### 3.2 Streak de Alimentação Consciente
+Contador de dias consecutivos com check-in de refeição.
 
-**Variante simples do TypingIndicator:**
-```typescript
-// variant='simple' - mostra apenas os pontos, sem frase
-{variant === 'simple' ? null : (
-  <motion.span className="text-xs text-muted-foreground italic">
-    {thinkingPhrase}
-  </motion.span>
-)}
-```
+#### 3.3 Conquistas de Nutrição
+Integrar com sistema de gamificação:
+- "Mestre da Água" (7 dias batendo meta)
+- "Comedor Consciente" (10 check-ins completos)
+- "Vencedor da Fome Emocional" (5 respirações antes de comer)
 
 ---
 
-### Resultado Esperado
+### Nível 4: Funcionalidades Avançadas
 
-- Indicador de "digitando..." aparece consistentemente entre TODOS os chunks
-- Frases reflexivas aparecem apenas no início (leitura/pensamento) e após perguntas
-- Pausas entre chunks mostram apenas pontos animados (mais natural)
-- Comportamento mais similar a chats automatizados reais
+#### 4.1 Diário Alimentar Simplificado
+Permitir descrever o que comeu (texto livre) sem necessidade de macros:
+- Foco em consciência, não contagem
+- IA pode sugerir insights baseados em padrões textuais
+
+#### 4.2 Conexão Humor-Alimentação
+Relatório semanal mostrando:
+- Quais alimentos/horários correlacionam com bom humor
+- Padrões de energia ao longo do dia
+
+#### 4.3 Modo Jejum Consciente
+Para usuários que praticam jejum intermitente:
+- Timer de jejum
+- Check-in de estado durante o jejum
+- Sugestões de respiração para fome
+
+---
+
+## Priorização Recomendada
+
+| Prioridade | Melhoria | Esforço | Impacto |
+|------------|----------|---------|---------|
+| 🔴 Alta | 1.1 Etapa energy_after | Baixo | Alto |
+| 🔴 Alta | 1.2 Campo de reflexão | Baixo | Médio |
+| 🟡 Média | 1.3 Tipos de líquido | Baixo | Médio |
+| 🟡 Média | 2.2 Padrões de fome | Médio | Alto |
+| 🟡 Média | 3.2 Streak alimentação | Baixo | Médio |
+| 🟢 Baixa | 3.1 Dashboard gráficos | Alto | Alto |
+| 🟢 Baixa | 3.3 Conquistas | Médio | Médio |
+
+---
+
+## Proposta de Implementação Inicial
+
+### Fase 1: Completar Fluxo de Check-in (1-2 dias)
+
+1. Adicionar etapa 4 ao `MealCheckModal`: "Como você se sente agora?"
+2. Adicionar campo opcional de notas
+3. Salvar `energy_after` e `mindful_eating_notes`
+4. Exibir esses dados no `MealCard`
+
+### Fase 2: Expandir Hidratação (1 dia)
+
+1. Atualizar `WaterTracker` com seletor de tipo de líquido
+2. Diferenciar visualmente água de outras bebidas
+3. Manter meta de 2L focada em água, mas mostrar total geral
+
+### Fase 3: Insights de Nutrição (2-3 dias)
+
+1. Adicionar seção em `useInsightsData` para processar `emotion_nutrition_context`
+2. Criar componente `NutritionInsightsCard` com:
+   - % fome física vs emocional
+   - Padrões por horário/dia
+   - Correlação humor-alimentação
+
+---
+
+## Arquivos a Modificar
+
+| Arquivo | Mudança |
+|---------|---------|
+| `src/components/nutrition/MealCheckModal.tsx` | Adicionar etapas energy_after e notas |
+| `src/components/nutrition/MealCard.tsx` | Exibir energy_after e notas |
+| `src/components/nutrition/WaterTracker.tsx` | Seletor de tipo de líquido |
+| `src/hooks/useNutrition.ts` | Atualizar mutação com novos campos |
+| `src/hooks/useInsightsData.ts` | Processar dados de nutrição |
+| `src/pages/Insights.tsx` | Adicionar card de insights de nutrição |
+
+---
+
+## Resultado Esperado
+
+- **Utilidade:** Fluxo completo de alimentação consciente com antes/depois
+- **Engajamento:** Dados mais ricos para insights personalizados
+- **Atratividade:** Visualizações de padrões e conquistas
+- **Diferencial:** Único app que conecta emoções + alimentação + respiração
 

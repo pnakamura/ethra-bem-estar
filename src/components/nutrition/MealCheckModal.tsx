@@ -111,9 +111,6 @@ export function MealCheckModal({ isOpen, onClose, onSuggestBreathing }: MealChec
     }
   };
 
-  const handleSkipNotes = () => {
-    handleSubmit();
-  };
 
   const handleBreathingChoice = (wantsBreathing: boolean) => {
     if (wantsBreathing && onSuggestBreathing) {
@@ -393,30 +390,21 @@ export function MealCheckModal({ isOpen, onClose, onSuggestBreathing }: MealChec
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     placeholder="Ex: Comi devagar e percebi que estava satisfeito antes de terminar o prato..."
-                    className="w-full h-32 p-4 rounded-2xl bg-muted border border-border/50 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-nutrition resize-none"
+                    className="w-full h-32 p-4 rounded-2xl bg-muted border border-border/50 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-nutrition resize-none text-base"
                     maxLength={500}
                   />
                   <p className="text-xs text-muted-foreground text-right">
                     {notes.length}/500
                   </p>
                   
-                  <div className="flex gap-3 pt-2">
-                    <button
-                      onClick={handleSkipNotes}
-                      disabled={isCreating}
-                      className="flex-1 py-3 px-4 rounded-xl bg-muted text-foreground font-medium disabled:opacity-50"
-                    >
-                      Pular
-                    </button>
-                    <button
-                      onClick={handleSubmit}
-                      disabled={isCreating}
-                      className="flex-1 py-3 px-4 rounded-xl bg-nutrition text-white font-medium flex items-center justify-center gap-2 disabled:opacity-50"
-                    >
-                      <Check className="w-4 h-4" />
-                      Salvar
-                    </button>
-                  </div>
+                  <button
+                    onClick={handleSubmit}
+                    disabled={isCreating}
+                    className="w-full py-3.5 px-4 rounded-xl bg-nutrition text-white font-medium flex items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    <Check className="w-5 h-5" />
+                    Salvar
+                  </button>
                 </div>
               )}
 

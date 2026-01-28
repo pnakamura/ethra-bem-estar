@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence, PanInfo } from 'framer-motion';
 import { X, ChevronRight, Wind, Check, ChevronLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useEmotionNutritionContext, useMealCategories } from '@/hooks/useNutrition';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { ContextualHelp } from '@/components/ui/ContextualHelp';
 
 interface MealCheckModalProps {
   isOpen: boolean;
@@ -38,8 +39,40 @@ const energyLevels = [
   { id: 'normal', emoji: '😐', label: 'Normal', description: 'Sem mudanças significativas' },
 ];
 
+const stepLabels: Record<Step, string> = {
+  mood: 'Humor',
+  hunger: 'Fome',
+  category: 'Refeição',
+  energy: 'Energia',
+  notes: 'Reflexão',
+  success: 'Concluído',
+};
+
+const reflectionPrompts = [
+  'O que você percebeu durante a refeição?',
+  'Como estava a sua atenção enquanto comia?',
+  'Você mastigou devagar e apreciou os sabores?',
+  'Percebeu o momento em que ficou satisfeito?',
+];
+
+const slideVariants = {
+  enter: (direction: number) => ({
+    x: direction > 0 ? 100 : -100,
+    opacity: 0,
+  }),
+  center: {
+    x: 0,
+    opacity: 1,
+  },
+  exit: (direction: number) => ({
+    x: direction < 0 ? 100 : -100,
+    opacity: 0,
+  }),
+};
+
 export function MealCheckModal({ isOpen, onClose, onSuggestBreathing }: MealCheckModalProps) {
   const [step, setStep] = useState<Step>('mood');
+  const [direction, setDirection] = useState(0);
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
   const [selectedHunger, setSelectedHunger] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -50,48 +83,55 @@ export function MealCheckModal({ isOpen, onClose, onSuggestBreathing }: MealChec
   const { createEntry, isCreating } = useEmotionNutritionContext();
   const { data: categories } = useMealCategories();
 
-  const resetForm = () => {
+  const hasData = selectedMood || selectedHunger || selectedCategory || selectedEnergy || notes.trim();
+
+  const resetForm = useCallback(() => {
     setStep('mood');
+    setDirection(0);
     setSelectedMood(null);
     setSelectedHunger(null);
     setSelectedCategory(null);
     setSelectedEnergy(null);
     setNotes('');
     setShowBreathingSuggestion(false);
-  };
+  }, []);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     resetForm();
     onClose();
-  };
+  }, [resetForm, onClose]);
 
-  const handleMoodSelect = (moodId: string) => {
+  const goToStep = useCallback((newStep: Step, dir: number) => {
+    setDirection(dir);
+    setStep(newStep);
+  }, []);
+
+  const handleMoodSelect = useCallback((moodId: string) => {
     setSelectedMood(moodId);
-    setStep('hunger');
-  };
+    goToStep('hunger', 1);
+  }, [goToStep]);
 
-  const handleHungerSelect = async (hungerId: string) => {
+  const handleHungerSelect = useCallback((hungerId: string) => {
     setSelectedHunger(hungerId);
     
-    // If emotional hunger, suggest breathing first
     if (hungerId === 'emotional') {
       setShowBreathingSuggestion(true);
     } else {
-      setStep('category');
+      goToStep('category', 1);
     }
-  };
+  }, [goToStep]);
 
-  const handleCategorySelect = (categoryName: string | null) => {
+  const handleCategorySelect = useCallback((categoryName: string | null) => {
     setSelectedCategory(categoryName);
-    setStep('energy');
-  };
+    goToStep('energy', 1);
+  }, [goToStep]);
 
-  const handleEnergySelect = (energyId: string) => {
+  const handleEnergySelect = useCallback((energyId: string) => {
     setSelectedEnergy(energyId);
-    setStep('notes');
-  };
+    goToStep('notes', 1);
+  }, [goToStep]);
 
-  const handleSubmit = async () => {
+  const handleSubmit = useCallback(async () => {
     try {
       await createEntry({
         mood_before: selectedMood!,
@@ -101,7 +141,7 @@ export function MealCheckModal({ isOpen, onClose, onSuggestBreathing }: MealChec
         mindful_eating_notes: notes.trim() || null,
       });
       
-      setStep('success');
+      goToStep('success', 1);
       toast.success('Registro de alimentação consciente salvo!');
       
       setTimeout(() => {
@@ -110,36 +150,36 @@ export function MealCheckModal({ isOpen, onClose, onSuggestBreathing }: MealChec
     } catch (error) {
       toast.error('Erro ao salvar registro');
     }
-  };
+  }, [selectedMood, selectedHunger, selectedCategory, selectedEnergy, notes, createEntry, goToStep, handleClose]);
 
-  const handleBreathingChoice = (wantsBreathing: boolean) => {
+  const handleBreathingChoice = useCallback((wantsBreathing: boolean) => {
     if (wantsBreathing && onSuggestBreathing) {
       handleClose();
       onSuggestBreathing();
     } else {
       setShowBreathingSuggestion(false);
-      setStep('category');
+      goToStep('category', 1);
     }
-  };
+  }, [goToStep, handleClose, onSuggestBreathing]);
 
-  const handleBack = () => {
+  const handleBack = useCallback(() => {
     switch (step) {
       case 'hunger':
-        setStep('mood');
+        goToStep('mood', -1);
         break;
       case 'category':
-        setStep('hunger');
+        goToStep('hunger', -1);
         break;
       case 'energy':
-        setStep('category');
+        goToStep('category', -1);
         break;
       case 'notes':
-        setStep('energy');
+        goToStep('energy', -1);
         break;
     }
-  };
+  }, [step, goToStep]);
 
-  const getStepTitle = () => {
+  const getStepTitle = useMemo(() => {
     switch (step) {
       case 'mood':
         return 'Como você está se sentindo agora?';
@@ -154,21 +194,34 @@ export function MealCheckModal({ isOpen, onClose, onSuggestBreathing }: MealChec
       case 'success':
         return 'Registro salvo!';
     }
-  };
+  }, [step]);
 
-  const getStepNumber = () => {
+  const getStepNumber = useMemo(() => {
     const steps: Step[] = ['mood', 'hunger', 'category', 'energy', 'notes'];
     return steps.indexOf(step) + 1;
-  };
+  }, [step]);
 
   const canGoBack = step !== 'mood' && step !== 'success' && !showBreathingSuggestion;
 
-  // Handle drag to dismiss
-  const handleDragEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+  const randomPrompt = useMemo(() => 
+    reflectionPrompts[Math.floor(Math.random() * reflectionPrompts.length)],
+  []);
+
+  // Handle drag to dismiss with confirmation
+  const handleDragEnd = useCallback((_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     if (info.offset.y > 100 && info.velocity.y > 0) {
-      handleClose();
+      if (hasData && step !== 'success') {
+        const confirmed = window.confirm('Você tem dados não salvos. Deseja realmente sair?');
+        if (confirmed) {
+          handleClose();
+        }
+      } else {
+        handleClose();
+      }
     }
-  };
+  }, [hasData, step, handleClose]);
+
+  const stepKeys: Step[] = ['mood', 'hunger', 'category', 'energy', 'notes'];
 
   return (
     <AnimatePresence>
@@ -199,8 +252,6 @@ export function MealCheckModal({ isOpen, onClose, onSuggestBreathing }: MealChec
             dragElastic={0.15}
             onDragEnd={handleDragEnd}
             onClick={(e) => e.stopPropagation()}
-            // Android (browser normal) pode sobrepor a barra de navegação do sistema em conteúdo fixo no bottom.
-            // Por isso elevamos levemente o sheet e usamos fallback vh/dvh para altura máxima.
             className={cn(
               "relative w-full max-w-lg flex flex-col overflow-hidden bg-card rounded-t-3xl shadow-xl border-t border-border/50",
               "max-h-[min(92dvh,92vh)]",
@@ -225,9 +276,12 @@ export function MealCheckModal({ isOpen, onClose, onSuggestBreathing }: MealChec
                 )}
                 <span className="text-xl">🍽️</span>
                 <div>
-                  <h2 className="text-base font-bold text-foreground">Alimentação Consciente</h2>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-base font-bold text-foreground">Alimentação Consciente</h2>
+                    <ContextualHelp helpKey="meal-checkin" size="sm" />
+                  </div>
                   <p className="text-xs text-muted-foreground">
-                    Passo {getStepNumber()} de 5
+                    Passo {getStepNumber} de 5
                   </p>
                 </div>
               </div>
@@ -241,23 +295,43 @@ export function MealCheckModal({ isOpen, onClose, onSuggestBreathing }: MealChec
 
             {/* Content - scrollable */}
             <div className="flex-1 min-h-0 overflow-y-auto px-5 py-4">
-              {/* Progress indicator */}
-              <div className="flex gap-1.5 mb-4">
-                {['mood', 'hunger', 'category', 'energy', 'notes'].map((s, i) => (
-                  <div
-                    key={s}
-                    className={cn(
-                      'h-1 flex-1 rounded-full transition-colors',
-                      getStepNumber() > i
-                        ? 'bg-nutrition'
-                        : 'bg-muted'
-                    )}
-                  />
-                ))}
+              {/* Progress indicator with labels */}
+              <div className="mb-4">
+                <div className="flex gap-1.5 mb-2">
+                  {stepKeys.map((s, i) => (
+                    <div
+                      key={s}
+                      className={cn(
+                        'h-1 flex-1 rounded-full transition-colors',
+                        getStepNumber > i
+                          ? 'bg-nutrition'
+                          : 'bg-muted'
+                      )}
+                    />
+                  ))}
+                </div>
+                {/* Step labels */}
+                <div className="flex justify-between px-1">
+                  {stepKeys.map((s, i) => (
+                    <span
+                      key={s}
+                      className={cn(
+                        'text-[10px] font-medium transition-colors text-center',
+                        getStepNumber > i
+                          ? 'text-nutrition'
+                          : step === s
+                          ? 'text-foreground'
+                          : 'text-muted-foreground/50'
+                      )}
+                    >
+                      {stepLabels[s]}
+                    </span>
+                  ))}
+                </div>
               </div>
 
               <h3 className="text-lg font-bold text-foreground mb-4 text-center">
-                {getStepTitle()}
+                {getStepTitle}
               </h3>
 
               {/* Breathing suggestion overlay */}
@@ -294,160 +368,233 @@ export function MealCheckModal({ isOpen, onClose, onSuggestBreathing }: MealChec
                 </motion.div>
               )}
 
-              {/* Mood selection */}
-              {step === 'mood' && !showBreathingSuggestion && (
-                <div className="grid grid-cols-4 gap-2">
-                  {moods.map((mood) => (
-                    <motion.button
-                      key={mood.id}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => handleMoodSelect(mood.id)}
-                      className={cn(
-                        'flex flex-col items-center gap-1.5 p-3 rounded-2xl border transition-all active:scale-95',
-                        selectedMood === mood.id
-                          ? 'bg-nutrition/20 border-nutrition'
-                          : 'bg-card border-border/50 hover:border-nutrition/50'
-                      )}
-                    >
-                      <span className="text-2xl">{mood.emoji}</span>
-                      <span className="text-xs font-medium text-foreground">{mood.label}</span>
-                    </motion.button>
-                  ))}
-                </div>
-              )}
-
-              {/* Hunger type selection */}
-              {step === 'hunger' && !showBreathingSuggestion && (
-                <div className="space-y-2.5">
-                  {hungerTypes.map((hunger) => (
-                    <motion.button
-                      key={hunger.id}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => handleHungerSelect(hunger.id)}
-                      className={cn(
-                        'w-full flex items-center gap-3 p-3.5 rounded-2xl border transition-all text-left active:scale-[0.98]',
-                        selectedHunger === hunger.id
-                          ? 'bg-nutrition/20 border-nutrition'
-                          : 'bg-card border-border/50 hover:border-nutrition/50'
-                      )}
-                    >
-                      <span className="text-2xl">{hunger.emoji}</span>
-                      <div className="flex-1 min-w-0">
-                        <span className="font-semibold text-foreground block text-sm">{hunger.label}</span>
-                        <span className="text-xs text-muted-foreground">{hunger.description}</span>
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                    </motion.button>
-                  ))}
-                </div>
-              )}
-
-              {/* Category selection */}
-              {step === 'category' && !showBreathingSuggestion && (
-                <div className="space-y-2.5">
-                  {categories?.map((category) => (
-                    <motion.button
-                      key={category.id}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => handleCategorySelect(category.nome)}
-                      disabled={isCreating}
-                      className={cn(
-                        'w-full flex items-center gap-3 p-3.5 rounded-2xl border transition-all text-left active:scale-[0.98]',
-                        'bg-card border-border/50 hover:border-nutrition/50 disabled:opacity-50'
-                      )}
-                    >
-                      <span className="text-xl">
-                        {category.nome === 'Café da manhã' ? '🌅' :
-                         category.nome === 'Almoço' ? '🍽️' :
-                         category.nome === 'Jantar' ? '🌙' :
-                         category.nome === 'Lanche' ? '🥪' : '🍴'}
-                      </span>
-                      <div className="flex-1 min-w-0">
-                        <span className="font-semibold text-foreground block text-sm">{category.nome}</span>
-                        {category.descricao && (
-                          <span className="text-xs text-muted-foreground">{category.descricao}</span>
-                        )}
-                      </div>
-                    </motion.button>
-                  ))}
-                  
-                  <motion.button
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => handleCategorySelect(null)}
-                    disabled={isCreating}
-                    className="w-full flex items-center gap-3 p-3.5 rounded-2xl border bg-muted/50 border-border/50 hover:border-nutrition/50 text-left disabled:opacity-50 active:scale-[0.98]"
+              {/* Animated step content */}
+              <AnimatePresence mode="wait" custom={direction}>
+                {/* Mood selection */}
+                {step === 'mood' && !showBreathingSuggestion && (
+                  <motion.div
+                    key="mood"
+                    custom={direction}
+                    variants={slideVariants}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    transition={{ duration: 0.2, ease: 'easeOut' }}
+                    className="grid grid-cols-4 gap-2"
                   >
-                    <span className="text-xl">✨</span>
-                    <span className="font-semibold text-foreground text-sm">Apenas registrar momento</span>
-                  </motion.button>
-                </div>
-              )}
+                    {moods.map((mood) => (
+                      <motion.button
+                        key={mood.id}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => handleMoodSelect(mood.id)}
+                        className={cn(
+                          'flex flex-col items-center gap-1.5 p-3 rounded-2xl border transition-all active:scale-95',
+                          selectedMood === mood.id
+                            ? 'bg-nutrition/20 border-nutrition'
+                            : 'bg-card border-border/50 hover:border-nutrition/50'
+                        )}
+                      >
+                        <span className="text-2xl">{mood.emoji}</span>
+                        <span className="text-xs font-medium text-foreground">{mood.label}</span>
+                      </motion.button>
+                    ))}
+                  </motion.div>
+                )}
 
-              {/* Energy level selection */}
-              {step === 'energy' && !showBreathingSuggestion && (
-                <div className="space-y-2.5">
-                  <p className="text-xs text-muted-foreground text-center mb-3">
-                    Como seu corpo está se sentindo após a refeição?
-                  </p>
-                  {energyLevels.map((energy) => (
+                {/* Hunger type selection */}
+                {step === 'hunger' && !showBreathingSuggestion && (
+                  <motion.div
+                    key="hunger"
+                    custom={direction}
+                    variants={slideVariants}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    transition={{ duration: 0.2, ease: 'easeOut' }}
+                    className="space-y-2.5"
+                  >
+                    {hungerTypes.map((hunger) => (
+                      <motion.button
+                        key={hunger.id}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => handleHungerSelect(hunger.id)}
+                        className={cn(
+                          'w-full flex items-center gap-3 p-3.5 rounded-2xl border transition-all text-left active:scale-[0.98]',
+                          selectedHunger === hunger.id
+                            ? hunger.id === 'emotional'
+                              ? 'bg-orange-500/20 border-orange-500'
+                              : hunger.id === 'physical'
+                              ? 'bg-green-500/20 border-green-500'
+                              : 'bg-nutrition/20 border-nutrition'
+                            : 'bg-card border-border/50 hover:border-nutrition/50'
+                        )}
+                      >
+                        <span className="text-2xl">{hunger.emoji}</span>
+                        <div className="flex-1 min-w-0">
+                          <span className="font-semibold text-foreground block text-sm">{hunger.label}</span>
+                          <span className="text-xs text-muted-foreground">{hunger.description}</span>
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                      </motion.button>
+                    ))}
+                  </motion.div>
+                )}
+
+                {/* Category selection */}
+                {step === 'category' && !showBreathingSuggestion && (
+                  <motion.div
+                    key="category"
+                    custom={direction}
+                    variants={slideVariants}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    transition={{ duration: 0.2, ease: 'easeOut' }}
+                    className="space-y-2.5"
+                  >
+                    {categories?.map((category) => (
+                      <motion.button
+                        key={category.id}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => handleCategorySelect(category.nome)}
+                        disabled={isCreating}
+                        className={cn(
+                          'w-full flex items-center gap-3 p-3.5 rounded-2xl border transition-all text-left active:scale-[0.98]',
+                          'bg-card border-border/50 hover:border-nutrition/50 disabled:opacity-50'
+                        )}
+                      >
+                        <span className="text-xl">
+                          {category.nome === 'Café da manhã' ? '🌅' :
+                           category.nome === 'Almoço' ? '🍽️' :
+                           category.nome === 'Jantar' ? '🌙' :
+                           category.nome === 'Lanche' ? '🥪' : '🍴'}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <span className="font-semibold text-foreground block text-sm">{category.nome}</span>
+                          {category.descricao && (
+                            <span className="text-xs text-muted-foreground">{category.descricao}</span>
+                          )}
+                        </div>
+                      </motion.button>
+                    ))}
+                    
                     <motion.button
-                      key={energy.id}
                       whileTap={{ scale: 0.98 }}
-                      onClick={() => handleEnergySelect(energy.id)}
-                      className={cn(
-                        'w-full flex items-center gap-3 p-3.5 rounded-2xl border transition-all text-left active:scale-[0.98]',
-                        selectedEnergy === energy.id
-                          ? 'bg-nutrition/20 border-nutrition'
-                          : 'bg-card border-border/50 hover:border-nutrition/50'
-                      )}
+                      onClick={() => handleCategorySelect(null)}
+                      disabled={isCreating}
+                      className="w-full flex items-center gap-3 p-3.5 rounded-2xl border bg-muted/50 border-border/50 hover:border-nutrition/50 text-left disabled:opacity-50 active:scale-[0.98]"
                     >
-                      <span className="text-2xl">{energy.emoji}</span>
-                      <div className="flex-1 min-w-0">
-                        <span className="font-semibold text-foreground block text-sm">{energy.label}</span>
-                        <span className="text-xs text-muted-foreground">{energy.description}</span>
-                      </div>
+                      <span className="text-xl">✨</span>
+                      <span className="font-semibold text-foreground text-sm">Apenas registrar momento</span>
                     </motion.button>
-                  ))}
-                </div>
-              )}
+                  </motion.div>
+                )}
 
-              {/* Notes step */}
-              {step === 'notes' && !showBreathingSuggestion && (
-                <div className="space-y-3">
-                  <p className="text-xs text-muted-foreground text-center">
-                    Reflexões sobre essa experiência alimentar (opcional)
-                  </p>
-                  <textarea
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Ex: Comi devagar e percebi que estava satisfeito antes de terminar o prato..."
-                    className="w-full h-28 p-3.5 rounded-2xl bg-muted border border-border/50 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-nutrition resize-none text-sm"
-                    maxLength={500}
-                  />
-                  <p className="text-xs text-muted-foreground text-right">
-                    {notes.length}/500
-                  </p>
-                </div>
-              )}
+                {/* Energy level selection */}
+                {step === 'energy' && !showBreathingSuggestion && (
+                  <motion.div
+                    key="energy"
+                    custom={direction}
+                    variants={slideVariants}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    transition={{ duration: 0.2, ease: 'easeOut' }}
+                    className="space-y-2.5"
+                  >
+                    <p className="text-xs text-muted-foreground text-center mb-3">
+                      Como seu corpo está se sentindo após a refeição?
+                    </p>
+                    {energyLevels.map((energy) => (
+                      <motion.button
+                        key={energy.id}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => handleEnergySelect(energy.id)}
+                        className={cn(
+                          'w-full flex items-center gap-3 p-3.5 rounded-2xl border transition-all text-left active:scale-[0.98]',
+                          selectedEnergy === energy.id
+                            ? 'bg-nutrition/20 border-nutrition'
+                            : 'bg-card border-border/50 hover:border-nutrition/50'
+                        )}
+                      >
+                        <span className="text-2xl">{energy.emoji}</span>
+                        <div className="flex-1 min-w-0">
+                          <span className="font-semibold text-foreground block text-sm">{energy.label}</span>
+                          <span className="text-xs text-muted-foreground">{energy.description}</span>
+                        </div>
+                      </motion.button>
+                    ))}
+                  </motion.div>
+                )}
 
-              {/* Success state */}
-              {step === 'success' && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="text-center py-6"
-                >
-                  <div className="w-16 h-16 mx-auto mb-3 rounded-full bg-nutrition/20 flex items-center justify-center">
-                    <Check className="w-8 h-8 text-nutrition" />
-                  </div>
-                  <p className="text-base font-semibold text-foreground mb-1">
-                    Excelente! 🎉
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Você praticou alimentação consciente. Continue assim!
-                  </p>
-                </motion.div>
-              )}
+                {/* Notes step */}
+                {step === 'notes' && !showBreathingSuggestion && (
+                  <motion.div
+                    key="notes"
+                    custom={direction}
+                    variants={slideVariants}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    transition={{ duration: 0.2, ease: 'easeOut' }}
+                    className="space-y-3"
+                  >
+                    <p className="text-xs text-muted-foreground text-center">
+                      Reflexões sobre essa experiência alimentar (opcional)
+                    </p>
+                    <div className="relative">
+                      <textarea
+                        value={notes}
+                        onChange={(e) => setNotes(e.target.value)}
+                        placeholder={randomPrompt}
+                        className="w-full h-32 p-4 rounded-2xl bg-muted border border-border/50 text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:ring-2 focus:ring-nutrition resize-none text-sm leading-relaxed"
+                        maxLength={500}
+                      />
+                      <span className="absolute bottom-3 right-3 text-[10px] text-muted-foreground/50">
+                        {notes.length}/500
+                      </span>
+                    </div>
+                    
+                    {/* Reflection prompts */}
+                    <div className="flex flex-wrap gap-2">
+                      {['Comi devagar', 'Apreciei os sabores', 'Percebi a saciedade'].map((tag) => (
+                        <button
+                          key={tag}
+                          onClick={() => setNotes(prev => prev ? `${prev} ${tag}.` : `${tag}.`)}
+                          className="px-3 py-1.5 rounded-full bg-nutrition/10 text-nutrition text-xs font-medium hover:bg-nutrition/20 transition-colors"
+                        >
+                          + {tag}
+                        </button>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Success state */}
+                {step === 'success' && (
+                  <motion.div
+                    key="success"
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="text-center py-6"
+                  >
+                    <motion.div 
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: 'spring', damping: 15, stiffness: 200 }}
+                      className="w-16 h-16 mx-auto mb-3 rounded-full bg-nutrition/20 flex items-center justify-center"
+                    >
+                      <Check className="w-8 h-8 text-nutrition" />
+                    </motion.div>
+                    <p className="text-base font-semibold text-foreground mb-1">
+                      Excelente! 🎉
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Você praticou alimentação consciente. Continue assim!
+                    </p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* Footer - sticky with safe area */}

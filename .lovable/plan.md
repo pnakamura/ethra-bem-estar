@@ -1,165 +1,118 @@
 
+## Objetivo (o que vai mudar)
+Corrigir definitivamente dois problemas no **MealCheckModal**:
 
-# Plano: Corrigir Visibilidade do Botão Salvar + Fluxo de Restauração
-
-## Problemas Identificados
-
-### 1. Botão "Salvar" Ainda Invisível
-
-Após análise detalhada, o problema é que:
-- O footer tem `pb-6` (24px) + `safe-area-bottom` (mais 24px) = ~48px de padding-bottom
-- Mas o conteúdo scrollável também tem `pb-6`, criando excesso
-- O `max-h-[85dvh]` ainda pode ser muito para dispositivos com viewports menores
-
-**Causa raiz**: A classe `safe-area-bottom` aplica `padding-bottom: max(1.5rem, ...)`, mas o footer JÁ TEM `pb-6` na mesma linha. Isso causa conflito - o Tailwind `pb-6` está sendo sobrescrito pela classe CSS customizada, mas a especificidade pode variar.
-
-### 2. Restauração Voltando para Pergunta 5 (deveria ser 4)
-
-O hook `useNutritionDraft.ts` salva o step atual a cada mudança. Porém:
-- O auto-save acontece quando `step` muda E está em `['category', 'energy', 'notes']`
-- Se o usuário está no step 4 (energy), seleciona uma opção e o app fecha, o draft salva `step: 'energy'`
-- **MAS** ao selecionar energia, `handleEnergySelect` chama `goToStep('notes', 1)`, salvando o draft com `step: 'notes'`
-
-O problema está na ordem dos eventos:
-1. Usuário seleciona energia no step 4
-2. `handleEnergySelect` é chamado → `setSelectedEnergy` + `goToStep('notes')`
-3. O `useEffect` de auto-save detecta `step='notes'` e salva com step 5
-4. Ao restaurar, volta no step 5 em vez de 4
+1) O botão **“Salvar Registro”** não aparece (principalmente no passo 5 / Reflexão).  
+2) Ao restaurar o rascunho, o fluxo volta para a **pergunta 5**, mas deveria voltar para a **4 (Energia)** quando o usuário saiu logo após selecionar a energia.
 
 ---
 
-## Solução
+## Diagnóstico (com base no código atual)
+### A) “Salvar” depende de estar no step `notes`
+Hoje o botão só renderiza quando `step === 'notes'`:
 
-### Solução 1: Footer Sempre Visível
+- Footer sempre renderiza quando `step !== 'success'`
+- Mas o **botão “Salvar Registro” só aparece no bloco `step === 'notes'`**  
+Se por qualquer motivo o estado estiver em `energy` (passo 4) ou o modal estiver “restaurado errado”, o usuário verá apenas o texto “Continue para registrar...”.
 
-**Arquivo: `src/components/nutrition/MealCheckModal.tsx`**
+### B) O layout atual pode estar “cortando” o footer em alguns browsers
+Mesmo com `flex` correto, em browsers como WhatsApp In‑App Browser / Android WebView, existe um padrão recorrente:
+- `overflow-hidden` no container do bottom sheet + `drag="y"` (Framer Motion) + `overflow-y-auto` interno pode resultar em cálculo de altura/scroll inconsistente.
+- Resultado típico: o **footer fica fora da área visível** (literalmente “cortado”), então o botão não aparece mesmo existindo no DOM.
 
-Estratégia mais agressiva para garantir que o footer apareça:
-
-1. **Reduzir max-height para 80dvh** - Deixa mais margem na parte inferior
-2. **Remover pb-6 do footer** - Deixar apenas `safe-area-bottom` controlar o padding
-3. **Remover pb-6 do conteúdo scrollável** - Evitar padding duplo
-4. **Adicionar `overflow-hidden` no container principal** - Forçar o flex a calcular corretamente
-
-```tsx
-// Container do modal (linha 296-299)
-className={cn(
-  "relative w-full max-w-lg flex flex-col overflow-hidden bg-card rounded-t-3xl shadow-xl border-t border-border/50",
-  "max-h-[80dvh]"  // Reduzido de 85dvh
-)}
-
-// Conteúdo scrollável (linha 337)
-<div className="flex-1 min-h-0 overflow-y-auto px-5 py-4">  // Removido pb-6
-
-// Footer (linha 650)
-<div className="flex-shrink-0 px-5 pt-3 border-t border-border/30 bg-card shadow-[0_-4px_12px_rgba(0,0,0,0.1)] z-[130] safe-area-bottom">
-// Removido pb-6, safe-area-bottom já cuida do padding inferior
+### C) Restauração indo para o passo 5
+O autosave salva o passo atual:
+```ts
+if (['category','energy','notes'].includes(step) && hasData) saveDraft({ step, ... })
 ```
+No step 4 (`energy`), ao selecionar energia, você faz:
+- `setSelectedEnergy(energyId)`
+- `goToStep('notes', 1)`
 
-### Solução 2: Corrigir Lógica de Restauração
-
-**Arquivo: `src/hooks/useNutritionDraft.ts`**
-
-Mudar para salvar o step ANTERIOR ao avançar, ou seja, salvar o step onde o usuário fez a última seleção:
-
-Na verdade, a correção mais simples é no `MealCheckModal.tsx`: restaurar para o step ANTERIOR ao salvo, quando aplicável.
-
-**Arquivo: `src/components/nutrition/MealCheckModal.tsx`**
-
-Adicionar lógica para voltar 1 step ao restaurar:
-
-```tsx
-// Linhas 102-120 - Restore draft
-useEffect(() => {
-  if (isOpen && !hasRestoredRef.current) {
-    const draft = loadDraft();
-    if (draft && ['category', 'energy', 'notes'].includes(draft.step)) {
-      // Restaurar dados
-      setSelectedMood(draft.selectedMood);
-      setSelectedHunger(draft.selectedHunger);
-      setSelectedCategory(draft.selectedCategory);
-      setSelectedEnergy(draft.selectedEnergy);
-      setNotes(draft.notes);
-      
-      // Restaurar para o step ANTERIOR se for 'notes' ou 'energy'
-      // (porque o usuário pode não ter completado o step atual)
-      let restoreStep = draft.step;
-      if (draft.step === 'notes' && !draft.notes.trim()) {
-        restoreStep = 'energy';
-      }
-      if (draft.step === 'energy' && !draft.selectedEnergy) {
-        restoreStep = 'category';
-      }
-      
-      setStep(restoreStep);
-      hasRestoredRef.current = true;
-      toast.info('Continuando de onde você parou...', { duration: 2000 });
-    }
-  }
-  if (!isOpen) {
-    hasRestoredRef.current = false;
-  }
-}, [isOpen, loadDraft]);
-```
-
-Esta lógica verifica: se o draft está em 'notes' mas não tem notas, volta para 'energy'. Se está em 'energy' mas não tem energia selecionada, volta para 'category'.
+Isso faz o autosave rodar com `step = 'notes'`, `selectedEnergy != null`, `notes = ''`, e o draft acaba salvo como “notes”.  
+Na restauração, a lógica tenta voltar para `energy` se `notes` estiver vazio — mas na prática o usuário ainda está caindo no step 5, o que indica que **precisamos impedir o draft de “avançar” para `notes` automaticamente** no momento da escolha da energia.
 
 ---
 
-## Mudanças Específicas
+## Solução proposta (mudanças concretas)
 
-### Arquivo: `src/components/nutrition/MealCheckModal.tsx`
+### 1) Tornar o footer “inquebrável” (não pode ser cortado)
+Trocar o footer de “bloco no fluxo do flex” para **footer ancorado** dentro do modal:
 
-**Mudança 1 - Container do modal (linhas 296-299):**
-```tsx
-// DE:
-className={cn(
-  "relative w-full max-w-lg flex flex-col bg-card rounded-t-3xl shadow-xl border-t border-border/50",
-  "max-h-[85dvh]"
-)}
+- Modal container continua `relative`.
+- Footer vira `absolute bottom-0 left-0 right-0`.
+- O conteúdo scrollável ganha `padding-bottom` suficiente para nunca ficar atrás do footer.
 
-// PARA:
-className={cn(
-  "relative w-full max-w-lg flex flex-col overflow-hidden bg-card rounded-t-3xl shadow-xl border-t border-border/50",
-  "max-h-[80dvh]"
-)}
-```
+Isso elimina a dependência do cálculo de flex/scroll em browsers problemáticos e garante que o botão fique sempre visível quando estiver no step correto.
 
-**Mudança 2 - Conteúdo scrollável (linha 337):**
-```tsx
-// DE:
-<div className="flex-1 min-h-0 overflow-y-auto px-5 py-4 pb-6">
+**Mudanças no `MealCheckModal.tsx`:**
+- Manter container do modal como `relative` e com `overflow-hidden` (ok).
+- Alterar o footer para:
+  - `className="absolute bottom-0 left-0 right-0 ... safe-area-bottom"`
+- Ajustar o content scroll:
+  - adicionar `pb-[algo]` (ex.: `pb-28` ou `pb-32`) para abrir espaço do footer + safe-area.
+  - manter `min-h-0 overflow-y-auto`.
 
-// PARA:
-<div className="flex-1 min-h-0 overflow-y-auto px-5 py-4">
-```
+> Por que isso funciona melhor?  
+> Porque o footer deixa de depender do espaço “sobrando” no flex e passa a ser “colado” no fundo do modal, independente do tamanho do conteúdo/viewport.
 
-**Mudança 3 - Footer (linha 650):**
-```tsx
-// DE:
-<div className="flex-shrink-0 px-5 pt-3 pb-6 border-t border-border/30 bg-card shadow-[0_-4px_12px_rgba(0,0,0,0.1)] z-[130] safe-area-bottom">
+### 2) Garantir que o botão apareça mesmo se o usuário “parou” no passo 4
+Hoje o botão só aparece no step 5. Como o seu requisito funcional é que o usuário volte para o passo 4 ao restaurar (e provavelmente finalize dali), vamos tornar o footer mais explícito:
 
-// PARA:
-<div className="flex-shrink-0 px-5 pt-3 border-t border-border/30 bg-card shadow-[0_-4px_12px_rgba(0,0,0,0.1)] z-[130] safe-area-bottom">
-```
+- No step 4 (`energy`), exibir um CTA “Continuar” fixo (ou “Ir para Reflexão”) no footer.
+- No step 5 (`notes`), exibir “Salvar Registro”.
 
-**Mudança 4 - Lógica de restauração (linhas 102-120):**
-Adicionar verificação para restaurar no step correto baseado nos dados presentes.
+Isso reduz confusão e evita a sensação de “não tem botão” quando a restauração cai no passo 4.
+
+### 3) Corrigir a restauração para voltar para o passo 4 (de forma determinística)
+Ajustar a estratégia de salvamento: **quando o step for `notes` mas `notes` estiver vazio, salvar como `energy`**.
+
+Ou seja, no autosave vamos calcular um `stepToSave`:
+
+- Se `step === 'notes'` e `notes.trim()` está vazio ⇒ `stepToSave = 'energy'`
+- Caso contrário ⇒ `stepToSave = step`
+
+Assim, se o usuário selecionou energia e foi automaticamente pro step 5, mas ainda não escreveu nada, o rascunho fica “ancorado” no step 4 — exatamente o comportamento desejado.
+
+**Mudança no autosave (`useEffect`) em `MealCheckModal.tsx`:**
+- substituir `step` por `stepToSave` ao chamar `saveDraft(...)`.
+
+### 4) (Opcional, mas recomendado) Salvar imediatamente ao selecionar energia com o step 4
+Além do autosave, podemos salvar no próprio `handleEnergySelect`:
+
+- Salvar draft com `{ step: 'energy', selectedEnergy: energyId, ... }` antes de `goToStep('notes')`.
+
+Isso garante que mesmo se o app fechar “no meio” do state update, o draft fica correto.
 
 ---
 
-## Arquivos Afetados
-
-| Arquivo | Mudança |
-|---------|---------|
-| `src/components/nutrition/MealCheckModal.tsx` | Ajustar max-height, remover paddings duplicados, corrigir lógica de restauração |
+## Checklist de validação (o que vamos testar após aplicar)
+1) Abrir Nutrição → abrir modal → ir até o step 5: **botão “Salvar Registro” visível sem precisar rolar**.  
+2) No step 5 com teclado aberto (digitando notas): botão continua visível.  
+3) Ir até o step 4 (Energia) → selecionar uma opção → fechar o modal/app imediatamente → reabrir:
+   - deve voltar no **step 4** (Energia), não no 5.  
+4) Escrever alguma nota no step 5 → fechar → reabrir:
+   - agora sim pode voltar no **step 5** (porque há conteúdo real).  
+5) Concluir e salvar:
+   - draft deve ser apagado (`clearDraft()`), e reabrir começa do step 1.
 
 ---
 
-## Testes Recomendados
-1. Abrir modal de nutrição no Android Chrome e verificar se botão "Salvar" está visível no passo 5
-2. Ir até o passo 4 (Energia), selecionar uma opção, fechar o modal
-3. Reabrir o modal e verificar que restaura no passo 4, não no passo 5
-4. Ir até o passo 3 (Refeição), fechar e reabrir - deve restaurar no passo 3
-5. Testar com diferentes tamanhos de tela
+## Arquivos afetados
+- `src/components/nutrition/MealCheckModal.tsx` (principal: layout do footer, padding do conteúdo, lógica de autosave/restauração, CTA nos steps 4/5)
 
+Nenhuma mudança necessária em `index.css` (a classe `.safe-area-bottom` já existe e está correta).
+
+---
+
+## Riscos e mitigação
+- **Risco:** `pb-28/pb-32` pode variar por fonte/escala de acessibilidade.  
+  **Mitigação:** usar um padding mais conservador (ex.: `pb-32`) e manter o conteúdo rolável.
+- **Risco:** mudanças no footer podem afetar animações/drag.  
+  **Mitigação:** footer absoluto não interfere no drag do container; o drag continua no wrapper.
+
+---
+
+## Notas técnicas (para referência)
+- A solução “footer absoluto + content com padding-bottom” é a forma mais robusta para WebView/WhatsApp, onde `overflow-y-auto` em conjunto com `drag` frequentemente causa inconsistências visuais.
+- A correção do draft deve ser feita no ponto de salvamento (autosave/handleEnergySelect) para não depender de heurísticas na restauração.

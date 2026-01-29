@@ -1,169 +1,165 @@
 
 
-# Plano de Melhorias - Módulo de Nutrição
+# Plano de Correção: Botão Salvar na Nutrição + Fluxo de Novos Usuários
 
-## Resumo Executivo
-Após análise detalhada da área de Alimentação Consciente, identifiquei oportunidades significativas para melhorar a experiência do usuário, adicionar funcionalidades e incorporar ajuda contextual que já existe em outras partes do app mas está ausente na nutrição.
+## Resumo dos Problemas Identificados
 
----
+### 1. Modal de Nutrição - Botão Salvar Invisível
+O footer com o botão "Salvar" está no step 5 (notas), mas:
+- Usa `sticky bottom-0` dentro de um container flex que pode não renderizar corretamente em alguns dispositivos
+- O footer está posicionado DENTRO da área scrollável, não como elemento fixo do modal
+- Falta explicação visual do que acontece após o registro
 
-## 1. Adicionar Ajuda Contextual (ContextualHelp)
-
-### Problema
-O `MoodCheckModal` possui ajuda contextual integrada (`ContextualHelp` com ícone de `?`), mas o `MealCheckModal` e a página de Nutrição **não possuem** essa funcionalidade, apesar de já existirem conteúdos de ajuda definidos em `help-content.ts`:
-- `meal-checkin`
-- `water-tracker`
-- `mindful-eating`
-
-### Ações
-
-**Arquivo: `src/components/nutrition/MealCheckModal.tsx`**
-- Adicionar `ContextualHelp` no header do modal com `helpKey="meal-checkin"`
-- Adicionar tooltip/ajuda contextual no step de fome explicando a diferença entre fome física e emocional
-
-**Arquivo: `src/components/nutrition/WaterTracker.tsx`**
-- Adicionar `ContextualHelp` ao lado do título "Hidratação" com `helpKey="water-tracker"`
-
-**Arquivo: `src/pages/Nutrition.tsx`**
-- Adicionar `ContextualHelp` ao lado do título principal com `helpKey="mindful-eating"`
+### 2. Página de Login - Sem Opção para Novos Usuários
+- A página Auth.tsx só oferece Login e "Esqueci minha senha"
+- Não existe opção para usuários sem conta conhecerem o serviço
+- Deveria haver um CTA para "Criar conta" ou "Conhecer o ETHRA" direcionando para a landing page
 
 ---
 
-## 2. Melhorias de UX no MealCheckModal
+## Solução 1: Corrigir Footer do Modal de Nutrição
 
-### 2.1 Feedback Visual de Progresso
-- O indicador de progresso (barras de step) já existe, mas pode ser mais informativo
-- Adicionar **labels de step** visíveis: "Humor → Fome → Refeição → Energia → Reflexão"
+### Problema Técnico Atual
+```text
+┌─────────────────────────────────┐
+│ Header (sticky top)             │
+├─────────────────────────────────┤
+│ Content (flex-1 overflow-y-auto)│
+│   └── ... steps ...             │
+│   └── Footer (sticky bottom-0)  │  ← ERRADO: dentro do scroll!
+└─────────────────────────────────┘
+```
 
-### 2.2 Animações de Transição Entre Steps
-- Adicionar animação de slide horizontal (entrada/saída) entre steps para feedback mais fluido
-- Usar `AnimatePresence` com `mode="wait"` para transições suaves
+### Solução Correta
+```text
+┌─────────────────────────────────┐
+│ Header (flex-shrink-0)          │
+├─────────────────────────────────┤
+│ Content (flex-1 overflow-y-auto)│
+│   └── ... steps ...             │
+├─────────────────────────────────┤
+│ Footer (flex-shrink-0)          │  ← FORA do scroll
+└─────────────────────────────────┘
+```
 
-### 2.3 Melhorar Área de Notas (Step 5)
-- Aumentar altura do textarea em telas maiores
-- Adicionar prompts/sugestões de reflexão (ex: "O que você percebeu durante a refeição?")
-- Mostrar contador de caracteres de forma mais discreta
+### Mudanças no Arquivo: `src/components/nutrition/MealCheckModal.tsx`
 
-### 2.4 Confirmar Antes de Fechar
-- Se o usuário arrastou para fechar (drag-to-dismiss) e já preencheu dados, mostrar confirmação
+1. **Mover o footer para FORA da área scrollável** (após fechar a div do content)
+2. **Mostrar footer em TODOS os steps** (não apenas no step notes)
+   - Step 1-4: Exibir texto explicativo sobre o que será registrado
+   - Step 5: Exibir botão "Salvar" com descrição do que acontece
 
----
+3. **Adicionar explicação pós-registro:**
+   - Mostrar mensagem no step de sucesso: "Seu registro foi salvo e aparecerá na timeline de refeições. Você pode ver padrões de alimentação na página de Insights."
 
-## 3. Melhorias de UX na Página Nutrition.tsx
-
-### 3.1 Onboarding para Novos Usuários
-- Melhorar estado vazio com um mini-tutorial visual explicando os benefícios da alimentação consciente
-- Adicionar ilustração ou animação lottie no estado vazio
-
-### 3.2 Quick Actions
-- Adicionar botão de "Adicionar água" diretamente na página (além do FAB de refeição)
-- Permitir registro rápido de água sem abrir o WaterTracker completo
-
-### 3.3 Filtros na Timeline
-- Adicionar filtro por tipo de fome (física/emocional/todas)
-- Adicionar filtro por período (hoje/semana/mês)
-
-### 3.4 Estatísticas Rápidas
-- Mostrar mini-resumo no topo: "X refeições hoje • Y copos de água • Z% fome física"
-
----
-
-## 4. Melhorias de UI
-
-### 4.1 Cards de Refeição (MealCard)
-- Adicionar visual de "comparação antes/depois" mais proeminente quando expandido
-- Usar cores temáticas baseadas no tipo de fome:
-  - Verde para fome física
-  - Laranja para fome emocional
-  - Cinza para não identificada
-
-### 4.2 WaterTracker
-- Animação mais suave ao adicionar água (bounce effect)
-- Celebração visual ao atingir 50% e 100% da meta
-- Adicionar opção de editar quantidade personalizada
-
-### 4.3 NutritionSummary
-- Mostrar dados de alimentação consciente (não apenas macros do sistema externo)
-- Se não há dados de macros, mostrar resumo dos check-ins de fome
-
-### 4.4 Cores e Temas
-- Garantir consistência da cor `nutrition` (laranja) em todos os componentes
-- Adicionar variantes para estados de sucesso/alerta
+4. **Melhorar visibilidade do botão:**
+   - Usar `z-[130]` no footer para garantir sobreposição
+   - Adicionar sombra superior para destacar do conteúdo
+   - Usar `safe-bottom` com fallback de margem
 
 ---
 
-## 5. Novas Funcionalidades
+## Solução 2: Adicionar Opção para Novos Usuários na Página de Login
 
-### 5.1 Lembretes de Hidratação
-- Opção de ativar notificações de lembrete para beber água (se suportado pelo PWA)
+### Mudanças no Arquivo: `src/pages/Auth.tsx`
 
-### 5.2 Streak de Alimentação Consciente
-- Mostrar sequência de dias com check-in de refeição
-- Gamificação: badges por X dias consecutivos praticando
+1. **Adicionar seção "Não tem conta?" abaixo do formulário de login:**
+   ```text
+   ────────────────────────────────────
+   Novo por aqui?
+   [Conhecer o ETHRA] → navega para /landing
+   ────────────────────────────────────
+   ```
 
-### 5.3 Integração com Insights
-- Link direto para ver padrões de alimentação nos Insights
-- Preview de insights no rodapé da página de Nutrição
+2. **Manter consistência com a marca:**
+   - Usar texto amigável: "Ainda não faz parte?"
+   - Botão secundário com variante `outline`
+   - Direcionar para `/landing` onde o usuário pode ver benefícios e planos
 
-### 5.4 Exportar Dados
-- Permitir exportar histórico de alimentação consciente em formato simples
-
----
-
-## 6. Correções Técnicas Pendentes
-
-### 6.1 Layout do Modal (já parcialmente implementado)
-- Garantir que `max-h-[min(92dvh,92vh)]` funciona em todos os navegadores
-- Testar a margem inferior `mb-[max(env(safe-area-inset-bottom,24px),24px)]` em diferentes dispositivos
-
-### 6.2 Performance
-- Memoizar componentes de step para evitar re-renders desnecessários
-- Lazy load do componente de sugestão de respiração
+3. **Adicionar separador visual:**
+   - Linha com "ou" entre o botão "Entrar" e a seção de novos usuários
 
 ---
 
-## Priorização Recomendada
+## Detalhes de Implementação
 
-### Alta Prioridade (Implementar Primeiro)
-1. Adicionar `ContextualHelp` em todos os componentes de nutrição
-2. Melhorar transições entre steps do modal
-3. Garantir layout correto em todos os dispositivos Android
+### Arquivo 1: `src/components/nutrition/MealCheckModal.tsx`
 
-### Média Prioridade
-4. Filtros na timeline
-5. Quick action de água na página
-6. Melhorar estado vazio com onboarding
+**Mudança estrutural:**
+```tsx
+// Layout atual (INCORRETO)
+<div className="flex-1 min-h-0 overflow-y-auto px-5 py-4">
+  {/* Content + Steps */}
+  {step === 'notes' && (
+    <div className="sticky bottom-0 ...">  {/* Footer DENTRO do scroll */}
+      <Button>Salvar</Button>
+    </div>
+  )}
+</div>
 
-### Baixa Prioridade (Futuro)
-7. Lembretes de hidratação
-8. Streak de alimentação
-9. Exportação de dados
+// Layout corrigido
+<div className="flex-1 min-h-0 overflow-y-auto px-5 py-4">
+  {/* Content + Steps */}
+</div>
+{/* Footer FORA do scroll, sempre visível */}
+{step !== 'success' && (
+  <div className="flex-shrink-0 px-5 pt-3 pb-5 border-t ...">
+    {step === 'notes' ? (
+      <Button>Salvar</Button>
+    ) : (
+      <p className="text-sm text-muted-foreground text-center">
+        Continue para registrar sua experiência alimentar
+      </p>
+    )}
+  </div>
+)}
+```
+
+**Adicionar explicação no step de sucesso:**
+- Mensagem: "Seu registro foi salvo! Ele aparece na sua timeline de refeições e contribui para seus insights de alimentação consciente."
+
+### Arquivo 2: `src/pages/Auth.tsx`
+
+**Adicionar após o Card de login:**
+```tsx
+{/* Separador */}
+<div className="relative my-4">
+  <div className="absolute inset-0 flex items-center">
+    <span className="w-full border-t border-border" />
+  </div>
+  <div className="relative flex justify-center text-xs uppercase">
+    <span className="bg-background px-2 text-muted-foreground">ou</span>
+  </div>
+</div>
+
+{/* Seção para novos usuários */}
+<div className="text-center space-y-3">
+  <p className="text-sm text-muted-foreground">
+    Ainda não faz parte?
+  </p>
+  <Button
+    variant="outline"
+    className="w-full"
+    onClick={() => navigate('/landing')}
+  >
+    Conhecer o ETHRA
+  </Button>
+</div>
+```
 
 ---
 
 ## Arquivos Afetados
-- `src/components/nutrition/MealCheckModal.tsx` - Ajuda contextual + transições + melhorias UX
-- `src/components/nutrition/WaterTracker.tsx` - Ajuda contextual + celebrações
-- `src/components/nutrition/MealCard.tsx` - Cores temáticas + visual expandido
-- `src/components/nutrition/NutritionSummary.tsx` - Resumo de check-ins
-- `src/pages/Nutrition.tsx` - Ajuda contextual + filtros + quick actions
+1. `src/components/nutrition/MealCheckModal.tsx` - Reposicionar footer + adicionar explicação
+2. `src/pages/Auth.tsx` - Adicionar opção para novos usuários
 
 ---
 
-## Seção Técnica
-
-### Dependências Necessárias
-- Nenhuma nova dependência. Usar `ContextualHelp`, `framer-motion`, e componentes existentes.
-
-### Padrões a Seguir
-- Usar `AnimatePresence mode="wait"` para transições entre steps
-- Seguir padrão do `MoodCheckModal` para ajuda contextual
-- Manter `z-[120]` para modais sobre `BottomNavigation`
-- Usar cores CSS variables (`hsl(var(--nutrition))`) para consistência temática
-
-### Testes Recomendados
-- Testar em Android Chrome (browser normal)
-- Testar em iOS Safari
-- Testar em WhatsApp In-App Browser
-- Verificar com diferentes escalas de fonte (Normal/Large/Extra Grande)
+## Testes Recomendados
+1. Abrir modal de nutrição no Android e verificar se botão "Salvar" está visível
+2. Testar com teclado aberto (digitando notas) e verificar que botão não é coberto
+3. Verificar transição entre steps e texto explicativo no footer
+4. Testar fluxo completo de registro e verificar mensagem de sucesso
+5. Acessar `/auth` como usuário deslogado e clicar "Conhecer o ETHRA"
+6. Verificar redirecionamento para `/landing`
 

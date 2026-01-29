@@ -1,139 +1,143 @@
 
-# Plano: Correção do Botão Salvar + Persistência de Rascunho
 
-## Problemas Identificados
+# Plano: Corrigir Visibilidade do Botão Salvar
 
-### 1. Botão "Salvar" Invisível no Passo 5
-Analisando a screenshot e o código (linhas 608-631), identifiquei o problema:
-- O footer está **dentro** da estrutura do modal, mas a div scrollável (linha 297) fecha na linha 606
-- O footer está **FORA** da área scrollável, o que é correto
-- **Porém**, o footer usa `margin-bottom: max(env(...), 0px)` que pode ser insuficiente em alguns dispositivos Android
+## Diagnóstico do Problema
 
-O problema real: o modal tem `max-h-[min(92dvh,92vh)]` e `mb-[max(env(safe-area-inset-bottom,24px),24px)]`, mas o footer pode estar sendo "empurrado para fora" da viewport visível.
+Após análise detalhada da screenshot e do código, identifiquei a causa raiz:
 
-### 2. Perda de Progresso ao Sair do App
-O usuário escolheu **"Restaurar automaticamente"**: se o check-in estiver após o passo 3, ao reabrir o modal ele deve retomar de onde parou.
+**O footer está posicionado corretamente FORA da área scrollável, mas a altura combinada de todos os elementos excede o espaço disponível na viewport.**
+
+### Estrutura Atual
+```text
+┌─────────────────────────────────────────┐
+│ Drag Indicator (pt-3 pb-1)              │
+├─────────────────────────────────────────┤
+│ Header (sticky, ~70px)                   │
+├─────────────────────────────────────────┤
+│ Content (flex-1 overflow-y-auto)         │
+│   └── Progress bars + labels (~50px)     │
+│   └── Title (~30px)                      │
+│   └── Step content (textarea, tags)      │
+│   └── SEM padding-bottom extra           │  ← PROBLEMA
+├─────────────────────────────────────────┤
+│ Footer (flex-shrink-0, ~100px)           │  ← CORTADO!
+│   └── Texto explicativo                  │
+│   └── Botão "Salvar Registro"            │
+└─────────────────────────────────────────┘
+max-h = 88dvh (não deixa espaço suficiente)
+```
+
+### Causa
+O `flex-1` no container de conteúdo está "empurrando" o footer para baixo, ultrapassando o limite de `max-h-[min(88dvh,88vh)]`. No dispositivo mostrado na screenshot, o footer fica parcialmente visível (texto sim, botão não).
 
 ---
 
-## Solução 1: Corrigir Visibilidade do Footer
+## Solução
+
+### 1. Reduzir max-height do modal e adicionar estrutura mais rígida
+
+Mudar de `max-h-[min(88dvh,88vh)]` para `max-h-[85dvh]` para garantir mais margem.
+
+### 2. Adicionar padding-bottom ao conteúdo scrollável
+
+Garantir que o conteúdo tenha espaço interno para não competir com o footer.
+
+### 3. Usar altura fixa para o footer (não flex)
+
+Evitar que o footer seja "comprimido" ou "empurrado" para fora.
+
+### 4. Remover o inline style de paddingBottom problemático
+
+O `style={{ paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom, 20px))' }}` pode não funcionar corretamente em todos os navegadores. Usar classe Tailwind com fallback.
+
+---
+
+## Mudanças Específicas
 
 ### Arquivo: `src/components/nutrition/MealCheckModal.tsx`
 
-**Mudanças:**
-1. Remover `marginBottom` inline que pode causar conflito
-2. Usar classes Tailwind consistentes para safe-area
-3. Adicionar padding-bottom interno ao content para dar espaço ao footer
-4. Garantir que o footer tenha altura fixa e não seja cortado
-
+**Linha 296-300 - Ajustar container do modal:**
 ```tsx
-// Atual (problemático)
-<div className="flex-shrink-0 px-5 pt-3 pb-5 border-t ..." 
-     style={{ marginBottom: 'max(env(safe-area-inset-bottom, 0px), 0px)' }}>
+// DE:
+className={cn(
+  "relative w-full max-w-lg flex flex-col overflow-hidden bg-card rounded-t-3xl shadow-xl border-t border-border/50",
+  "max-h-[min(88dvh,88vh)]"
+)}
+style={{ marginBottom: 'max(env(safe-area-inset-bottom, 0px), 0px)' }}
 
-// Corrigido
-<div className="flex-shrink-0 px-5 pt-3 pb-[max(1.25rem,env(safe-area-inset-bottom))] border-t ...">
+// PARA:
+className={cn(
+  "relative w-full max-w-lg flex flex-col bg-card rounded-t-3xl shadow-xl border-t border-border/50",
+  "max-h-[85dvh]"
+)}
+// Remover o style inline
 ```
 
-**Ajuste estrutural:**
-- Adicionar `pb-20` ao container scrollável para garantir que o conteúdo não fique escondido atrás do footer
+**Linha 338 - Adicionar padding-bottom ao conteúdo:**
+```tsx
+// DE:
+<div className="flex-1 min-h-0 overflow-y-auto px-5 py-4">
 
----
-
-## Solução 2: Persistência Automática de Rascunho
-
-### Arquivo: `src/hooks/useNutritionDraft.ts` (NOVO)
-
-Hook dedicado para gerenciar o rascunho no `localStorage`:
-
-```typescript
-interface NutritionDraft {
-  step: Step;
-  selectedMood: string | null;
-  selectedHunger: string | null;
-  selectedCategory: string | null;
-  selectedEnergy: string | null;
-  notes: string;
-  savedAt: number; // timestamp para expirar após 1 hora
-}
-
-export function useNutritionDraft() {
-  const STORAGE_KEY = 'nutrition-check-in-draft';
-  const EXPIRY_MS = 60 * 60 * 1000; // 1 hora
-
-  const saveDraft = (data: Omit<NutritionDraft, 'savedAt'>) => {...}
-  const loadDraft = (): NutritionDraft | null => {...}
-  const clearDraft = () => {...}
-  const hasDraft = (): boolean => {...}
-  
-  return { saveDraft, loadDraft, clearDraft, hasDraft };
-}
+// PARA:
+<div className="flex-1 min-h-0 overflow-y-auto px-5 py-4 pb-6">
 ```
 
-### Arquivo: `src/components/nutrition/MealCheckModal.tsx`
-
-**Integração do hook:**
-
-1. **No mount do modal**: verificar se há rascunho válido e restaurar automaticamente
-2. **A cada mudança de step (após step 3)**: salvar rascunho automaticamente
-3. **Ao completar o registro**: limpar rascunho
-4. **Ao fechar o modal**: se estiver após step 3, salvar rascunho antes de fechar
-
+**Linhas 651-653 - Simplificar footer:**
 ```tsx
-// Ao abrir o modal
-useEffect(() => {
-  if (isOpen) {
-    const draft = loadDraft();
-    if (draft && ['category', 'energy', 'notes'].includes(draft.step)) {
-      // Restaurar estado
-      setStep(draft.step);
-      setSelectedMood(draft.selectedMood);
-      // ... etc
-    }
-  }
-}, [isOpen]);
+// DE:
+<div 
+  className="flex-shrink-0 px-5 pt-3 border-t border-border/30 bg-card shadow-[0_-4px_12px_rgba(0,0,0,0.1)] z-[130]"
+  style={{ paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom, 20px))' }}
+>
 
-// Salvar automaticamente após step 3
-useEffect(() => {
-  if (['category', 'energy', 'notes'].includes(step) && hasData) {
-    saveDraft({ step, selectedMood, selectedHunger, selectedCategory, selectedEnergy, notes });
-  }
-}, [step, selectedMood, selectedHunger, selectedCategory, selectedEnergy, notes]);
+// PARA:
+<div className="flex-shrink-0 px-5 pt-3 pb-6 border-t border-border/30 bg-card shadow-[0_-4px_12px_rgba(0,0,0,0.1)] z-[130] safe-area-bottom">
+```
+
+**Adicionar classe CSS para safe-area (se não existir):**
+No index.css:
+```css
+.safe-area-bottom {
+  padding-bottom: max(1.5rem, env(safe-area-inset-bottom, 1.5rem));
+}
 ```
 
 ---
 
-## Resumo das Mudanças
+## Arquivos Afetados
 
 | Arquivo | Mudança |
 |---------|---------|
-| `src/hooks/useNutritionDraft.ts` | NOVO - hook para persistência em localStorage |
-| `src/components/nutrition/MealCheckModal.tsx` | Corrigir footer visibility + integrar draft persistence |
+| `src/components/nutrition/MealCheckModal.tsx` | Ajustar max-height, padding-bottom e footer |
+| `src/index.css` | Adicionar classe `.safe-area-bottom` (se necessário) |
 
 ---
 
-## Fluxo do Usuário
+## Resultado Esperado
 
-1. Usuário abre modal de Alimentação Consciente
-2. Preenche Humor (step 1) → Fome (step 2) → Refeição (step 3)
-3. **App em background ou fechado acidentalmente**
-4. Ao reabrir o modal: "Continuando de onde você parou..." + restaura no step 3 ou posterior
-5. Usuário completa e salva → rascunho é limpo
+```text
+┌─────────────────────────────────────────┐
+│ Drag Indicator                          │
+├─────────────────────────────────────────┤
+│ Header                                   │
+├─────────────────────────────────────────┤
+│ Content (scrollable, com pb-6)           │
+│   └── ...                                │
+│   └── Espaço extra no final              │
+├─────────────────────────────────────────┤
+│ Footer (SEMPRE visível)                  │
+│   └── Texto explicativo ✓                │
+│   └── Botão "Salvar Registro" ✓          │
+└─────────────────────────────────────────┘
+max-h = 85dvh (com margem de segurança)
+```
 
 ---
 
-## Seção Técnica
+## Testes Recomendados
+1. Abrir modal de nutrição no Android Chrome e verificar se o botão "Salvar" está visível no passo 5
+2. Testar com teclado virtual aberto (digitando notas)
+3. Testar em diferentes tamanhos de tela
+4. Verificar que o conteúdo ainda é scrollável quando necessário
 
-### Dependências
-- Nenhuma nova dependência
-
-### Padrões a Seguir
-- localStorage com prefixo `nutrition-check-in-draft`
-- Expiração de 1 hora para rascunhos
-- Safe-area usando CSS `env()` dentro de Tailwind `pb-[...]`
-
-### Testes Recomendados
-1. Abrir modal, ir até step 5, verificar se botão "Salvar" está visível
-2. Ir até step 4, fechar o app, reabrir e verificar restauração automática
-3. Completar registro e verificar que rascunho foi limpo
-4. Testar em Android Chrome (browser normal) e iOS Safari

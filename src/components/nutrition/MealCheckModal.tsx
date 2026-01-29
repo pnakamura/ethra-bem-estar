@@ -85,6 +85,7 @@ export function MealCheckModal({ isOpen, onClose, onSuggestBreathing }: MealChec
   const { saveDraft, loadDraft, clearDraft } = useNutritionDraft();
   
   const hasRestoredRef = useRef(false);
+  const justSavedRef = useRef(false); // Prevents re-restoration immediately after saving
 
   const hasData = selectedMood || selectedHunger || selectedCategory || selectedEnergy || notes.trim();
 
@@ -99,46 +100,68 @@ export function MealCheckModal({ isOpen, onClose, onSuggestBreathing }: MealChec
     setShowBreathingSuggestion(false);
   }, []);
 
-  // Restore draft when modal opens
+  // Restore draft when modal opens - DATA-DRIVEN LOGIC
   useEffect(() => {
     if (isOpen && !hasRestoredRef.current) {
-      const draft = loadDraft();
-      if (draft && ['category', 'energy', 'notes'].includes(draft.step)) {
-        // Normalize notes as a safe string
-        const restoredNotes = typeof draft.notes === 'string' ? draft.notes : '';
-        const hasNotes = restoredNotes.trim().length > 0;
-        
-        // Restore all data first
-        setSelectedMood(draft.selectedMood);
-        setSelectedHunger(draft.selectedHunger);
-        setSelectedCategory(draft.selectedCategory);
-        setSelectedEnergy(draft.selectedEnergy);
-        setNotes(restoredNotes);
-        
-        // DETERMINISTIC RESTORATION LOGIC:
-        // Priority 1: If energy is selected but notes is empty → stay on energy (step 4)
-        // Priority 2: If step is 'notes' but notes is empty → go back to energy
-        // Default: use saved step
-        // NOTE: We intentionally do NOT fall back to 'category' if selectedEnergy is null,
-        // because the user should stay on 'energy' and select again
-        let restoreStep = draft.step;
-        
-        // Priority 1 & 2: Force back to energy if notes is empty
-        if (draft.selectedEnergy && !hasNotes) {
-          restoreStep = 'energy';
-        } else if (draft.step === 'notes' && !hasNotes) {
-          restoreStep = 'energy';
-        }
-        
-        setStep(restoreStep);
+      // If we just saved, don't restore - start fresh
+      if (justSavedRef.current) {
+        justSavedRef.current = false;
         hasRestoredRef.current = true;
-        toast.info('Continuando de onde você parou...', { duration: 2000 });
+        return;
       }
+      
+      const draft = loadDraft();
+      
+      // CONSISTENCY VALIDATION: Draft must have minimum required data
+      // If selectedMood or selectedHunger is missing, the draft is inconsistent
+      if (!draft || !draft.selectedMood || !draft.selectedHunger) {
+        if (draft) {
+          clearDraft(); // Clear inconsistent draft
+        }
+        hasRestoredRef.current = true;
+        return; // Start fresh from step 1 (mood)
+      }
+      
+      // Normalize notes as a safe string
+      const restoredNotes = typeof draft.notes === 'string' ? draft.notes : '';
+      const hasNotes = restoredNotes.trim().length > 0;
+      
+      // Restore all data first
+      setSelectedMood(draft.selectedMood);
+      setSelectedHunger(draft.selectedHunger);
+      setSelectedCategory(draft.selectedCategory);
+      setSelectedEnergy(draft.selectedEnergy);
+      setNotes(restoredNotes);
+      
+      // DATA-DRIVEN RESTORATION LOGIC (based on what data exists, not draft.step):
+      // 1. If notes has real content → restore to 'notes' (step 5)
+      // 2. If selectedEnergy exists but notes is empty → restore to 'energy' (step 4)
+      // 3. If selectedCategory exists but selectedEnergy is missing → restore to 'energy' (step 4)
+      // 4. If only category exists → restore to 'category' (step 3)
+      // 5. Default → 'category' (step 3 - first restorable step)
+      
+      let restoreStep: Step = 'category';
+      
+      if (hasNotes) {
+        // User wrote notes - go to step 5
+        restoreStep = 'notes';
+      } else if (draft.selectedEnergy) {
+        // Energy selected but no notes - stay on step 4 to allow editing
+        restoreStep = 'energy';
+      } else if (draft.selectedCategory) {
+        // Category selected but no energy - go to step 4 to select energy
+        restoreStep = 'energy';
+      }
+      // If only mood/hunger, start at category (step 3)
+      
+      setStep(restoreStep);
+      hasRestoredRef.current = true;
+      toast.info('Continuando de onde você parou...', { duration: 2000 });
     }
     if (!isOpen) {
       hasRestoredRef.current = false;
     }
-  }, [isOpen, loadDraft]);
+  }, [isOpen, loadDraft, clearDraft]);
 
   // Auto-save draft after step 3 - save as 'energy' when on 'notes' but notes is empty
   // CRITICAL: Don't overwrite when selectedEnergy is null (state not yet updated by React)
@@ -222,8 +245,9 @@ export function MealCheckModal({ isOpen, onClose, onSuggestBreathing }: MealChec
         mindful_eating_notes: notes.trim() || null,
       });
       
-      // Clear draft on successful save
+      // Clear draft on successful save and set flag to prevent re-restoration
       clearDraft();
+      justSavedRef.current = true;
       
       goToStep('success', 1);
       toast.success('Registro de alimentação consciente salvo!');
@@ -638,21 +662,8 @@ export function MealCheckModal({ isOpen, onClose, onSuggestBreathing }: MealChec
                       </span>
                     </div>
                     
-                    {/* Reflection prompts */}
-                    <div className="flex flex-wrap gap-2">
-                      {['Comi devagar', 'Apreciei os sabores', 'Percebi a saciedade'].map((tag) => (
-                        <button
-                          key={tag}
-                          onClick={() => setNotes(prev => prev ? `${prev} ${tag}.` : `${tag}.`)}
-                          className="px-3 py-1.5 rounded-full bg-nutrition/10 text-nutrition text-xs font-medium hover:bg-nutrition/20 transition-colors"
-                        >
-                          + {tag}
-                        </button>
-                      ))}
-                    </div>
-
-                    {/* INLINE Save Button - positioned right after textarea */}
-                    <div className="pt-3 border-t border-border/30">
+                    {/* STICKY Save Button - always visible at bottom */}
+                    <div className="sticky bottom-0 -mx-5 px-5 pt-3 pb-2 bg-card border-t border-border/30 z-20">
                       <p className="text-xs text-muted-foreground text-center mb-3">
                         Ao salvar, seu registro aparecerá na timeline e ajudará a identificar padrões alimentares
                       </p>
@@ -664,6 +675,19 @@ export function MealCheckModal({ isOpen, onClose, onSuggestBreathing }: MealChec
                         <Check className="w-5 h-5 mr-2" />
                         {isCreating ? 'Salvando...' : 'Salvar Registro'}
                       </Button>
+                    </div>
+                    
+                    {/* Reflection prompts - below sticky button */}
+                    <div className="flex flex-wrap gap-2 pt-2">
+                      {['Comi devagar', 'Apreciei os sabores', 'Percebi a saciedade'].map((tag) => (
+                        <button
+                          key={tag}
+                          onClick={() => setNotes(prev => prev ? `${prev} ${tag}.` : `${tag}.`)}
+                          className="px-3 py-1.5 rounded-full bg-nutrition/10 text-nutrition text-xs font-medium hover:bg-nutrition/20 transition-colors"
+                        >
+                          + {tag}
+                        </button>
+                      ))}
                     </div>
                   </motion.div>
                 )}

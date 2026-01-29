@@ -1,140 +1,160 @@
 
-## Objetivo
-Corrigir de forma definitiva:
-1) **Botão “Salvar Registro” não aparece** no passo 5 (Reflexão).
-2) **Restauração do rascunho** está voltando para a **pergunta 5**, mas deve voltar para a **4 (Energia)** quando o usuário saiu logo após selecionar energia.
 
----
+# Plano: Correção Definitiva do Botão Salvar e Restauração
 
-## O que descobri no código atual (por que ainda falha)
-### 1) O botão existe, mas está “preso” no footer absoluto
-No `MealCheckModal.tsx`, o botão **só é renderizado no footer** quando `step === 'notes'`:
+## Problemas Identificados
 
-- Footer está `absolute bottom-0 ... z-[130]`.
-- Em browsers problemáticos (WhatsApp/Android WebView), ainda pode acontecer de:
-  - o footer ficar **fora da área visível** (mesmo absoluto), ou
-  - ficar **atrás de alguma camada** / cálculo de viewport errado durante `drag`/`overflow`.
+### 1. Botão "Salvar" não aparece na etapa 5
+Analisando o código, o botão **está no lugar certo** (linhas 651-664, dentro do step `notes`), logo após a textarea. Se você chega na etapa 5 e vê a textarea mas não vê o botão, o problema é de **scroll/visibilidade**:
 
-Como você pediu explicitamente: **“Coloque o botão logo após a caixa de texto”**, a abordagem mais robusta é **não depender do footer para o botão**.
+- O container scrollável (`flex-1 min-h-0 overflow-y-auto`) pode não estar dando espaço suficiente para mostrar o botão
+- A altura do modal (`max-h-[80dvh]`) combinada com todos os elementos internos pode estar causando o botão ficar "cortado"
 
-### 2) A restauração “deveria” voltar para energy, mas na prática ainda cai em notes
-Hoje a restauração faz:
-- Se `draft.step === 'notes'` e `draft.notes.trim()` vazio → `restoreStep = 'energy'`.
+**Solução**: Adicionar `pb-24` (padding-bottom) ao container scrollável para garantir que o botão tenha espaço e seja visível sem precisar rolar até o fim.
 
-Se ainda está indo para o passo 5, isso indica um destes cenários reais:
-- O draft está chegando com `notes` **não vazio** (mesmo que seja espaço/quebra de linha).
-- O draft está sendo sobrescrito para `step:'notes'` depois do “energy select” por algum fluxo não previsto.
-- Ou o `restoreStep` até é calculado, mas algo depois está mudando `step` novamente (ex.: alguma navegação/efeito).
-
-Vamos tornar isso **determinístico**, baseado no que você quer:  
-“Se saiu logo após selecionar energia, sempre voltar para Energia”.
-
----
-
-## Estratégia (mudança de abordagem)
-### A) Botão “Salvar” passa a ficar dentro do conteúdo do passo 5 (logo após a textarea)
-Em vez de confiar no footer:
-- Renderizar o botão **imediatamente após a textarea** no bloco do step `notes`.
-- Opcionalmente manter um texto explicativo abaixo do botão.
-- O footer global pode ficar apenas com mensagens simples (ou ser removido) para evitar conflitos de layout.
-
-Para garantir visibilidade em mobile (teclado aberto):
-- Colocar o botão em um container **`sticky bottom-0`** dentro da área scrollável do step `notes`, com `bg-card`, `border-t` e `safe-area-bottom`.
-- Isso dá o melhor dos 2 mundos:
-  - o botão fica “logo após a caixa de texto” no DOM,
-  - e também fica “fixo”/visível durante scroll e teclado.
-
-### B) Restauração: usar regra “à prova de falhas” para voltar à página 4
-Vamos reforçar a lógica de restauração com duas medidas:
-
-1) **Normalização de notes** na restauração: considerar vazio se:
-   - `!draft.notes` OU
-   - `draft.notes.trim().length === 0`
-
-2) **Âncora forte para o caso específico do seu bug**:
-   - Se `draft.selectedEnergy` está preenchido **e** `draft.notes` está vazia → restaurar **sempre** em `energy` (passo 4).
-   - Mesmo que `draft.step` tenha sido salvo como `notes` por qualquer motivo, a regra do seu requisito ganha prioridade.
-
----
-
-## Mudanças planejadas (arquivo por arquivo)
-
-### 1) `src/components/nutrition/MealCheckModal.tsx`
-
-#### 1.1. Mover/duplicar botão para dentro do step `notes`
-No bloco:
+### 2. Restauração voltando para etapa 3 (deveria ser 4)
+A lógica atual (linhas 126-134):
 ```tsx
-{step === 'notes' && !showBreathingSuggestion && ( ... )}
-```
-Adicionar logo após a textarea (ou logo após o bloco textarea + contador):
-- Um container com:
-  - Texto curto
-  - Botão “Salvar Registro”
-- Preferência: container `sticky bottom-0` dentro do scroll (assim fica sempre visível).
-
-Exemplo de estrutura (conceitual):
-```tsx
-<div className="space-y-3">
-  ... textarea ...
-
-  <div className="sticky bottom-0 -mx-5 px-5 pt-3 bg-card border-t border-border/30 safe-area-bottom">
-    <p className="text-xs text-muted-foreground text-center mb-3">
-      Ao salvar, seu registro aparecerá na timeline e ajudará a identificar padrões alimentares
-    </p>
-    <Button ...>Salvar Registro</Button>
-  </div>
-</div>
+if (draft.selectedEnergy && !hasNotes) {
+  restoreStep = 'energy';
+}
+...
+if (restoreStep === 'energy' && !draft.selectedEnergy) {
+  restoreStep = 'category';  // <-- ESTE É O BUG!
+}
 ```
 
-#### 1.2. Simplificar ou remover o botão do footer global
-Para evitar duplicidade/confusão:
-- Opção recomendada: no footer global **não renderizar botão de salvar** (deixar o botão apenas no step `notes`).
-- O footer global pode ficar com mensagens do tipo:
-  - “Continue para registrar...”
-  - ou, no step `energy`, uma dica curta.
-- Alternativa: manter o footer, mas sem depender dele para “Salvar”.
+O problema é que **`draft.selectedEnergy` está chegando como `null`** na restauração, fazendo a segunda condição cair em `category`.
 
-Isso elimina 100% a chance do “Salvar” sumir por causa de footer.
+Por que `selectedEnergy` está null no draft?
+- No `handleEnergySelect`, o draft é salvo ANTES do `setSelectedEnergy` atualizar o estado
+- O `saveDraft` está usando `selectedEnergy` do estado atual (que ainda é null) em vez do `energyId` recém-selecionado
 
-#### 1.3. Restauração determinística (voltar para a 4)
-No `useEffect` de restore, substituir a lógica de `restoreStep` por uma função mais explícita:
+**Olhando linha 200-206**:
+```tsx
+saveDraft({
+  step: 'energy',
+  ...
+  selectedEnergy: energyId,  // ✓ Correto, usa energyId
+  ...
+});
+```
 
-Regras (ordem de prioridade):
-1) Se `draft.selectedEnergy` existe e `draft.notes.trim()` está vazia → `restoreStep = 'energy'`
-2) Senão, se `draft.step === 'notes'` e `draft.notes.trim()` vazia → `restoreStep = 'energy'`
-3) Senão, se `restoreStep === 'energy'` e `!draft.selectedEnergy` → `restoreStep = 'category'`
-4) Caso contrário, manter `draft.step`
+Mas o auto-save (linhas 148-162) pode estar sobrescrevendo logo em seguida com o estado anterior!
 
-Também vamos garantir que `draft.notes` seja tratado como string segura:
-- `const restoredNotes = typeof draft.notes === 'string' ? draft.notes : ''`
-
-#### 1.4. (Pequena melhoria) Salvar notes “limpo” quando selecionar energia
-No `handleEnergySelect`, ao salvar draft imediatamente, garantir:
-- `notes: notes ?? ''`
-- Se necessário, `notes: notes.trim()` para evitar armazenar whitespace que quebra a regra.
+**Causa raiz**: O `useEffect` de auto-save roda quando `step` muda. Quando `goToStep('notes')` é chamado, o auto-save detecta `step='notes'` mas o estado `selectedEnergy` ainda não foi atualizado pelo React, então salva com `selectedEnergy: null`.
 
 ---
 
-## Como vamos validar (checklist)
-1) Abrir modal → ir até o passo 5:
-   - o botão “Salvar Registro” deve estar **logo abaixo da caixa de texto**, visível.
-2) Em Android/WhatsApp in-app:
-   - focar no textarea (teclado aberto) e verificar que o botão ainda fica acessível (via sticky).
-3) Teste de restauração:
-   - ir até passo 4, selecionar energia, fechar imediatamente → abrir novamente:
-     - deve voltar no **passo 4 (Energia)**.
-4) Se escrever qualquer nota e fechar → abrir novamente:
-   - pode voltar no passo 5 (porque existe conteúdo real).
+## Soluções
+
+### Solução 1: Garantir visibilidade do botão
+Adicionar padding-bottom suficiente ao container scrollável para garantir que o botão sempre apareça:
+
+**Arquivo**: `src/components/nutrition/MealCheckModal.tsx`  
+**Linha 377**:
+```tsx
+// DE:
+<div className="flex-1 min-h-0 overflow-y-auto px-5 py-4">
+
+// PARA:
+<div className="flex-1 min-h-0 overflow-y-auto px-5 py-4 pb-24">
+```
+
+### Solução 2: Corrigir a lógica de auto-save para não sobrescrever
+O problema é que o auto-save usa o estado `selectedEnergy` que ainda não foi atualizado. Precisamos:
+
+1. **Desabilitar auto-save no step `notes` quando `selectedEnergy` está null**
+2. **OU** Confiar apenas no save explícito do `handleEnergySelect` e não deixar o auto-save sobrescrever
+
+**Mudança no auto-save (linhas 148-162)**:
+```tsx
+useEffect(() => {
+  // Só salvar se temos dados válidos para o step atual
+  if (['category', 'energy', 'notes'].includes(step) && hasData) {
+    // NÃO SALVAR se estamos em notes/energy mas selectedEnergy está null
+    // (significa que o estado ainda não foi atualizado)
+    if ((step === 'notes' || step === 'energy') && !selectedEnergy) {
+      return; // Não sobrescrever - o handleEnergySelect já salvou corretamente
+    }
+    
+    const stepToSave = (step === 'notes' && !notes.trim()) ? 'energy' : step;
+    
+    saveDraft({...});
+  }
+}, [...]);
+```
+
+### Solução 3: Simplificar a lógica de restauração
+Remover a condição que manda para `category` quando `selectedEnergy` está null no step `energy`, pois isso não deveria acontecer:
+
+**Mudança na restauração (linhas 131-135)**:
+```tsx
+// REMOVER esta condição:
+// if (restoreStep === 'energy' && !draft.selectedEnergy) {
+//   restoreStep = 'category';
+// }
+
+// NOVA LÓGICA MAIS SIMPLES:
+// Se o draft indica 'energy' ou 'notes' mas não tem selectedEnergy válido,
+// mantemos em 'energy' e deixamos o usuário selecionar novamente
+```
 
 ---
 
-## Arquivos afetados
-- `src/components/nutrition/MealCheckModal.tsx` (principal; layout do botão e restauração)
-- (Opcional) nenhum outro arquivo necessário, já que `useNutritionDraft.ts` está ok para armazenar dados; o problema é a decisão de “qual passo restaurar”.
+## Mudanças Específicas
+
+### Arquivo: `src/components/nutrition/MealCheckModal.tsx`
+
+**Mudança 1 - Padding para visibilidade (linha 377)**:
+```tsx
+<div className="flex-1 min-h-0 overflow-y-auto px-5 py-4 pb-24">
+```
+
+**Mudança 2 - Auto-save não sobrescreve quando selectedEnergy é null (linhas 148-162)**:
+```tsx
+useEffect(() => {
+  if (['category', 'energy', 'notes'].includes(step) && hasData) {
+    // Prevenir que o auto-save sobrescreva o draft quando
+    // estamos em notes/energy mas selectedEnergy ainda não foi atualizado
+    if ((step === 'notes' || step === 'energy') && !selectedEnergy) {
+      return;
+    }
+    
+    const stepToSave = (step === 'notes' && !notes.trim()) ? 'energy' : step;
+    
+    saveDraft({
+      step: stepToSave,
+      selectedMood,
+      selectedHunger,
+      selectedCategory,
+      selectedEnergy,
+      notes,
+    });
+  }
+}, [step, selectedMood, selectedHunger, selectedCategory, selectedEnergy, notes, hasData, saveDraft]);
+```
+
+**Mudança 3 - Remover fallback para category na restauração (linhas 131-135)**:
+```tsx
+// Remover estas linhas:
+// if (restoreStep === 'energy' && !draft.selectedEnergy) {
+//   restoreStep = 'category';
+// }
+```
 
 ---
 
-## Observação importante (para destravar se ainda falhar)
-Se após isso ainda “voltar no passo 5”, a próxima ação de debug será pedir para você copiar/colar o conteúdo do `localStorage` na chave:
-`nutrition-check-in-draft`
-Assim verificamos exatamente o que está sendo salvo em `step` e `notes` no dispositivo real (WhatsApp WebView pode se comportar diferente).
+## Arquivos Afetados
+| Arquivo | Mudança |
+|---------|---------|
+| `src/components/nutrition/MealCheckModal.tsx` | Adicionar pb-24, corrigir auto-save, simplificar restauração |
+
+---
+
+## Checklist de Validação
+1. Abrir modal → ir até step 5: botão "Salvar Registro" **visível sem precisar rolar**
+2. Ir até step 4 → selecionar energia → fechar imediatamente → reabrir: deve voltar em **step 4 (Energia)**
+3. Escrever nota no step 5 → fechar → reabrir: pode voltar em **step 5**
+4. Step 3 → selecionar categoria → fechar → reabrir: deve voltar em **step 3 (Refeição)**
+

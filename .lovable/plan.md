@@ -1,165 +1,139 @@
 
+# Plano: Correção do Botão Salvar + Persistência de Rascunho
 
-# Plano de Correção: Botão Salvar na Nutrição + Fluxo de Novos Usuários
+## Problemas Identificados
 
-## Resumo dos Problemas Identificados
+### 1. Botão "Salvar" Invisível no Passo 5
+Analisando a screenshot e o código (linhas 608-631), identifiquei o problema:
+- O footer está **dentro** da estrutura do modal, mas a div scrollável (linha 297) fecha na linha 606
+- O footer está **FORA** da área scrollável, o que é correto
+- **Porém**, o footer usa `margin-bottom: max(env(...), 0px)` que pode ser insuficiente em alguns dispositivos Android
 
-### 1. Modal de Nutrição - Botão Salvar Invisível
-O footer com o botão "Salvar" está no step 5 (notas), mas:
-- Usa `sticky bottom-0` dentro de um container flex que pode não renderizar corretamente em alguns dispositivos
-- O footer está posicionado DENTRO da área scrollável, não como elemento fixo do modal
-- Falta explicação visual do que acontece após o registro
+O problema real: o modal tem `max-h-[min(92dvh,92vh)]` e `mb-[max(env(safe-area-inset-bottom,24px),24px)]`, mas o footer pode estar sendo "empurrado para fora" da viewport visível.
 
-### 2. Página de Login - Sem Opção para Novos Usuários
-- A página Auth.tsx só oferece Login e "Esqueci minha senha"
-- Não existe opção para usuários sem conta conhecerem o serviço
-- Deveria haver um CTA para "Criar conta" ou "Conhecer o ETHRA" direcionando para a landing page
-
----
-
-## Solução 1: Corrigir Footer do Modal de Nutrição
-
-### Problema Técnico Atual
-```text
-┌─────────────────────────────────┐
-│ Header (sticky top)             │
-├─────────────────────────────────┤
-│ Content (flex-1 overflow-y-auto)│
-│   └── ... steps ...             │
-│   └── Footer (sticky bottom-0)  │  ← ERRADO: dentro do scroll!
-└─────────────────────────────────┘
-```
-
-### Solução Correta
-```text
-┌─────────────────────────────────┐
-│ Header (flex-shrink-0)          │
-├─────────────────────────────────┤
-│ Content (flex-1 overflow-y-auto)│
-│   └── ... steps ...             │
-├─────────────────────────────────┤
-│ Footer (flex-shrink-0)          │  ← FORA do scroll
-└─────────────────────────────────┘
-```
-
-### Mudanças no Arquivo: `src/components/nutrition/MealCheckModal.tsx`
-
-1. **Mover o footer para FORA da área scrollável** (após fechar a div do content)
-2. **Mostrar footer em TODOS os steps** (não apenas no step notes)
-   - Step 1-4: Exibir texto explicativo sobre o que será registrado
-   - Step 5: Exibir botão "Salvar" com descrição do que acontece
-
-3. **Adicionar explicação pós-registro:**
-   - Mostrar mensagem no step de sucesso: "Seu registro foi salvo e aparecerá na timeline de refeições. Você pode ver padrões de alimentação na página de Insights."
-
-4. **Melhorar visibilidade do botão:**
-   - Usar `z-[130]` no footer para garantir sobreposição
-   - Adicionar sombra superior para destacar do conteúdo
-   - Usar `safe-bottom` com fallback de margem
+### 2. Perda de Progresso ao Sair do App
+O usuário escolheu **"Restaurar automaticamente"**: se o check-in estiver após o passo 3, ao reabrir o modal ele deve retomar de onde parou.
 
 ---
 
-## Solução 2: Adicionar Opção para Novos Usuários na Página de Login
+## Solução 1: Corrigir Visibilidade do Footer
 
-### Mudanças no Arquivo: `src/pages/Auth.tsx`
+### Arquivo: `src/components/nutrition/MealCheckModal.tsx`
 
-1. **Adicionar seção "Não tem conta?" abaixo do formulário de login:**
-   ```text
-   ────────────────────────────────────
-   Novo por aqui?
-   [Conhecer o ETHRA] → navega para /landing
-   ────────────────────────────────────
-   ```
+**Mudanças:**
+1. Remover `marginBottom` inline que pode causar conflito
+2. Usar classes Tailwind consistentes para safe-area
+3. Adicionar padding-bottom interno ao content para dar espaço ao footer
+4. Garantir que o footer tenha altura fixa e não seja cortado
 
-2. **Manter consistência com a marca:**
-   - Usar texto amigável: "Ainda não faz parte?"
-   - Botão secundário com variante `outline`
-   - Direcionar para `/landing` onde o usuário pode ver benefícios e planos
-
-3. **Adicionar separador visual:**
-   - Linha com "ou" entre o botão "Entrar" e a seção de novos usuários
-
----
-
-## Detalhes de Implementação
-
-### Arquivo 1: `src/components/nutrition/MealCheckModal.tsx`
-
-**Mudança estrutural:**
 ```tsx
-// Layout atual (INCORRETO)
-<div className="flex-1 min-h-0 overflow-y-auto px-5 py-4">
-  {/* Content + Steps */}
-  {step === 'notes' && (
-    <div className="sticky bottom-0 ...">  {/* Footer DENTRO do scroll */}
-      <Button>Salvar</Button>
-    </div>
-  )}
-</div>
+// Atual (problemático)
+<div className="flex-shrink-0 px-5 pt-3 pb-5 border-t ..." 
+     style={{ marginBottom: 'max(env(safe-area-inset-bottom, 0px), 0px)' }}>
 
-// Layout corrigido
-<div className="flex-1 min-h-0 overflow-y-auto px-5 py-4">
-  {/* Content + Steps */}
-</div>
-{/* Footer FORA do scroll, sempre visível */}
-{step !== 'success' && (
-  <div className="flex-shrink-0 px-5 pt-3 pb-5 border-t ...">
-    {step === 'notes' ? (
-      <Button>Salvar</Button>
-    ) : (
-      <p className="text-sm text-muted-foreground text-center">
-        Continue para registrar sua experiência alimentar
-      </p>
-    )}
-  </div>
-)}
+// Corrigido
+<div className="flex-shrink-0 px-5 pt-3 pb-[max(1.25rem,env(safe-area-inset-bottom))] border-t ...">
 ```
 
-**Adicionar explicação no step de sucesso:**
-- Mensagem: "Seu registro foi salvo! Ele aparece na sua timeline de refeições e contribui para seus insights de alimentação consciente."
+**Ajuste estrutural:**
+- Adicionar `pb-20` ao container scrollável para garantir que o conteúdo não fique escondido atrás do footer
 
-### Arquivo 2: `src/pages/Auth.tsx`
+---
 
-**Adicionar após o Card de login:**
+## Solução 2: Persistência Automática de Rascunho
+
+### Arquivo: `src/hooks/useNutritionDraft.ts` (NOVO)
+
+Hook dedicado para gerenciar o rascunho no `localStorage`:
+
+```typescript
+interface NutritionDraft {
+  step: Step;
+  selectedMood: string | null;
+  selectedHunger: string | null;
+  selectedCategory: string | null;
+  selectedEnergy: string | null;
+  notes: string;
+  savedAt: number; // timestamp para expirar após 1 hora
+}
+
+export function useNutritionDraft() {
+  const STORAGE_KEY = 'nutrition-check-in-draft';
+  const EXPIRY_MS = 60 * 60 * 1000; // 1 hora
+
+  const saveDraft = (data: Omit<NutritionDraft, 'savedAt'>) => {...}
+  const loadDraft = (): NutritionDraft | null => {...}
+  const clearDraft = () => {...}
+  const hasDraft = (): boolean => {...}
+  
+  return { saveDraft, loadDraft, clearDraft, hasDraft };
+}
+```
+
+### Arquivo: `src/components/nutrition/MealCheckModal.tsx`
+
+**Integração do hook:**
+
+1. **No mount do modal**: verificar se há rascunho válido e restaurar automaticamente
+2. **A cada mudança de step (após step 3)**: salvar rascunho automaticamente
+3. **Ao completar o registro**: limpar rascunho
+4. **Ao fechar o modal**: se estiver após step 3, salvar rascunho antes de fechar
+
 ```tsx
-{/* Separador */}
-<div className="relative my-4">
-  <div className="absolute inset-0 flex items-center">
-    <span className="w-full border-t border-border" />
-  </div>
-  <div className="relative flex justify-center text-xs uppercase">
-    <span className="bg-background px-2 text-muted-foreground">ou</span>
-  </div>
-</div>
+// Ao abrir o modal
+useEffect(() => {
+  if (isOpen) {
+    const draft = loadDraft();
+    if (draft && ['category', 'energy', 'notes'].includes(draft.step)) {
+      // Restaurar estado
+      setStep(draft.step);
+      setSelectedMood(draft.selectedMood);
+      // ... etc
+    }
+  }
+}, [isOpen]);
 
-{/* Seção para novos usuários */}
-<div className="text-center space-y-3">
-  <p className="text-sm text-muted-foreground">
-    Ainda não faz parte?
-  </p>
-  <Button
-    variant="outline"
-    className="w-full"
-    onClick={() => navigate('/landing')}
-  >
-    Conhecer o ETHRA
-  </Button>
-</div>
+// Salvar automaticamente após step 3
+useEffect(() => {
+  if (['category', 'energy', 'notes'].includes(step) && hasData) {
+    saveDraft({ step, selectedMood, selectedHunger, selectedCategory, selectedEnergy, notes });
+  }
+}, [step, selectedMood, selectedHunger, selectedCategory, selectedEnergy, notes]);
 ```
 
 ---
 
-## Arquivos Afetados
-1. `src/components/nutrition/MealCheckModal.tsx` - Reposicionar footer + adicionar explicação
-2. `src/pages/Auth.tsx` - Adicionar opção para novos usuários
+## Resumo das Mudanças
+
+| Arquivo | Mudança |
+|---------|---------|
+| `src/hooks/useNutritionDraft.ts` | NOVO - hook para persistência em localStorage |
+| `src/components/nutrition/MealCheckModal.tsx` | Corrigir footer visibility + integrar draft persistence |
 
 ---
 
-## Testes Recomendados
-1. Abrir modal de nutrição no Android e verificar se botão "Salvar" está visível
-2. Testar com teclado aberto (digitando notas) e verificar que botão não é coberto
-3. Verificar transição entre steps e texto explicativo no footer
-4. Testar fluxo completo de registro e verificar mensagem de sucesso
-5. Acessar `/auth` como usuário deslogado e clicar "Conhecer o ETHRA"
-6. Verificar redirecionamento para `/landing`
+## Fluxo do Usuário
 
+1. Usuário abre modal de Alimentação Consciente
+2. Preenche Humor (step 1) → Fome (step 2) → Refeição (step 3)
+3. **App em background ou fechado acidentalmente**
+4. Ao reabrir o modal: "Continuando de onde você parou..." + restaura no step 3 ou posterior
+5. Usuário completa e salva → rascunho é limpo
+
+---
+
+## Seção Técnica
+
+### Dependências
+- Nenhuma nova dependência
+
+### Padrões a Seguir
+- localStorage com prefixo `nutrition-check-in-draft`
+- Expiração de 1 hora para rascunhos
+- Safe-area usando CSS `env()` dentro de Tailwind `pb-[...]`
+
+### Testes Recomendados
+1. Abrir modal, ir até step 5, verificar se botão "Salvar" está visível
+2. Ir até step 4, fechar o app, reabrir e verificar restauração automática
+3. Completar registro e verificar que rascunho foi limpo
+4. Testar em Android Chrome (browser normal) e iOS Safari

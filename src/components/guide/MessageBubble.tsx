@@ -86,17 +86,18 @@ export function MessageBubble({
           )}
         </div>
 
-        {/* Timestamp with tooltip */}
-        <span
-          className={cn(
-            'text-xs font-body cursor-default transition-opacity duration-200 bg-yellow-200 px-2 py-1',
-            isUser
-              ? 'text-sage-900 text-right'
-              : 'text-sage-900 text-left'
-          )}
-        >
-          DEBUG: {relativeTime || 'Agora'} - {message.createdAt?.toString()}
-        </span>
+        {/* Timestamp with tooltip - SHOULD BE VISIBLE */}
+        <div style={{
+          backgroundColor: 'red',
+          color: 'white',
+          padding: '8px',
+          fontSize: '16px',
+          fontWeight: 'bold',
+          border: '3px solid black',
+          marginTop: '8px'
+        }}>
+          TIMESTAMP AQUI: {relativeTime || 'Agora'}
+        </div>
       </div>
     </motion.div>
   );

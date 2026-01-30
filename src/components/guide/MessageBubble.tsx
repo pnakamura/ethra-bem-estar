@@ -1,7 +1,6 @@
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { GuideAvatar } from './GuideAvatar';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { formatRelativeTime, formatFullDateTime } from '@/lib/formatTime';
 import type { ChatMessage } from '@/hooks/useGuideChat';
 
@@ -20,14 +19,6 @@ export function MessageBubble({
 }: MessageBubbleProps) {
   const isUser = message.role === 'user';
   const relativeTime = formatRelativeTime(message.createdAt);
-  const fullDateTime = formatFullDateTime(message.createdAt);
-
-  console.log('MessageBubble render:', {
-    role: message.role,
-    createdAt: message.createdAt,
-    relativeTime,
-    fullDateTime
-  });
 
   return (
     <motion.div
@@ -75,19 +66,6 @@ export function MessageBubble({
           )}
           <p className="whitespace-pre-wrap">{message.content}</p>
 
-          {/* TIMESTAMP DENTRO DA BOLHA */}
-          <div style={{
-            backgroundColor: 'red',
-            color: 'white',
-            padding: '4px 8px',
-            fontSize: '12px',
-            fontWeight: 'bold',
-            marginTop: '8px',
-            borderRadius: '4px'
-          }}>
-            ⏰ {relativeTime || 'Agora'}
-          </div>
-
           {/* Streaming indicator */}
           {isStreaming && !isUser && (
             <motion.span
@@ -98,6 +76,16 @@ export function MessageBubble({
             />
           )}
         </div>
+
+        {/* Timestamp - below message bubble */}
+        <span
+          className={cn(
+            'text-xs font-body px-1',
+            isUser ? 'text-right text-sage-600' : 'text-left text-sage-600'
+          )}
+        >
+          {relativeTime}
+        </span>
       </div>
     </motion.div>
   );

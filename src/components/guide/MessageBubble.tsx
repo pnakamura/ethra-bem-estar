@@ -80,26 +80,16 @@ export function MessageBubble({
         </div>
 
         {/* Timestamp with tooltip */}
-        <Tooltip delayDuration={200}>
-          <TooltipTrigger asChild>
-            <span
-              className={cn(
-                'text-xs font-body cursor-default select-none transition-opacity duration-200 hover:opacity-100',
-                isUser
-                  ? 'text-sage-500 opacity-60 text-right'
-                  : 'text-sage-500 opacity-60 text-left'
-              )}
-            >
-              {relativeTime}
-            </span>
-          </TooltipTrigger>
-          <TooltipContent
-            side={isUser ? 'left' : 'right'}
-            className="bg-sage-900 border-sage-700 text-cream-50 font-body text-xs"
-          >
-            {fullDateTime}
-          </TooltipContent>
-        </Tooltip>
+        <span
+          className={cn(
+            'text-xs font-body cursor-default transition-opacity duration-200',
+            isUser
+              ? 'text-sage-700 text-right'
+              : 'text-sage-700 text-left'
+          )}
+        >
+          {relativeTime || 'Agora'}
+        </span>
       </div>
     </motion.div>
   );

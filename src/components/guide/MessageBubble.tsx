@@ -64,7 +64,12 @@ export function MessageBubble({
               {guideName}
             </span>
           )}
-          <p className="whitespace-pre-wrap">{message.content}</p>
+          <p className="whitespace-pre-wrap">
+            {message.content}
+            <span className="block mt-2 text-xs text-sage-500 italic">
+              — {relativeTime}
+            </span>
+          </p>
 
           {/* Streaming indicator */}
           {isStreaming && !isUser && (

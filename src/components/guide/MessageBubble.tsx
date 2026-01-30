@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { GuideAvatar } from './GuideAvatar';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { formatRelativeTime, formatFullDateTime } from '@/lib/formatTime';
 import type { ChatMessage } from '@/hooks/useGuideChat';
 
@@ -19,6 +20,7 @@ export function MessageBubble({
 }: MessageBubbleProps) {
   const isUser = message.role === 'user';
   const relativeTime = formatRelativeTime(message.createdAt);
+  const fullDateTime = formatFullDateTime(message.createdAt);
 
   return (
     <motion.div
@@ -64,11 +66,6 @@ export function MessageBubble({
               {guideName}
             </span>
           )}
-
-          <div style={{ backgroundColor: 'yellow', color: 'black', padding: '4px', fontWeight: 'bold', marginBottom: '8px' }}>
-            ⏰ TIMESTAMP ANTES
-          </div>
-
           <p className="whitespace-pre-wrap">{message.content}</p>
 
           {/* Streaming indicator */}
@@ -82,15 +79,27 @@ export function MessageBubble({
           )}
         </div>
 
-        {/* Timestamp - below message bubble */}
-        <span
-          className={cn(
-            'text-xs font-body px-1',
-            isUser ? 'text-right text-sage-600' : 'text-left text-sage-600'
-          )}
-        >
-          {relativeTime}
-        </span>
+        {/* Timestamp with tooltip */}
+        <Tooltip delayDuration={200}>
+          <TooltipTrigger asChild>
+            <span
+              className={cn(
+                'text-xs font-body cursor-default select-none transition-opacity duration-200 hover:opacity-100',
+                isUser
+                  ? 'text-sage-500 opacity-70 text-right'
+                  : 'text-sage-500 opacity-70 text-left'
+              )}
+            >
+              {relativeTime}
+            </span>
+          </TooltipTrigger>
+          <TooltipContent
+            side={isUser ? 'left' : 'right'}
+            className="bg-sage-900 border-sage-700 text-cream-50 font-body text-xs"
+          >
+            {fullDateTime}
+          </TooltipContent>
+        </Tooltip>
       </div>
     </motion.div>
   );

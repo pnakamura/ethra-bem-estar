@@ -75,6 +75,19 @@ export function MessageBubble({
           )}
           <p className="whitespace-pre-wrap">{message.content}</p>
 
+          {/* TIMESTAMP DENTRO DA BOLHA */}
+          <div style={{
+            backgroundColor: 'red',
+            color: 'white',
+            padding: '4px 8px',
+            fontSize: '12px',
+            fontWeight: 'bold',
+            marginTop: '8px',
+            borderRadius: '4px'
+          }}>
+            ⏰ {relativeTime || 'Agora'}
+          </div>
+
           {/* Streaming indicator */}
           {isStreaming && !isUser && (
             <motion.span
@@ -84,19 +97,6 @@ export function MessageBubble({
               transition={{ duration: 0.8, repeat: Infinity }}
             />
           )}
-        </div>
-
-        {/* Timestamp with tooltip - SHOULD BE VISIBLE */}
-        <div style={{
-          backgroundColor: 'red',
-          color: 'white',
-          padding: '8px',
-          fontSize: '16px',
-          fontWeight: 'bold',
-          border: '3px solid black',
-          marginTop: '8px'
-        }}>
-          TIMESTAMP AQUI: {relativeTime || 'Agora'}
         </div>
       </div>
     </motion.div>

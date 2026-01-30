@@ -64,12 +64,12 @@ export function MessageBubble({
               {guideName}
             </span>
           )}
-          <p className="whitespace-pre-wrap">
-            {message.content}
-            <span className="block mt-2 text-xs text-red-500 font-bold">
-              — TESTE TIMESTAMP
-            </span>
-          </p>
+
+          <div style={{ backgroundColor: 'yellow', color: 'black', padding: '4px', fontWeight: 'bold', marginBottom: '8px' }}>
+            ⏰ TIMESTAMP ANTES
+          </div>
+
+          <p className="whitespace-pre-wrap">{message.content}</p>
 
           {/* Streaming indicator */}
           {isStreaming && !isUser && (

@@ -4,12 +4,17 @@ import { GuideAvatar } from './GuideAvatar';
 interface TypingIndicatorProps {
   guideEmoji?: string;
   thinkingPhrase?: string;
+  /** 'thinking' shows phrase + dots, 'simple' shows only dots */
+  variant?: 'thinking' | 'simple';
 }
 
 export function TypingIndicator({
   guideEmoji = '🧘',
-  thinkingPhrase = 'Refletindo...'
+  thinkingPhrase = 'Refletindo...',
+  variant = 'thinking',
 }: TypingIndicatorProps) {
+  const showPhrase = variant === 'thinking' && thinkingPhrase;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 16, filter: 'blur(8px)', scale: 0.92 }}
@@ -20,17 +25,19 @@ export function TypingIndicator({
     >
       <GuideAvatar emoji={guideEmoji} state="thinking" />
 
-      <div className="bg-cream-50/90 backdrop-blur-sm rounded-2xl rounded-bl-md px-4 py-3 flex flex-col gap-2 border border-sage-200/30 shadow-[0_2px_12px_rgba(95,115,95,0.08)]">
-        {/* Thinking phrase */}
-        <motion.span
-          key={thinkingPhrase}
-          initial={{ opacity: 0, x: -8 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5, ease: 'easeOut' }}
-          className="text-xs text-sage-600 italic font-body"
-        >
-          {thinkingPhrase}
-        </motion.span>
+      <div className={`bg-cream-50/90 backdrop-blur-sm rounded-2xl rounded-bl-md px-4 py-3 flex flex-col border border-sage-200/30 shadow-[0_2px_12px_rgba(95,115,95,0.08)] ${showPhrase ? 'gap-2' : 'justify-center'}`}>
+        {/* Thinking phrase - only show for 'thinking' variant */}
+        {showPhrase && (
+          <motion.span
+            key={thinkingPhrase}
+            initial={{ opacity: 0, x: -8 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, ease: 'easeOut' }}
+            className="text-xs text-sage-600 italic font-body"
+          >
+            {thinkingPhrase}
+          </motion.span>
+        )}
 
         {/* Animated dots - slower animation for more relaxed feel */}
         <div className="flex items-center gap-1.5">

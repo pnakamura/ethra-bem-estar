@@ -1,27 +1,108 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 
-// Thinking phrases that the guide "says" while processing
-export const thinkingPhrases = [
-  'Refletindo sobre isso...',
-  'Deixe-me pensar...',
-  'Hmm, interessante...',
-  'Preparando uma resposta com carinho...',
-  'Considerando suas palavras...',
-  'Pensando em como ajudar...',
+// Thinking phrases organized by context for more natural selection
+export const thinkingPhrasesByContext = {
+  default: [
+    'Refletindo sobre isso...',
+    'Deixe-me pensar...',
+    'Hmm, interessante...',
+    'Um momento...',
+    'Pensando com cuidado...',
+    'Considerando suas palavras...',
+  ],
+  emotional: [
+    'Entendo... deixe-me responder com carinho...',
+    'Isso é importante... refletindo...',
+    'Sinto que preciso pensar bem nisso...',
+    'Acolhendo suas palavras...',
+    'Com cuidado e atenção...',
+    'Preparando uma resposta com carinho...',
+  ],
+  question: [
+    'Boa pergunta...',
+    'Deixe-me considerar isso...',
+    'Hmm, vamos ver...',
+    'Pensando na melhor resposta...',
+    'Interessante pergunta...',
+  ],
+  greeting: [
+    'Que bom te ver por aqui...',
+    'Olá! Um momento...',
+    'Bem-vindo de volta...',
+  ],
+  // Minimal phrases for pauses between chunks - just visual indicator
+  pause: [],
+};
+
+// All phrases combined for backward compatibility
+export const thinkingPhrases = Object.values(thinkingPhrasesByContext).flat();
+
+// Emotional indicators to detect message context
+const emotionalIndicators = [
+  'sinto', 'ansioso', 'triste', 'medo', 'ajuda', 'difícil', 
+  'angústia', 'sozinho', 'perdido', 'sentido', 'vida', 'morte',
+  'propósito', 'amor', 'relacionamento', 'dor', 'sofrimento',
+  'depressão', 'ansiedade', 'pânico', 'desespero', 'esperança',
+  'chorar', 'chorando', 'preocupado', 'nervoso', 'estresse',
+  'cansado', 'exausto', 'frustrado', 'irritado', 'raiva',
+  'feliz', 'alegre', 'gratidão', 'paz', 'calmo', 'tranquilo'
 ];
 
-export function getRandomThinkingPhrase(): string {
-  return thinkingPhrases[Math.floor(Math.random() * thinkingPhrases.length)];
+const greetingIndicators = [
+  'olá', 'oi', 'bom dia', 'boa tarde', 'boa noite', 'hey',
+  'e aí', 'tudo bem', 'como vai'
+];
+
+const questionIndicators = ['?', 'como', 'por que', 'o que', 'qual', 'quando', 'onde'];
+
+export type MessageContext = 'default' | 'emotional' | 'question' | 'greeting';
+
+/**
+ * Detects the context of a message based on its content
+ */
+export function detectMessageContext(message: string): MessageContext {
+  const lowerMessage = message.toLowerCase();
+  
+  // Check greeting first (usually short messages at start)
+  if (message.length < 50 && greetingIndicators.some(g => lowerMessage.includes(g))) {
+    return 'greeting';
+  }
+  
+  // Check emotional content
+  if (emotionalIndicators.some(e => lowerMessage.includes(e))) {
+    return 'emotional';
+  }
+  
+  // Check if it's a question
+  if (questionIndicators.some(q => lowerMessage.includes(q))) {
+    return 'question';
+  }
+  
+  return 'default';
+}
+
+/**
+ * Checks if a message has emotional content
+ */
+export function hasEmotionalContent(message: string): boolean {
+  const lowerMessage = message.toLowerCase();
+  return emotionalIndicators.some(e => lowerMessage.includes(e));
+}
+
+export function getRandomThinkingPhrase(context: MessageContext = 'default'): string {
+  const phrases = thinkingPhrasesByContext[context] || thinkingPhrasesByContext.default;
+  return phrases[Math.floor(Math.random() * phrases.length)];
 }
 
 /**
  * Calculates a human-like thinking time based on message complexity
+ * Tempos aumentados para simular reflexão mais profunda de um guia espiritual
  */
 export function calculateThinkingTime(userMessage: string): number {
-  const baseTime = 2500; // 2.5 seconds minimum - more time to "process"
-  const perCharTime = 30; // 30ms per character - slower, more thoughtful
-  const maxTime = 10000; // 10 seconds maximum - allows for deep reflection
-  const randomVariation = Math.random() * 1000 - 500; // +/- 500ms
+  const baseTime = 4000; // 4 seconds minimum - guia reflete mais
+  const perCharTime = 50; // 50ms per character - mensagens complexas requerem mais reflexão
+  const maxTime = 15000; // 15 seconds maximum - permite reflexão profunda
+  const randomVariation = Math.random() * 1600 - 800; // +/- 800ms mais imprevisibilidade
   
   const messageLength = userMessage.length;
   
@@ -29,25 +110,15 @@ export function calculateThinkingTime(userMessage: string): number {
   // Longer/deeper messages = more "thinking" time
   let calculatedTime = baseTime + messageLength * perCharTime + randomVariation;
   
-  // Add extra time for questions that seem deep/emotional
-  const deepIndicators = [
-    'sinto', 'ansioso', 'triste', 'medo', 'ajuda', 'difícil', 
-    'angústia', 'sozinho', 'perdido', 'sentido', 'vida', 'morte',
-    'propósito', 'amor', 'relacionamento', 'dor', 'sofrimento',
-    'depressão', 'ansiedade', 'pânico', 'desespero', 'esperança'
-  ];
-  
-  const hasDeepContent = deepIndicators.some(
-    indicator => userMessage.toLowerCase().includes(indicator)
-  );
-  
-  if (hasDeepContent) {
-    calculatedTime += 1500; // Extra reflection time for emotional content
+  // Add extra time for emotional content - conteúdo sensível merece mais cuidado
+  if (hasEmotionalContent(userMessage)) {
+    calculatedTime += 2500; // Extra reflection time for emotional content
   }
   
   // First messages get extra time (guide is "getting to know" the user)
+  // Mesmo perguntas simples merecem atenção
   if (messageLength < 50) {
-    calculatedTime += 800;
+    calculatedTime += 1200;
   }
   
   return Math.min(Math.max(calculatedTime, baseTime), maxTime);
@@ -65,11 +136,12 @@ export function useThinkingDelay({ onDelayComplete }: UseThinkingDelayOptions = 
 
   const startThinking = useCallback((userMessage: string) => {
     const thinkingTime = calculateThinkingTime(userMessage);
+    const context = detectMessageContext(userMessage);
     
     // Initial delay before showing typing indicator (300-600ms)
     const initialDelay = 300 + Math.random() * 300;
     
-    setThinkingPhrase(getRandomThinkingPhrase());
+    setThinkingPhrase(getRandomThinkingPhrase(context));
     
     // Start thinking after initial delay
     timeoutRef.current = setTimeout(() => {
@@ -78,7 +150,7 @@ export function useThinkingDelay({ onDelayComplete }: UseThinkingDelayOptions = 
       // Change phrase periodically if thinking takes long
       if (thinkingTime > 2500) {
         phraseIntervalRef.current = setInterval(() => {
-          setThinkingPhrase(getRandomThinkingPhrase());
+          setThinkingPhrase(getRandomThinkingPhrase(context));
         }, 2000);
       }
     }, initialDelay);

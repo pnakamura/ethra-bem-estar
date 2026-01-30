@@ -39,10 +39,10 @@ export default function GuideChat() {
 
   // Callback when stream starts - delay proportional to estimated response length
   const handleStreamStart = useCallback((estimatedLength: number = 0) => {
-    // Base delay + proportional to estimated response size (up to 1200ms extra)
-    const baseDelay = 600;
-    const proportionalDelay = Math.min(estimatedLength * 1.5, 1200);
-    const transitionDelay = baseDelay + proportionalDelay + Math.random() * 400;
+    // Base delay + proportional to estimated response size (up to 1800ms extra)
+    const baseDelay = 1000;
+    const proportionalDelay = Math.min(estimatedLength * 2, 1800);
+    const transitionDelay = baseDelay + proportionalDelay + Math.random() * 600;
 
     setTimeout(() => {
       setPhase('transitioning');

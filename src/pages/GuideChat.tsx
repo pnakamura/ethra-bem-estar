@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Send, RefreshCw, Users } from 'lucide-react';
@@ -7,15 +7,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { MessageBubble } from '@/components/guide/MessageBubble';
 import { TypingIndicator } from '@/components/guide/TypingIndicator';
 import { SuggestedQuestions } from '@/components/guide/SuggestedQuestions';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import { useGuideChat } from '@/hooks/useGuideChat';
 import { useGuide, useUserGuidePreference, useGuides } from '@/hooks/useGuides';
 import { useAuth } from '@/contexts/AuthContext';
-import { getRandomThinkingPhrase, detectMessageContext, hasEmotionalContent } from '@/hooks/useThinkingDelay';
-import { PauseType } from '@/hooks/useMessageChunker';
+import { getRandomThinkingPhrase } from '@/hooks/useThinkingDelay';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BottomNavigation } from '@/components/BottomNavigation';
 
-type ChatPhase = 'idle' | 'reading' | 'thinking' | 'transitioning' | 'responding' | 'pausing';
+type ChatPhase = 'idle' | 'reading' | 'thinking' | 'transitioning' | 'responding';
 
 export default function GuideChat() {
   const navigate = useNavigate();
@@ -27,15 +27,13 @@ export default function GuideChat() {
   const [thinkingPhrase, setThinkingPhrase] = useState('');
   const [phase, setPhase] = useState<ChatPhase>('idle');
   const [canRevealAssistant, setCanRevealAssistant] = useState(true);
-  const [lastUserMessageContext, setLastUserMessageContext] = useState<'default' | 'emotional' | 'question' | 'greeting'>('default');
-  const [currentPauseType, setCurrentPauseType] = useState<PauseType>('simple');
   const phraseIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Get guide ID from location state or user preference
   const locationGuideId = location.state?.guideId;
   const { data: preferredGuideId, isLoading: loadingPreference } = useUserGuidePreference();
   const { data: guides } = useGuides();
-  
+
   const guideId = locationGuideId || preferredGuideId || guides?.[0]?.id;
   const { data: guide, isLoading: loadingGuide } = useGuide(guideId || null);
 
@@ -45,39 +43,25 @@ export default function GuideChat() {
     const baseDelay = 1000;
     const proportionalDelay = Math.min(estimatedLength * 2, 1800);
     const transitionDelay = baseDelay + proportionalDelay + Math.random() * 600;
-    
+
     setTimeout(() => {
       setPhase('transitioning');
     }, transitionDelay);
   }, []);
 
-  // Callback when pausing between chunks - receives pauseType for indicator variant
-  const handleChunkPause = useCallback((chunkIndex: number, totalChunks: number, pauseType: PauseType) => {
-    setCurrentPauseType(pauseType);
-    setPhase('pausing');
-  }, []);
-
-  // Callback when a new chunk is displayed
-  const handleChunkDisplay = useCallback((chunkIndex: number, totalChunks: number) => {
-    setPhase('responding');
-  }, []);
-
   // Use stable guideId - never change from empty to non-empty (prevents hooks reorder)
   const stableGuideId = guideId || '';
-  
+
   const {
     messages,
     isLoading: isSending,
     isStreaming,
-    isPausing,
     sendMessage,
     clearMessages,
     setMessages,
-  } = useGuideChat({ 
+  } = useGuideChat({
     guideId: stableGuideId,
     onStreamStart: handleStreamStart,
-    onChunkPause: handleChunkPause,
-    onChunkDisplay: handleChunkDisplay,
   });
 
   // Redirect to guide selection if no guide selected and not loading
@@ -112,26 +96,23 @@ export default function GuideChat() {
   useEffect(() => {
     // When user sends a message, start reading phase
     if (isSending && messages[messages.length - 1]?.role === 'user' && phase === 'idle') {
-      const lastUserMessage = messages[messages.length - 1];
-      const context = detectMessageContext(lastUserMessage.content);
-      setLastUserMessageContext(context);
       setCanRevealAssistant(false);
       setPhase('reading');
-      setThinkingPhrase(getRandomThinkingPhrase(context));
+      setThinkingPhrase(getRandomThinkingPhrase());
     }
   }, [isSending, messages, phase]);
 
   // Reading phase -> Thinking phase
   useEffect(() => {
     if (phase === 'reading') {
-      // Reading delay based on user message length (2800-6000ms)
+      // Reading delay based on user message length (1600-3500ms)
       const lastUserMessage = messages.filter(m => m.role === 'user').pop();
       const userMessageLength = lastUserMessage?.content.length || 0;
-      const baseReading = 2800; // 2.8s minimum - pessoa real leva mais tempo
-      const perCharReading = 25; // 25ms per character - velocidade de leitura humana
+      const baseReading = 1600; // 1.6s minimum
+      const perCharReading = 12; // 12ms per character
       const readingDelay = Math.min(
-        baseReading + userMessageLength * perCharReading + Math.random() * 1000,
-        6000 // Max 6s reading - permite leitura completa
+        baseReading + userMessageLength * perCharReading + Math.random() * 600,
+        3500 // Max 3.5s reading
       );
       const timeout = setTimeout(() => {
         setPhase('thinking');
@@ -140,14 +121,14 @@ export default function GuideChat() {
     }
   }, [phase, messages]);
 
-  // Thinking phase - rotate phrases using context
+  // Thinking phase - rotate phrases
   useEffect(() => {
     if (phase === 'thinking') {
-      // Change phrase every 5.5 seconds, keeping context - frases mudam mais lentamente
+      // Change phrase every 4 seconds
       phraseIntervalRef.current = setInterval(() => {
-        setThinkingPhrase(getRandomThinkingPhrase(lastUserMessageContext));
-      }, 5500);
-      
+        setThinkingPhrase(getRandomThinkingPhrase());
+      }, 4000);
+
       return () => {
         if (phraseIntervalRef.current) {
           clearInterval(phraseIntervalRef.current);
@@ -155,7 +136,7 @@ export default function GuideChat() {
         }
       };
     }
-  }, [phase, lastUserMessageContext]);
+  }, [phase]);
 
   // Handle transitioning phase + safety timeout
   useEffect(() => {
@@ -165,24 +146,24 @@ export default function GuideChat() {
         clearInterval(phraseIntervalRef.current);
         phraseIntervalRef.current = null;
       }
-      
+
       // Safety timeout - if transition takes too long, force reveal (2s max)
       const safetyTimeout = setTimeout(() => {
         console.warn('Safety timeout: forcing assistant reveal');
         setCanRevealAssistant(true);
         setPhase('responding');
       }, 2000);
-      
+
       return () => clearTimeout(safetyTimeout);
     }
   }, [phase]);
 
-  // Handle responding phase completion - also handle pausing
+  // Handle responding phase completion
   useEffect(() => {
-    if (!isSending && !isStreaming && !isPausing && (phase === 'responding' || phase === 'pausing')) {
+    if (!isSending && !isStreaming && phase === 'responding') {
       setPhase('idle');
     }
-  }, [isSending, isStreaming, isPausing, phase]);
+  }, [isSending, isStreaming, phase]);
 
   // Handle typing indicator exit complete - add small buffer before reveal
   const handleTypingIndicatorExitComplete = useCallback(() => {
@@ -223,7 +204,7 @@ export default function GuideChat() {
       clearInterval(phraseIntervalRef.current);
       phraseIntervalRef.current = null;
     }
-    
+
     if (guide?.welcome_message) {
       setTimeout(() => {
         setMessages([{
@@ -242,15 +223,15 @@ export default function GuideChat() {
   }
 
   const isLoading = loadingPreference || loadingGuide;
-  const suggestedQuestions = Array.isArray(guide?.suggested_questions) 
-    ? guide.suggested_questions 
+  const suggestedQuestions = Array.isArray(guide?.suggested_questions)
+    ? guide.suggested_questions
     : [];
 
   // Determine which messages to show - hide last assistant until canRevealAssistant is true
   const visibleMessages = messages.filter((msg, index) => {
     // Always show user messages
     if (msg.role === 'user') return true;
-    
+
     // For the last assistant message, only show when canRevealAssistant is true
     // This ensures the message never appears before TypingIndicator exits
     if (msg.role === 'assistant' && index === messages.length - 1) {
@@ -258,13 +239,13 @@ export default function GuideChat() {
         return false;
       }
     }
-    
+
     return true;
   });
 
-  // Show typing indicator during reading, thinking, transitioning, and pausing phases
-  // NOT during 'responding' (so it exits when chunks appear)
-  const showTypingIndicator = phase === 'reading' || phase === 'thinking' || phase === 'pausing';
+  // Show typing indicator during reading, thinking, and transitioning phases
+  // Show typing indicator only during reading and thinking - NOT transitioning (so it exits)
+  const showTypingIndicator = phase === 'reading' || phase === 'thinking';
 
   // Get header status text
   const getStatusText = () => {
@@ -276,71 +257,85 @@ export default function GuideChat() {
       case 'transitioning':
       case 'responding':
         return 'digitando...';
-      case 'pausing':
-        return 'pensando...';
       default:
         return guide?.approach || '';
     }
   };
 
   return (
-    <div className="min-h-[100dvh] bg-background flex flex-col">
+    <TooltipProvider>
+      <div className="min-h-[100dvh] bg-gradient-to-br from-cream-50 via-sage-50/30 to-earth-50/20 flex flex-col">
+      {/* Noise texture overlay */}
+      <div
+        className="fixed inset-0 opacity-[0.03] mix-blend-overlay pointer-events-none"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
+        }}
+      />
+
       {/* Subtle animated background for emotional tone */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <motion.div 
-          className="absolute -top-40 -right-40 w-96 h-96 rounded-full opacity-[0.03]"
-          style={{ background: 'radial-gradient(circle, hsl(var(--primary)) 0%, transparent 70%)' }}
+        <motion.div
+          className="absolute -top-40 -right-40 w-96 h-96 rounded-full"
+          style={{ background: 'radial-gradient(circle, rgba(125, 143, 125, 0.08) 0%, transparent 70%)' }}
           animate={{ scale: [1, 1.1, 1] }}
           transition={{ duration: 10, repeat: Infinity }}
         />
-        <motion.div 
-          className="absolute -bottom-40 -left-40 w-80 h-80 rounded-full opacity-[0.03]"
-          style={{ background: 'radial-gradient(circle, hsl(var(--primary)) 0%, transparent 70%)' }}
+        <motion.div
+          className="absolute -bottom-40 -left-40 w-80 h-80 rounded-full"
+          style={{ background: 'radial-gradient(circle, rgba(139, 115, 95, 0.06) 0%, transparent 70%)' }}
           animate={{ scale: [1, 1.15, 1] }}
           transition={{ duration: 12, repeat: Infinity, delay: 2 }}
         />
       </div>
 
       {/* Header */}
-      <div className="sticky top-0 z-10 glass border-b border-border/50">
+      <div className="sticky top-0 z-10 backdrop-blur-xl bg-cream-50/80 border-b border-sage-300/30">
         <div className="flex items-center gap-3 px-4 py-3 safe-top">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => navigate('/')}
-            className="rounded-full"
+            className="rounded-full hover:bg-sage-50/50 text-sage-700"
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
-          
+
           {isLoading ? (
             <div className="flex-1 flex items-center gap-3">
-              <Skeleton className="w-10 h-10 rounded-full" />
+              <Skeleton className="w-10 h-10 rounded-full bg-sage-100/50" />
               <div>
-                <Skeleton className="h-4 w-24 mb-1" />
-                <Skeleton className="h-3 w-16" />
+                <Skeleton className="h-4 w-24 mb-1 bg-sage-100/50" />
+                <Skeleton className="h-3 w-16 bg-sage-100/50" />
               </div>
             </div>
           ) : guide ? (
             <div className="flex-1 flex items-center gap-3">
-              <motion.div 
-                className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-xl"
-                animate={phase !== 'idle' ? { 
+              <motion.div
+                className="w-10 h-10 rounded-full flex items-center justify-center text-xl"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(125, 143, 125, 0.15) 0%, rgba(95, 115, 95, 0.1) 100%)',
+                }}
+                animate={phase !== 'idle' ? {
                   scale: [1, 1.05, 1],
-                  boxShadow: ['0 0 0 hsl(var(--primary)/0)', '0 0 15px hsl(var(--primary)/0.2)', '0 0 0 hsl(var(--primary)/0)'],
+                  boxShadow: [
+                    '0 0 0 rgba(95, 115, 95, 0)',
+                    '0 0 15px rgba(95, 115, 95, 0.2)',
+                    '0 0 0 rgba(95, 115, 95, 0)'
+                  ],
                 } : {}}
                 transition={{ duration: 2, repeat: phase !== 'idle' ? Infinity : 0 }}
               >
                 {guide.avatar_emoji}
               </motion.div>
               <div>
-                <h1 className="font-semibold text-foreground">{guide.name}</h1>
-                <motion.p 
+                <h1 className="font-display font-medium text-sage-900">{guide.name}</h1>
+                <motion.p
                   key={getStatusText()}
                   initial={{ opacity: 0, y: 5 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3 }}
-                  className="text-xs text-muted-foreground"
+                  className="text-xs font-body text-sage-600"
                 >
                   {getStatusText()}
                 </motion.p>
@@ -353,7 +348,7 @@ export default function GuideChat() {
               variant="ghost"
               size="icon"
               onClick={handleNewConversation}
-              className="rounded-full"
+              className="rounded-full hover:bg-sage-50/50 text-sage-700"
               title="Nova conversa"
             >
               <RefreshCw className="w-5 h-5" />
@@ -362,7 +357,7 @@ export default function GuideChat() {
               variant="ghost"
               size="icon"
               onClick={() => navigate('/guide/select')}
-              className="rounded-full"
+              className="rounded-full hover:bg-sage-50/50 text-sage-700"
               title="Trocar guia"
             >
               <Users className="w-5 h-5" />
@@ -375,39 +370,23 @@ export default function GuideChat() {
       <div className="flex-1 overflow-y-auto px-4 py-4" style={{ paddingBottom: 'calc(var(--bottom-nav-height, 88px) + 144px)' }}>
         <div className="max-w-2xl mx-auto space-y-4">
           <AnimatePresence mode="popLayout">
-            {visibleMessages.map((message, index) => {
-              // Determine if this assistant message should show empathic state
-              const isLastAssistant = message.role === 'assistant' && index === visibleMessages.length - 1;
-              const previousUserMessage = isLastAssistant 
-                ? messages.filter(m => m.role === 'user').pop()
-                : null;
-              const isEmpathicResponse = previousUserMessage 
-                ? hasEmotionalContent(previousUserMessage.content)
-                : false;
-
-              return (
-                <MessageBubble
-                  key={message.id}
-                  message={message}
-                  guideEmoji={guide?.avatar_emoji}
-                  guideName={guide?.name}
-                  isStreaming={isStreaming && isLastAssistant}
-                  isEmpathic={isLastAssistant && isEmpathicResponse}
-                  isChunk={message.isChunk}
-                  isFirstChunk={message.isFirstChunk}
-                />
-              );
-            })}
+            {visibleMessages.map((message, index) => (
+              <MessageBubble
+                key={message.id}
+                message={message}
+                guideEmoji={guide?.avatar_emoji}
+                guideName={guide?.name}
+                isStreaming={isStreaming && message.role === 'assistant' && index === visibleMessages.length - 1}
+              />
+            ))}
           </AnimatePresence>
 
           {/* Typing indicator with synchronized exit - mode="wait" ensures exit completes before new element */}
           <AnimatePresence mode="wait" onExitComplete={handleTypingIndicatorExitComplete}>
             {showTypingIndicator && (
-              <TypingIndicator 
-                guideEmoji={guide?.avatar_emoji} 
+              <TypingIndicator
+                guideEmoji={guide?.avatar_emoji}
                 thinkingPhrase={thinkingPhrase}
-                // During 'pausing' phase, use simple variant (dots only) unless pauseType is reflective
-                variant={phase === 'pausing' && currentPauseType === 'simple' ? 'simple' : 'thinking'}
               />
             )}
           </AnimatePresence>
@@ -433,7 +412,7 @@ export default function GuideChat() {
       </div>
 
       {/* Input */}
-      <div className="fixed left-0 right-0 p-4 glass border-t border-border/50" style={{ bottom: 'calc(var(--bottom-nav-height, 88px) + 12px)' }}>
+      <div className="fixed left-0 right-0 p-4 backdrop-blur-xl bg-cream-50/80 border-t border-sage-300/30" style={{ bottom: 'calc(var(--bottom-nav-height, 88px) + 12px)' }}>
         <div className="max-w-2xl mx-auto flex gap-2">
           <Textarea
             ref={inputRef}
@@ -441,14 +420,18 @@ export default function GuideChat() {
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Digite sua mensagem..."
-            className="min-h-[48px] max-h-32 resize-none rounded-xl bg-background"
+            className="min-h-[48px] max-h-32 resize-none rounded-2xl bg-cream-50 border-sage-300/50 focus:border-sage-400 font-body text-sage-900 placeholder:text-sage-400"
             disabled={isSending || isStreaming || !guideId}
           />
           <Button
             onClick={handleSend}
             disabled={!inputValue.trim() || isSending || isStreaming || !guideId}
             size="icon"
-            className="h-12 w-12 rounded-xl flex-shrink-0"
+            className="h-12 w-12 rounded-2xl flex-shrink-0 shadow-[0_4px_16px_rgba(95,115,95,0.2)]"
+            style={{
+              background: 'linear-gradient(135deg, #7d8f7d 0%, #5f735f 100%)',
+              color: '#f6f7f6',
+            }}
           >
             <Send className="w-5 h-5" />
           </Button>
@@ -457,5 +440,6 @@ export default function GuideChat() {
 
       <BottomNavigation />
     </div>
+    </TooltipProvider>
   );
 }

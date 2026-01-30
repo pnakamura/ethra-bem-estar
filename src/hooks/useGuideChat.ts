@@ -111,21 +111,21 @@ export function useGuideChat({
   // Load conversation history when hook initializes with existing conversationId
   useEffect(() => {
     const loadHistory = async () => {
-      if (!conversationId || historyLoadedRef.current || messages.length > 0) return;
-      
+      if (!conversationId || historyLoadedRef.current) return;
+
       historyLoadedRef.current = true;
-      
+
       const { data, error } = await supabase
         .from('guide_messages')
         .select('id, role, content, created_at')
         .eq('conversation_id', conversationId)
         .order('created_at', { ascending: true });
-      
+
       if (error) {
         console.error('Failed to load conversation history:', error);
         return;
       }
-      
+
       if (data && data.length > 0) {
         setMessages(data.map(msg => ({
           id: msg.id,
@@ -135,9 +135,9 @@ export function useGuideChat({
         })));
       }
     };
-    
+
     loadHistory();
-  }, [conversationId, messages.length]);
+  }, [conversationId]);
 
   /**
    * Display chunks with pauses between them

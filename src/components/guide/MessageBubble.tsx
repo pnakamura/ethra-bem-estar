@@ -2,6 +2,8 @@ import { motion } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { GuideAvatar } from './GuideAvatar';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { formatRelativeTime, formatFullDateTime } from '@/lib/formatTime';
 import type { ChatMessage } from '@/hooks/useGuideChat';
 
 interface MessageBubbleProps {
@@ -37,9 +39,9 @@ function hasMemoryReference(content: string): boolean {
   return memoryPatterns.some(pattern => lowerContent.includes(pattern));
 }
 
-export function MessageBubble({ 
-  message, 
-  guideEmoji = '🧘', 
+export function MessageBubble({
+  message,
+  guideEmoji = '🧘',
   guideName = 'Guia',
   isStreaming = false,
   isEmpathic = false,
@@ -47,8 +49,10 @@ export function MessageBubble({
   isFirstChunk = true,
 }: MessageBubbleProps) {
   const isUser = message.role === 'user';
+  const relativeTime = formatRelativeTime(message.createdAt);
+  const fullDateTime = formatFullDateTime(message.createdAt);
   const showMemoryIndicator = !isUser && hasMemoryReference(message.content);
-  
+
   // Hide guide name and avatar for continuation chunks
   const showGuideHeader = !isUser && (!isChunk || isFirstChunk);
 
@@ -56,8 +60,8 @@ export function MessageBubble({
     <motion.div
       initial={{ opacity: 0, y: 22, scale: 0.92, filter: 'blur(6px)' }}
       animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
-      transition={{ 
-        duration: 0.65, 
+      transition={{
+        duration: 0.65,
         ease: [0.22, 1, 0.36, 1],
         delay: isUser ? 0 : 0.15,
       }}
@@ -68,9 +72,9 @@ export function MessageBubble({
     >
       {/* Avatar - only for assistant, hidden on continuation chunks */}
       {!isUser && showGuideHeader && (
-        <GuideAvatar 
-          emoji={guideEmoji} 
-          state={isStreaming ? 'speaking' : isEmpathic ? 'empathic' : 'idle'} 
+        <GuideAvatar
+          emoji={guideEmoji}
+          state={isStreaming ? 'speaking' : isEmpathic ? 'empathic' : 'idle'}
         />
       )}
       {/* Spacer for continuation chunks to maintain alignment */}
@@ -79,43 +83,75 @@ export function MessageBubble({
       )}
 
       {/* Message content */}
-      <div
-        className={cn(
-          'rounded-2xl px-4 py-3 text-sm leading-relaxed',
-          isUser 
-            ? 'bg-primary text-primary-foreground rounded-br-md' 
-            : 'bg-muted text-foreground rounded-bl-md',
-          isEmpathic && !isUser && 'ring-1 ring-primary/20'
-        )}
-      >
-        {showGuideHeader && (
-          <div className="flex items-center gap-1.5 mb-1">
-            <span className="text-xs font-medium text-muted-foreground">
-              {guideName}
+      <div className="flex flex-col gap-1">
+        <div
+          className={cn(
+            'rounded-2xl px-4 py-3 text-sm leading-relaxed font-body backdrop-blur-sm',
+            isUser
+              ? 'rounded-br-md shadow-[0_4px_16px_rgba(95,115,95,0.15)] text-cream-50'
+              : 'bg-cream-50/90 text-sage-900 rounded-bl-md shadow-[0_2px_12px_rgba(95,115,95,0.08)] border border-sage-200/30',
+            isEmpathic && !isUser && 'ring-1 ring-sage-400/30'
+          )}
+          style={
+            isUser
+              ? {
+                  background: 'linear-gradient(135deg, #7d8f7d 0%, #5f735f 100%)',
+                }
+              : undefined
+          }
+        >
+          {showGuideHeader && (
+            <div className="flex items-center gap-1.5 mb-1">
+              <span className="text-xs font-medium text-sage-600 font-body">
+                {guideName}
+              </span>
+              {showMemoryIndicator && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.3, type: 'spring' }}
+                  title="Seu guia lembrou de algo que você disse antes"
+                  className="text-sage-500"
+                >
+                  <Sparkles className="w-3 h-3" />
+                </motion.div>
+              )}
+            </div>
+          )}
+          <p className="whitespace-pre-wrap">{message.content}</p>
+
+          {/* Streaming indicator */}
+          {isStreaming && !isUser && (
+            <motion.span
+              className="inline-block w-1.5 h-4 ml-0.5 rounded-sm"
+              style={{ background: 'rgba(95, 115, 95, 0.5)' }}
+              animate={{ opacity: [1, 0, 1] }}
+              transition={{ duration: 0.8, repeat: Infinity }}
+            />
+          )}
+        </div>
+
+        {/* Timestamp with tooltip */}
+        <Tooltip delayDuration={200}>
+          <TooltipTrigger asChild>
+            <span
+              className={cn(
+                'text-xs font-body cursor-default select-none transition-opacity duration-200 hover:opacity-100',
+                isUser
+                  ? 'text-sage-500 opacity-70 text-right'
+                  : 'text-sage-500 opacity-70 text-left'
+              )}
+            >
+              {relativeTime}
             </span>
-            {showMemoryIndicator && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.3, type: 'spring' }}
-                title="Seu guia lembrou de algo que você disse antes"
-                className="text-primary/60"
-              >
-                <Sparkles className="w-3 h-3" />
-              </motion.div>
-            )}
-          </div>
-        )}
-        <p className="whitespace-pre-wrap">{message.content}</p>
-        
-        {/* Streaming indicator */}
-        {isStreaming && !isUser && (
-          <motion.span
-            className="inline-block w-1.5 h-4 bg-primary/50 ml-0.5 rounded-sm"
-            animate={{ opacity: [1, 0, 1] }}
-            transition={{ duration: 0.8, repeat: Infinity }}
-          />
-        )}
+          </TooltipTrigger>
+          <TooltipContent
+            side={isUser ? 'left' : 'right'}
+            className="bg-sage-900 border-sage-700 text-cream-50 font-body text-xs"
+          >
+            {fullDateTime}
+          </TooltipContent>
+        </Tooltip>
       </div>
     </motion.div>
   );

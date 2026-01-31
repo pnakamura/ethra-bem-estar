@@ -1,358 +1,593 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { BreathVisualizationEngine } from '@/components/breath-engine';
-import {
-  WaveVisualizer,
-  FluidParticles,
-  MandalaVisualizer,
-  CurveEditor,
-} from '@/components/animation-studio';
-import { breathEquations } from '@/lib/math-animations';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Slider } from '@/components/ui/slider';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
 import {
   ArrowLeft,
   Play,
   Sparkles,
-  Waves,
-  Flower2,
   Droplets,
   Snowflake,
   Globe,
   Zap,
   Cloud,
-  ExternalLink,
+  Settings2,
+  Clock,
+  Repeat,
+  ChevronRight,
+  Info,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
-const visualModes = [
+// Types
+type VisualMode = 'starDust' | 'fluid' | 'crystal' | 'topography' | 'bio' | 'atmosphere';
+
+interface BreathPreset {
+  id: string;
+  name: string;
+  description: string;
+  inhale: number;
+  holdFull: number;
+  exhale: number;
+  holdEmpty: number;
+  cycles: number;
+  recommendedMode: VisualMode;
+  color: string;
+}
+
+// Visual modes data
+const visualModes: {
+  id: VisualMode;
+  name: string;
+  description: string;
+  icon: React.ElementType;
+  phases: {
+    inhale: string;
+    holdFull: string;
+    exhale: string;
+    holdEmpty: string;
+  };
+  gradient: string;
+  iconBg: string;
+}[] = [
   {
     id: 'starDust',
     name: 'Pó de Estrela',
-    description: 'Partículas com gravidade invertida que flutuam durante a inspiração',
+    description: 'Partículas com gravidade invertida',
     icon: Sparkles,
-    color: 'from-yellow-500/20 to-amber-500/20',
-    borderColor: 'border-yellow-500/30',
+    phases: {
+      inhale: 'Partículas sobem e se dispersam',
+      holdFull: 'Flutuam no topo, vibrando levemente',
+      exhale: 'Caem suavemente de volta',
+      holdEmpty: 'Assentadas no chão, brilho fraco',
+    },
+    gradient: 'from-amber-500/20 via-yellow-500/10 to-orange-500/20',
+    iconBg: 'bg-gradient-to-br from-amber-500 to-yellow-500',
   },
   {
     id: 'fluid',
     name: 'Fluido Viscoso',
-    description: 'Tinta se dissolvendo na água com turbulência dinâmica',
+    description: 'Tinta se dissolvendo na água',
     icon: Droplets,
-    color: 'from-blue-500/20 to-cyan-500/20',
-    borderColor: 'border-blue-500/30',
+    phases: {
+      inhale: 'Injeção de tinta, cores explodem',
+      holdFull: 'Redemoinhos lentos ocupam a tela',
+      exhale: 'Fluido sugado para o centro',
+      holdEmpty: 'Água cristalina, sem movimento',
+    },
+    gradient: 'from-cyan-500/20 via-blue-500/10 to-indigo-500/20',
+    iconBg: 'bg-gradient-to-br from-cyan-500 to-blue-500',
   },
   {
     id: 'crystal',
     name: 'Cristalização',
-    description: 'Ordem emergindo do caos - cristais se formando na expiração',
+    description: 'Ordem emergindo do caos',
     icon: Snowflake,
-    color: 'from-violet-500/20 to-purple-500/20',
-    borderColor: 'border-violet-500/30',
+    phases: {
+      inhale: 'Estrutura geométrica sublima (vira gás)',
+      holdFull: 'Gás ocupa o espaço, etéreo',
+      exhale: 'Condensa em formas geométricas',
+      holdEmpty: 'Cristal perfeito, imóvel',
+    },
+    gradient: 'from-violet-500/20 via-purple-500/10 to-fuchsia-500/20',
+    iconBg: 'bg-gradient-to-br from-violet-500 to-purple-500',
   },
   {
     id: 'topography',
     name: 'Topografia 3D',
-    description: 'Malha esférica elástica que responde à respiração',
+    description: 'Malha esférica elástica',
     icon: Globe,
-    color: 'from-teal-500/20 to-emerald-500/20',
-    borderColor: 'border-teal-500/30',
+    phases: {
+      inhale: 'Malha esticada, cria picos pontiagudos',
+      holdFull: 'Vibra na tensão máxima, emite luz',
+      exhale: 'Picos se suavizam',
+      holdEmpty: 'Esfera lisa e escura',
+    },
+    gradient: 'from-teal-500/20 via-emerald-500/10 to-green-500/20',
+    iconBg: 'bg-gradient-to-br from-teal-500 to-emerald-500',
   },
   {
     id: 'bio',
     name: 'Bioluminescência',
-    description: 'Rede neural pulsante com luz viajando pelos filamentos',
+    description: 'Rede neural pulsante',
     icon: Zap,
-    color: 'from-green-500/20 to-lime-500/20',
-    borderColor: 'border-green-500/30',
+    phases: {
+      inhale: 'Pulso de luz do centro às extremidades',
+      holdFull: 'Pontas brilham intensamente',
+      exhale: 'Luz recua das pontas ao núcleo',
+      holdEmpty: 'Ponto fraco pulsa no centro',
+    },
+    gradient: 'from-lime-500/20 via-green-500/10 to-emerald-500/20',
+    iconBg: 'bg-gradient-to-br from-lime-500 to-green-500',
   },
   {
     id: 'atmosphere',
     name: 'Atmosfera',
-    description: 'Eclipse e nevoeiro - luz revelada na inspiração',
+    description: 'Eclipse e nevoeiro',
     icon: Cloud,
-    color: 'from-orange-500/20 to-red-500/20',
-    borderColor: 'border-orange-500/30',
+    phases: {
+      inhale: 'Nevoeiro dissipa, luz revelada',
+      holdFull: 'Luz máxima, brilho intenso',
+      exhale: 'Sombras crescem das bordas',
+      holdEmpty: 'Escuridão quase total',
+    },
+    gradient: 'from-orange-500/20 via-red-500/10 to-rose-500/20',
+    iconBg: 'bg-gradient-to-br from-orange-500 to-red-500',
+  },
+];
+
+// Breathing presets
+const breathPresets: BreathPreset[] = [
+  {
+    id: 'box',
+    name: 'Box Breathing',
+    description: 'Equilíbrio e foco. Usado por Navy SEALs.',
+    inhale: 4,
+    holdFull: 4,
+    exhale: 4,
+    holdEmpty: 4,
+    cycles: 4,
+    recommendedMode: 'crystal',
+    color: 'from-violet-500 to-purple-600',
+  },
+  {
+    id: '478',
+    name: '4-7-8 Relaxante',
+    description: 'Técnica do Dr. Weil para relaxamento profundo.',
+    inhale: 4,
+    holdFull: 7,
+    exhale: 8,
+    holdEmpty: 0,
+    cycles: 4,
+    recommendedMode: 'atmosphere',
+    color: 'from-blue-500 to-indigo-600',
+  },
+  {
+    id: 'coherence',
+    name: 'Coerência Cardíaca',
+    description: 'Sincroniza respiração e batimentos cardíacos.',
+    inhale: 5,
+    holdFull: 0,
+    exhale: 5,
+    holdEmpty: 0,
+    cycles: 10,
+    recommendedMode: 'bio',
+    color: 'from-emerald-500 to-teal-600',
+  },
+  {
+    id: 'energizing',
+    name: 'Energizante',
+    description: 'Aumenta energia e estado de alerta.',
+    inhale: 4,
+    holdFull: 0,
+    exhale: 2,
+    holdEmpty: 0,
+    cycles: 6,
+    recommendedMode: 'starDust',
+    color: 'from-amber-500 to-orange-600',
+  },
+  {
+    id: 'calm',
+    name: 'Calmante',
+    description: 'Expiração prolongada para acalmar.',
+    inhale: 4,
+    holdFull: 2,
+    exhale: 6,
+    holdEmpty: 2,
+    cycles: 5,
+    recommendedMode: 'fluid',
+    color: 'from-cyan-500 to-blue-600',
+  },
+  {
+    id: 'sleep',
+    name: 'Preparação p/ Sono',
+    description: 'Induz relaxamento profundo antes de dormir.',
+    inhale: 4,
+    holdFull: 7,
+    exhale: 8,
+    holdEmpty: 4,
+    cycles: 3,
+    recommendedMode: 'atmosphere',
+    color: 'from-indigo-500 to-purple-600',
   },
 ];
 
 export default function AnimationStudio() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'engine' | 'editor' | 'preview'>('engine');
   const [showEngine, setShowEngine] = useState(false);
-  const [selectedMode, setSelectedMode] = useState('starDust');
+  const [selectedMode, setSelectedMode] = useState<VisualMode>('starDust');
+  const [selectedPreset, setSelectedPreset] = useState<BreathPreset | null>(null);
+  const [showModeDetails, setShowModeDetails] = useState(false);
+  const [customConfig, setCustomConfig] = useState({
+    inhale: 4,
+    holdFull: 4,
+    exhale: 4,
+    holdEmpty: 4,
+    cycles: 4,
+  });
+
+  // Get selected mode details
+  const modeDetails = visualModes.find(m => m.id === selectedMode);
+
+  const handleStartWithPreset = (preset: BreathPreset) => {
+    setSelectedPreset(preset);
+    setSelectedMode(preset.recommendedMode);
+    setCustomConfig({
+      inhale: preset.inhale,
+      holdFull: preset.holdFull,
+      exhale: preset.exhale,
+      holdEmpty: preset.holdEmpty,
+      cycles: preset.cycles,
+    });
+    setShowEngine(true);
+  };
+
+  const handleStartCustom = () => {
+    setSelectedPreset(null);
+    setShowEngine(true);
+  };
 
   const handleEngineComplete = (duration: number) => {
+    const minutes = Math.floor(duration / 60);
+    const seconds = duration % 60;
     toast.success('Sessão concluída!', {
-      description: `Você praticou por ${Math.floor(duration / 60)}min ${duration % 60}s`,
+      description: `Você praticou por ${minutes > 0 ? `${minutes}min ` : ''}${seconds}s. Excelente trabalho!`,
     });
     setShowEngine(false);
   };
 
-  const openStandaloneEngine = () => {
-    window.open('/breath-engine.html', '_blank');
-  };
+  const totalCycleTime = customConfig.inhale + customConfig.holdFull + customConfig.exhale + customConfig.holdEmpty;
+  const totalSessionTime = totalCycleTime * customConfig.cycles;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-      {/* Header */}
-      <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border/50">
-        <div className="container flex items-center justify-between h-16 px-4">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate('/')}
-              className="rounded-full"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-            <div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-teal-400 to-cyan-300 bg-clip-text text-transparent">
-                Animation Studio
-              </h1>
-              <p className="text-xs text-muted-foreground">
-                Motor de Visualização de Respiração
-              </p>
-            </div>
-          </div>
+    <div className="min-h-screen bg-[#0a0a0f] text-white overflow-x-hidden">
+      {/* Ambient background */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <motion.div
+          className="absolute top-1/4 -left-1/4 w-[600px] h-[600px] rounded-full"
+          style={{
+            background: 'radial-gradient(circle, rgba(78, 205, 196, 0.08) 0%, transparent 70%)',
+          }}
+          animate={{
+            scale: [1, 1.2, 1],
+            x: [0, 50, 0],
+          }}
+          transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}
+        />
+        <motion.div
+          className="absolute bottom-1/4 -right-1/4 w-[500px] h-[500px] rounded-full"
+          style={{
+            background: 'radial-gradient(circle, rgba(139, 92, 246, 0.06) 0%, transparent 70%)',
+          }}
+          animate={{
+            scale: [1, 1.3, 1],
+            y: [0, -30, 0],
+          }}
+          transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut', delay: 5 }}
+        />
+      </div>
 
+      {/* Header */}
+      <header className="relative z-10 flex items-center justify-between p-4 border-b border-white/5">
+        <div className="flex items-center gap-4">
           <Button
-            variant="outline"
-            size="sm"
-            onClick={openStandaloneEngine}
-            className="gap-2"
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate('/')}
+            className="text-white/70 hover:text-white hover:bg-white/10 rounded-full"
           >
-            <ExternalLink className="w-4 h-4" />
-            Abrir em Nova Aba
+            <ArrowLeft className="w-5 h-5" />
           </Button>
+          <div>
+            <h1 className="text-xl font-semibold tracking-tight">Animation Studio</h1>
+            <p className="text-sm text-white/50">Motor de Visualização de Respiração</p>
+          </div>
         </div>
       </header>
 
-      <main className="container px-4 py-6 space-y-6">
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)}>
-          <TabsList className="grid w-full max-w-lg mx-auto grid-cols-3 mb-6">
-            <TabsTrigger value="engine" className="gap-2">
-              <Sparkles className="w-4 h-4" />
-              Motor
-            </TabsTrigger>
-            <TabsTrigger value="preview" className="gap-2">
-              <Waves className="w-4 h-4" />
-              Preview
-            </TabsTrigger>
-            <TabsTrigger value="editor" className="gap-2">
-              <Flower2 className="w-4 h-4" />
-              Editor
-            </TabsTrigger>
-          </TabsList>
+      <main className="relative z-10 container max-w-5xl mx-auto px-4 py-8 space-y-10">
+        {/* Hero Section */}
+        <section className="text-center space-y-6">
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className="w-24 h-24 mx-auto rounded-3xl bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center shadow-[0_0_80px_rgba(78,205,196,0.3)] mb-6">
+              <Sparkles className="w-12 h-12 text-white" />
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold mb-3">
+              Experiências Visuais de Respiração
+            </h2>
+            <p className="text-white/60 max-w-xl mx-auto text-lg">
+              6 modos visuais abstratos baseados em física e metáforas naturais.
+              Cada modo reage de forma única às 4 fases do ciclo respiratório.
+            </p>
+          </motion.div>
+        </section>
 
-          {/* Engine Tab */}
-          <TabsContent value="engine" className="space-y-6">
-            {/* Hero Section */}
-            <Card className="border-0 bg-gradient-to-br from-teal-500/10 to-cyan-500/10 overflow-hidden">
-              <CardContent className="p-8 text-center">
-                <motion.div
-                  initial={{ scale: 0.9, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  className="space-y-4"
+        {/* Visual Modes Selector */}
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-white/90">Escolha o Modo Visual</h3>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowModeDetails(!showModeDetails)}
+              className="text-white/50 hover:text-white gap-2"
+            >
+              <Info className="w-4 h-4" />
+              {showModeDetails ? 'Esconder detalhes' : 'Ver detalhes'}
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            {visualModes.map((mode, index) => (
+              <motion.div
+                key={mode.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
+              >
+                <Card
+                  className={cn(
+                    'relative cursor-pointer transition-all duration-300 border-0 overflow-hidden group',
+                    `bg-gradient-to-br ${mode.gradient}`,
+                    selectedMode === mode.id
+                      ? 'ring-2 ring-white/50 scale-[1.02]'
+                      : 'hover:scale-[1.02] ring-1 ring-white/10'
+                  )}
+                  onClick={() => setSelectedMode(mode.id)}
                 >
-                  <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center shadow-[0_0_60px_rgba(78,205,196,0.4)]">
-                    <Sparkles className="w-10 h-10 text-white" />
-                  </div>
-                  <h2 className="text-2xl font-bold text-foreground">
-                    Motor de Visualização de Respiração
-                  </h2>
-                  <p className="text-muted-foreground max-w-md mx-auto">
-                    6 modos visuais abstratos baseados em física e metáforas naturais.
-                    State Machine de 4 fases: Inspirar, Segurar Cheio, Expirar, Segurar Vazio.
-                  </p>
-                  <Button
-                    size="lg"
-                    onClick={() => setShowEngine(true)}
-                    className="rounded-full px-10 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-400 hover:to-cyan-400 shadow-lg"
-                  >
-                    <Play className="w-5 h-5 mr-2" />
-                    Iniciar Experiência
-                  </Button>
-                </motion.div>
-              </CardContent>
-            </Card>
+                  <CardContent className="p-4">
+                    <div className="flex items-start gap-3">
+                      <div className={cn('p-2.5 rounded-xl', mode.iconBg)}>
+                        <mode.icon className="w-5 h-5 text-white" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-semibold text-white truncate">{mode.name}</h4>
+                        <p className="text-xs text-white/60 line-clamp-1">{mode.description}</p>
+                      </div>
+                    </div>
 
-            {/* Visual Modes Grid */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-foreground">Modos Visuais</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {visualModes.map((mode, index) => (
-                  <motion.div
-                    key={mode.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                  >
-                    <Card
-                      className={cn(
-                        'cursor-pointer transition-all hover:scale-[1.02] border',
-                        `bg-gradient-to-br ${mode.color}`,
-                        mode.borderColor,
-                        selectedMode === mode.id && 'ring-2 ring-teal-500'
+                    {/* Phase details - expandable */}
+                    <AnimatePresence>
+                      {showModeDetails && selectedMode === mode.id && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="overflow-hidden"
+                        >
+                          <div className="mt-4 pt-3 border-t border-white/10 space-y-2">
+                            {Object.entries(mode.phases).map(([phase, desc]) => (
+                              <div key={phase} className="flex gap-2 text-xs">
+                                <Badge
+                                  variant="outline"
+                                  className="shrink-0 border-white/20 text-white/70 text-[10px] px-1.5"
+                                >
+                                  {phase === 'inhale' ? 'Inspire' :
+                                   phase === 'holdFull' ? 'Segure' :
+                                   phase === 'exhale' ? 'Expire' : 'Pause'}
+                                </Badge>
+                                <span className="text-white/50 line-clamp-1">{desc}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </motion.div>
                       )}
-                      onClick={() => setSelectedMode(mode.id)}
-                    >
-                      <CardContent className="p-5">
-                        <div className="flex items-start gap-4">
-                          <div className="p-3 rounded-xl bg-white/10">
-                            <mode.icon className="w-6 h-6 text-foreground" />
-                          </div>
-                          <div className="flex-1">
-                            <h4 className="font-semibold text-foreground">{mode.name}</h4>
-                            <p className="text-sm text-muted-foreground mt-1">
-                              {mode.description}
-                            </p>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
+                    </AnimatePresence>
+                  </CardContent>
+
+                  {/* Selection indicator */}
+                  {selectedMode === mode.id && (
+                    <motion.div
+                      layoutId="mode-indicator"
+                      className="absolute inset-0 border-2 border-white/30 rounded-xl pointer-events-none"
+                    />
+                  )}
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </section>
+
+        {/* Breath Presets */}
+        <section className="space-y-4">
+          <h3 className="text-lg font-semibold text-white/90">Padrões de Respiração</h3>
+
+          <div className="grid gap-3">
+            {breathPresets.map((preset, index) => (
+              <motion.div
+                key={preset.id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.05 }}
+              >
+                <Card
+                  className="bg-white/5 border-white/10 hover:bg-white/[0.07] transition-all cursor-pointer group"
+                  onClick={() => handleStartWithPreset(preset)}
+                >
+                  <CardContent className="p-4 flex items-center gap-4">
+                    <div className={cn('w-12 h-12 rounded-xl bg-gradient-to-br flex items-center justify-center shrink-0', preset.color)}>
+                      <Play className="w-5 h-5 text-white" />
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h4 className="font-semibold text-white">{preset.name}</h4>
+                        <Badge variant="outline" className="border-white/20 text-white/60 text-[10px]">
+                          {preset.inhale}-{preset.holdFull}-{preset.exhale}-{preset.holdEmpty}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-white/50 line-clamp-1">{preset.description}</p>
+                    </div>
+
+                    <div className="flex items-center gap-4 text-white/40">
+                      <div className="flex items-center gap-1.5 text-xs">
+                        <Clock className="w-3.5 h-3.5" />
+                        <span>{(preset.inhale + preset.holdFull + preset.exhale + preset.holdEmpty) * preset.cycles}s</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-xs">
+                        <Repeat className="w-3.5 h-3.5" />
+                        <span>{preset.cycles}x</span>
+                      </div>
+                      <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </section>
+
+        {/* Custom Configuration */}
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-white/90">Configuração Personalizada</h3>
+            <div className="flex items-center gap-3 text-sm text-white/50">
+              <span className="flex items-center gap-1.5">
+                <Clock className="w-4 h-4" />
+                {Math.floor(totalSessionTime / 60)}:{(totalSessionTime % 60).toString().padStart(2, '0')} total
+              </span>
+            </div>
+          </div>
+
+          <Card className="bg-white/5 border-white/10">
+            <CardContent className="p-6 space-y-6">
+              {/* Timing sliders */}
+              <div className="grid md:grid-cols-2 gap-6">
+                {[
+                  { key: 'inhale', label: 'Inspirar', color: 'bg-teal-500' },
+                  { key: 'holdFull', label: 'Segurar (cheio)', color: 'bg-blue-500' },
+                  { key: 'exhale', label: 'Expirar', color: 'bg-orange-500' },
+                  { key: 'holdEmpty', label: 'Segurar (vazio)', color: 'bg-purple-500' },
+                ].map(({ key, label, color }) => (
+                  <div key={key} className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-2">
+                        <div className={cn('w-2 h-2 rounded-full', color)} />
+                        <span className="text-sm text-white/70">{label}</span>
+                      </div>
+                      <Badge variant="secondary" className="bg-white/10 text-white">
+                        {customConfig[key as keyof typeof customConfig]}s
+                      </Badge>
+                    </div>
+                    <Slider
+                      value={[customConfig[key as keyof typeof customConfig]]}
+                      onValueChange={([v]) => setCustomConfig(c => ({ ...c, [key]: v }))}
+                      min={0}
+                      max={10}
+                      step={1}
+                      className="[&_[role=slider]]:bg-white [&_[role=slider]]:border-0"
+                    />
+                  </div>
                 ))}
               </div>
-            </div>
 
-            {/* Features */}
-            <Card className="border-border/50">
-              <CardHeader>
-                <CardTitle className="text-lg">Características</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {[
-                    { label: '4 Fases', desc: 'State Machine completa' },
-                    { label: '6 Modos', desc: 'Visualizações únicas' },
-                    { label: 'Tempo Real', desc: 'Animações fluidas' },
-                    { label: 'Personalizável', desc: 'Cores e tempos' },
-                  ].map((feature) => (
-                    <div
-                      key={feature.label}
-                      className="text-center p-4 rounded-xl bg-muted/30"
-                    >
-                      <div className="text-xl font-bold text-teal-400">{feature.label}</div>
-                      <div className="text-xs text-muted-foreground">{feature.desc}</div>
-                    </div>
-                  ))}
+              {/* Cycles */}
+              <div className="pt-4 border-t border-white/10">
+                <div className="flex justify-between items-center mb-3">
+                  <span className="text-sm text-white/70">Número de Ciclos</span>
+                  <Badge variant="secondary" className="bg-white/10 text-white">
+                    {customConfig.cycles} ciclos
+                  </Badge>
                 </div>
-              </CardContent>
-            </Card>
+                <Slider
+                  value={[customConfig.cycles]}
+                  onValueChange={([v]) => setCustomConfig(c => ({ ...c, cycles: v }))}
+                  min={1}
+                  max={15}
+                  step={1}
+                  className="[&_[role=slider]]:bg-white [&_[role=slider]]:border-0"
+                />
+              </div>
 
-            {/* Presets */}
-            <Card className="border-border/50">
-              <CardHeader>
-                <CardTitle className="text-lg">Padrões de Respiração</CardTitle>
-                <CardDescription>
-                  Clique para iniciar com um preset configurado
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  {[
-                    { name: 'Box Breathing', pattern: '4-4-4-4', desc: 'Equilíbrio' },
-                    { name: '4-7-8', pattern: '4-7-8-0', desc: 'Relaxamento' },
-                    { name: 'Coerência', pattern: '5-0-5-0', desc: 'Harmonia' },
-                    { name: 'Energizante', pattern: '4-0-2-0', desc: 'Vitalidade' },
-                  ].map((preset) => (
-                    <Button
-                      key={preset.name}
-                      variant="outline"
-                      className="h-auto py-4 flex-col gap-1"
-                      onClick={() => setShowEngine(true)}
-                    >
-                      <span className="font-semibold">{preset.name}</span>
-                      <span className="text-xs text-muted-foreground">{preset.pattern}</span>
-                      <Badge variant="secondary" className="mt-1 text-xs">
-                        {preset.desc}
-                      </Badge>
-                    </Button>
-                  ))}
+              {/* Timeline preview */}
+              <div className="pt-4 border-t border-white/10">
+                <p className="text-xs text-white/50 mb-2">Visualização do ciclo</p>
+                <div className="flex h-3 rounded-full overflow-hidden">
+                  <div
+                    className="bg-teal-500 transition-all"
+                    style={{ width: `${(customConfig.inhale / totalCycleTime) * 100}%` }}
+                  />
+                  <div
+                    className="bg-blue-500 transition-all"
+                    style={{ width: `${(customConfig.holdFull / totalCycleTime) * 100}%` }}
+                  />
+                  <div
+                    className="bg-orange-500 transition-all"
+                    style={{ width: `${(customConfig.exhale / totalCycleTime) * 100}%` }}
+                  />
+                  <div
+                    className="bg-purple-500 transition-all"
+                    style={{ width: `${(customConfig.holdEmpty / totalCycleTime) * 100}%` }}
+                  />
                 </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+              </div>
 
-          {/* Preview Tab */}
-          <TabsContent value="preview" className="space-y-6">
-            <div className="grid md:grid-cols-2 gap-6">
-              {/* Wave Preview */}
-              <Card className="border-border/50 overflow-hidden">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Waves className="w-5 h-5 text-teal-400" />
-                    Visualizador de Ondas
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-4">
-                  <WaveVisualizer
-                    equation={breathEquations[0]}
-                    params={{ amplitude: 1, frequency: 0.5, phase: 0 }}
-                    currentTime={0.5}
-                    showGrid={true}
-                    colorScheme="calm"
-                    height={200}
-                  />
-                </CardContent>
-              </Card>
+              {/* Start button */}
+              <Button
+                size="lg"
+                onClick={handleStartCustom}
+                className="w-full rounded-xl h-14 text-lg font-semibold bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-400 hover:to-cyan-400 border-0"
+              >
+                <Play className="w-5 h-5 mr-2" />
+                Iniciar com {modeDetails?.name}
+              </Button>
+            </CardContent>
+          </Card>
+        </section>
 
-              {/* Particles Preview */}
-              <Card className="border-border/50 overflow-hidden">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Droplets className="w-5 h-5 text-blue-400" />
-                    Partículas Fluidas
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-0 h-[250px]">
-                  <FluidParticles
-                    breathPhase="inhale"
-                    progress={0.5}
-                    colorScheme="calm"
-                    particleCount={60}
-                  />
-                </CardContent>
-              </Card>
-
-              {/* Mandala Preview */}
-              <Card className="border-border/50 overflow-hidden md:col-span-2">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Flower2 className="w-5 h-5 text-violet-400" />
-                    Mandala Visualizer
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-0 h-[350px]">
-                  <MandalaVisualizer
-                    breathPhase="inhale"
-                    progress={0.5}
-                    colorScheme="cosmic"
-                    layers={5}
-                    petalsPerLayer={8}
-                    rotationSpeed={0.3}
-                  />
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          {/* Editor Tab */}
-          <TabsContent value="editor">
-            <CurveEditor
-              onSave={(config) => {
-                toast.success('Configuração salva!');
-                console.log('Saved config:', config);
-              }}
-            />
-          </TabsContent>
-        </Tabs>
+        {/* Info Section */}
+        <section className="pt-6 border-t border-white/10">
+          <div className="grid md:grid-cols-4 gap-4">
+            {[
+              { label: '4 Fases', desc: 'State Machine completa' },
+              { label: '6 Modos', desc: 'Visualizações únicas' },
+              { label: 'Tempo Real', desc: 'Canvas 60fps' },
+              { label: 'Personalizável', desc: 'Tempos e cores' },
+            ].map((item) => (
+              <div key={item.label} className="text-center p-4 rounded-xl bg-white/5">
+                <div className="text-xl font-bold text-teal-400">{item.label}</div>
+                <div className="text-xs text-white/50">{item.desc}</div>
+              </div>
+            ))}
+          </div>
+        </section>
       </main>
 
       {/* Fullscreen Engine */}
@@ -362,6 +597,17 @@ export default function AnimationStudio() {
             onClose={() => setShowEngine(false)}
             onComplete={handleEngineComplete}
             fullscreen={true}
+            initialConfig={{
+              inhaleTime: customConfig.inhale,
+              holdFullTime: customConfig.holdFull,
+              exhaleTime: customConfig.exhale,
+              holdEmptyTime: customConfig.holdEmpty,
+              cycles: customConfig.cycles,
+              visualMode: selectedMode,
+              primaryColor: '#4ECDC4',
+              backgroundColor: '#0a0a0f',
+              complexity: 50,
+            }}
           />
         )}
       </AnimatePresence>

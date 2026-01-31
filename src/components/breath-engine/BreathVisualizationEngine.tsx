@@ -52,6 +52,7 @@ interface BreathVisualizationEngineProps {
   onClose?: () => void;
   onComplete?: (durationSeconds: number) => void;
   fullscreen?: boolean;
+  initialConfig?: Partial<BreathConfig>;
 }
 
 const defaultConfig: BreathConfig = {
@@ -91,13 +92,17 @@ export function BreathVisualizationEngine({
   onClose,
   onComplete,
   fullscreen = true,
+  initialConfig,
 }: BreathVisualizationEngineProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>();
   const startTimeRef = useRef<number>(0);
   const phaseStartTimeRef = useRef<number>(0);
 
-  const [config, setConfig] = useState<BreathConfig>(defaultConfig);
+  const [config, setConfig] = useState<BreathConfig>(() => ({
+    ...defaultConfig,
+    ...initialConfig,
+  }));
   const [phase, setPhase] = useState<BreathPhase>('idle');
   const [isRunning, setIsRunning] = useState(false);
   const [currentCycle, setCurrentCycle] = useState(0);

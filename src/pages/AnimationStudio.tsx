@@ -1,258 +1,106 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { BreathVisualizationEngine } from '@/components/breath-engine';
 import {
   WaveVisualizer,
   FluidParticles,
   MandalaVisualizer,
   CurveEditor,
-  BreathCurveConfig,
 } from '@/components/animation-studio';
-import {
-  breathEquations,
-  AnimationEquation,
-  getEquationById,
-} from '@/lib/math-animations';
+import { breathEquations } from '@/lib/math-animations';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Slider } from '@/components/ui/slider';
-import { Switch } from '@/components/ui/switch';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import {
   ArrowLeft,
   Play,
-  Pause,
-  RotateCcw,
-  Waves,
   Sparkles,
-  CircleDot,
-  Palette,
-  Settings2,
-  Maximize2,
-  Eye,
-  Zap,
-  Moon,
-  Sun,
-  Volume2,
-  VolumeX,
-  Download,
-  Share2,
+  Waves,
   Flower2,
   Droplets,
-  Wind,
+  Snowflake,
+  Globe,
+  Zap,
+  Cloud,
+  ExternalLink,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
-type VisualizationType = 'particles' | 'mandala' | 'wave' | 'combined';
-type ColorScheme = 'calm' | 'energy' | 'focus' | 'nature';
-type BreathPhase = 'idle' | 'inhale' | 'holdIn' | 'exhale' | 'holdOut';
-
-interface BreathConfig {
-  inhaleDuration: number;
-  holdInDuration: number;
-  exhaleDuration: number;
-  holdOutDuration: number;
-  cycles: number;
-}
-
-const defaultBreathConfig: BreathConfig = {
-  inhaleDuration: 4000,
-  holdInDuration: 4000,
-  exhaleDuration: 4000,
-  holdOutDuration: 4000,
-  cycles: 4,
-};
-
-const visualizationOptions = [
-  { id: 'particles', label: 'Partículas', icon: Droplets },
-  { id: 'mandala', label: 'Mandala', icon: Flower2 },
-  { id: 'wave', label: 'Onda', icon: Waves },
-  { id: 'combined', label: 'Combinado', icon: Sparkles },
-];
-
-const colorSchemeOptions = [
-  { id: 'calm', label: 'Calmo', colors: ['#4ECDC4', '#45B7D1'] },
-  { id: 'energy', label: 'Energia', colors: ['#FF6B6B', '#FFE66D'] },
-  { id: 'focus', label: 'Foco', colors: ['#A78BFA', '#6366F1'] },
-  { id: 'nature', label: 'Natureza', colors: ['#88D8B0', '#7CB342'] },
+const visualModes = [
+  {
+    id: 'starDust',
+    name: 'Pó de Estrela',
+    description: 'Partículas com gravidade invertida que flutuam durante a inspiração',
+    icon: Sparkles,
+    color: 'from-yellow-500/20 to-amber-500/20',
+    borderColor: 'border-yellow-500/30',
+  },
+  {
+    id: 'fluid',
+    name: 'Fluido Viscoso',
+    description: 'Tinta se dissolvendo na água com turbulência dinâmica',
+    icon: Droplets,
+    color: 'from-blue-500/20 to-cyan-500/20',
+    borderColor: 'border-blue-500/30',
+  },
+  {
+    id: 'crystal',
+    name: 'Cristalização',
+    description: 'Ordem emergindo do caos - cristais se formando na expiração',
+    icon: Snowflake,
+    color: 'from-violet-500/20 to-purple-500/20',
+    borderColor: 'border-violet-500/30',
+  },
+  {
+    id: 'topography',
+    name: 'Topografia 3D',
+    description: 'Malha esférica elástica que responde à respiração',
+    icon: Globe,
+    color: 'from-teal-500/20 to-emerald-500/20',
+    borderColor: 'border-teal-500/30',
+  },
+  {
+    id: 'bio',
+    name: 'Bioluminescência',
+    description: 'Rede neural pulsante com luz viajando pelos filamentos',
+    icon: Zap,
+    color: 'from-green-500/20 to-lime-500/20',
+    borderColor: 'border-green-500/30',
+  },
+  {
+    id: 'atmosphere',
+    name: 'Atmosfera',
+    description: 'Eclipse e nevoeiro - luz revelada na inspiração',
+    icon: Cloud,
+    color: 'from-orange-500/20 to-red-500/20',
+    borderColor: 'border-orange-500/30',
+  },
 ];
 
 export default function AnimationStudio() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'preview' | 'editor'>('preview');
-  const [visualizationType, setVisualizationType] = useState<VisualizationType>('combined');
-  const [colorScheme, setColorScheme] = useState<ColorScheme>('calm');
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [breathPhase, setBreathPhase] = useState<BreathPhase>('idle');
-  const [progress, setProgress] = useState(0);
-  const [currentCycle, setCurrentCycle] = useState(0);
-  const [breathConfig, setBreathConfig] = useState<BreathConfig>(defaultBreathConfig);
-  const [selectedEquation, setSelectedEquation] = useState<AnimationEquation>(breathEquations[0]);
-  const [equationParams, setEquationParams] = useState<Record<string, number>>({});
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [showGrid, setShowGrid] = useState(true);
-  const [soundEnabled, setSoundEnabled] = useState(false);
+  const [activeTab, setActiveTab] = useState<'engine' | 'editor' | 'preview'>('engine');
+  const [showEngine, setShowEngine] = useState(false);
+  const [selectedMode, setSelectedMode] = useState('starDust');
 
-  const animationRef = useRef<number>();
-  const startTimeRef = useRef<number>(0);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  // Initialize equation params
-  useEffect(() => {
-    const params: Record<string, number> = {};
-    selectedEquation.parameters.forEach((param) => {
-      params[param.name] = param.default;
+  const handleEngineComplete = (duration: number) => {
+    toast.success('Sessão concluída!', {
+      description: `Você praticou por ${Math.floor(duration / 60)}min ${duration % 60}s`,
     });
-    setEquationParams(params);
-  }, [selectedEquation]);
-
-  // Breathing animation loop
-  const runBreathingAnimation = useCallback(() => {
-    if (!isPlaying) return;
-
-    const now = performance.now();
-    const elapsed = now - startTimeRef.current;
-    const cycleDuration =
-      breathConfig.inhaleDuration +
-      breathConfig.holdInDuration +
-      breathConfig.exhaleDuration +
-      breathConfig.holdOutDuration;
-
-    const currentCycleTime = elapsed % cycleDuration;
-    const cycleNumber = Math.floor(elapsed / cycleDuration);
-
-    if (cycleNumber >= breathConfig.cycles) {
-      setIsPlaying(false);
-      setBreathPhase('idle');
-      setProgress(0);
-      setCurrentCycle(0);
-      return;
-    }
-
-    setCurrentCycle(cycleNumber + 1);
-
-    let newPhase: BreathPhase = 'idle';
-    let newProgress = 0;
-
-    if (currentCycleTime < breathConfig.inhaleDuration) {
-      newPhase = 'inhale';
-      newProgress = currentCycleTime / breathConfig.inhaleDuration;
-    } else if (currentCycleTime < breathConfig.inhaleDuration + breathConfig.holdInDuration) {
-      newPhase = 'holdIn';
-      newProgress = (currentCycleTime - breathConfig.inhaleDuration) / breathConfig.holdInDuration;
-    } else if (
-      currentCycleTime <
-      breathConfig.inhaleDuration + breathConfig.holdInDuration + breathConfig.exhaleDuration
-    ) {
-      newPhase = 'exhale';
-      newProgress =
-        (currentCycleTime - breathConfig.inhaleDuration - breathConfig.holdInDuration) /
-        breathConfig.exhaleDuration;
-    } else {
-      newPhase = 'holdOut';
-      newProgress =
-        (currentCycleTime -
-          breathConfig.inhaleDuration -
-          breathConfig.holdInDuration -
-          breathConfig.exhaleDuration) /
-        breathConfig.holdOutDuration;
-    }
-
-    setBreathPhase(newPhase);
-    setProgress(newProgress);
-
-    animationRef.current = requestAnimationFrame(runBreathingAnimation);
-  }, [isPlaying, breathConfig]);
-
-  useEffect(() => {
-    if (isPlaying) {
-      startTimeRef.current = performance.now();
-      animationRef.current = requestAnimationFrame(runBreathingAnimation);
-    }
-
-    return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-    };
-  }, [isPlaying, runBreathingAnimation]);
-
-  const handlePlayPause = () => {
-    if (isPlaying) {
-      setIsPlaying(false);
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-    } else {
-      setIsPlaying(true);
-      setBreathPhase('inhale');
-      setProgress(0);
-    }
+    setShowEngine(false);
   };
 
-  const handleReset = () => {
-    setIsPlaying(false);
-    setBreathPhase('idle');
-    setProgress(0);
-    setCurrentCycle(0);
-    if (animationRef.current) {
-      cancelAnimationFrame(animationRef.current);
-    }
-  };
-
-  const toggleFullscreen = () => {
-    if (!document.fullscreenElement) {
-      containerRef.current?.requestFullscreen();
-      setIsFullscreen(true);
-    } else {
-      document.exitFullscreen();
-      setIsFullscreen(false);
-    }
-  };
-
-  const handleSaveCurve = (config: BreathCurveConfig) => {
-    setBreathConfig({
-      inhaleDuration: config.inhale.duration,
-      holdInDuration: config.holdIn.duration,
-      exhaleDuration: config.exhale.duration,
-      holdOutDuration: config.holdOut.duration,
-      cycles: config.cycles,
-    });
-    const equation = getEquationById(config.inhale.equationId);
-    if (equation) {
-      setSelectedEquation(equation);
-      setEquationParams(config.inhale.params);
-    }
-  };
-
-  const totalCycleDuration =
-    (breathConfig.inhaleDuration +
-      breathConfig.holdInDuration +
-      breathConfig.exhaleDuration +
-      breathConfig.holdOutDuration) /
-    1000;
-
-  const phaseLabels: Record<BreathPhase, string> = {
-    idle: 'Preparar',
-    inhale: 'Inspire',
-    holdIn: 'Segure',
-    exhale: 'Expire',
-    holdOut: 'Pausar',
+  const openStandaloneEngine = () => {
+    window.open('/breath-engine.html', '_blank');
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
+      <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border/50">
         <div className="container flex items-center justify-between h-16 px-4">
           <div className="flex items-center gap-4">
             <Button
@@ -268,401 +116,163 @@ export default function AnimationStudio() {
                 Animation Studio
               </h1>
               <p className="text-xs text-muted-foreground">
-                Crie e visualize animações de respiração
+                Motor de Visualização de Respiração
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={() => setSoundEnabled(!soundEnabled)}>
-              {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
-            </Button>
-            <Button variant="ghost" size="icon" onClick={toggleFullscreen}>
-              <Maximize2 className="w-4 h-4" />
-            </Button>
-          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={openStandaloneEngine}
+            className="gap-2"
+          >
+            <ExternalLink className="w-4 h-4" />
+            Abrir em Nova Aba
+          </Button>
         </div>
       </header>
 
       <main className="container px-4 py-6 space-y-6">
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'preview' | 'editor')}>
-          <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-6">
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)}>
+          <TabsList className="grid w-full max-w-lg mx-auto grid-cols-3 mb-6">
+            <TabsTrigger value="engine" className="gap-2">
+              <Sparkles className="w-4 h-4" />
+              Motor
+            </TabsTrigger>
             <TabsTrigger value="preview" className="gap-2">
-              <Eye className="w-4 h-4" />
-              Visualizar
+              <Waves className="w-4 h-4" />
+              Preview
             </TabsTrigger>
             <TabsTrigger value="editor" className="gap-2">
-              <Settings2 className="w-4 h-4" />
+              <Flower2 className="w-4 h-4" />
               Editor
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="preview" className="space-y-6">
-            {/* Main visualization area */}
-            <div ref={containerRef} className="relative">
-              <Card className="border-0 bg-gradient-to-br from-slate-900/90 to-slate-800/90 overflow-hidden backdrop-blur-xl">
-                <CardContent className="p-0">
-                  {/* Visualization */}
-                  <div className="relative aspect-square max-h-[60vh] w-full">
-                    <AnimatePresence mode="wait">
-                      {(visualizationType === 'particles' || visualizationType === 'combined') && (
-                        <motion.div
-                          key="particles"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: visualizationType === 'combined' ? 0.7 : 1 }}
-                          exit={{ opacity: 0 }}
-                          className="absolute inset-0"
-                        >
-                          <FluidParticles
-                            breathPhase={breathPhase}
-                            progress={progress}
-                            colorScheme={colorScheme}
-                            particleCount={100}
-                          />
-                        </motion.div>
-                      )}
-
-                      {(visualizationType === 'mandala' || visualizationType === 'combined') && (
-                        <motion.div
-                          key="mandala"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: visualizationType === 'combined' ? 0.8 : 1 }}
-                          exit={{ opacity: 0 }}
-                          className="absolute inset-0"
-                        >
-                          <MandalaVisualizer
-                            breathPhase={breathPhase}
-                            progress={progress}
-                            equation={selectedEquation}
-                            equationParams={equationParams}
-                            colorScheme={
-                              colorScheme === 'calm'
-                                ? 'ocean'
-                                : colorScheme === 'energy'
-                                ? 'sunset'
-                                : colorScheme === 'focus'
-                                ? 'cosmic'
-                                : 'forest'
-                            }
-                            layers={5}
-                            petalsPerLayer={8}
-                          />
-                        </motion.div>
-                      )}
-
-                      {visualizationType === 'wave' && (
-                        <motion.div
-                          key="wave"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          className="absolute inset-0 flex items-center justify-center p-8"
-                        >
-                          <WaveVisualizer
-                            equation={selectedEquation}
-                            params={equationParams}
-                            currentTime={progress}
-                            isPlaying={isPlaying}
-                            showGrid={showGrid}
-                            colorScheme={colorScheme}
-                            height={300}
-                          />
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-
-                    {/* Phase indicator overlay */}
-                    <div className="absolute inset-x-0 bottom-0 p-6 bg-gradient-to-t from-black/60 to-transparent">
-                      <div className="text-center">
-                        <AnimatePresence mode="wait">
-                          <motion.div
-                            key={breathPhase}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -20 }}
-                            className="space-y-2"
-                          >
-                            <p className="text-4xl font-bold text-white drop-shadow-lg">
-                              {phaseLabels[breathPhase]}
-                            </p>
-                            {isPlaying && (
-                              <p className="text-lg text-white/80">
-                                Ciclo {currentCycle} de {breathConfig.cycles}
-                              </p>
-                            )}
-                          </motion.div>
-                        </AnimatePresence>
-                      </div>
-                    </div>
+          {/* Engine Tab */}
+          <TabsContent value="engine" className="space-y-6">
+            {/* Hero Section */}
+            <Card className="border-0 bg-gradient-to-br from-teal-500/10 to-cyan-500/10 overflow-hidden">
+              <CardContent className="p-8 text-center">
+                <motion.div
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  className="space-y-4"
+                >
+                  <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center shadow-[0_0_60px_rgba(78,205,196,0.4)]">
+                    <Sparkles className="w-10 h-10 text-white" />
                   </div>
-                </CardContent>
-              </Card>
+                  <h2 className="text-2xl font-bold text-foreground">
+                    Motor de Visualização de Respiração
+                  </h2>
+                  <p className="text-muted-foreground max-w-md mx-auto">
+                    6 modos visuais abstratos baseados em física e metáforas naturais.
+                    State Machine de 4 fases: Inspirar, Segurar Cheio, Expirar, Segurar Vazio.
+                  </p>
+                  <Button
+                    size="lg"
+                    onClick={() => setShowEngine(true)}
+                    className="rounded-full px-10 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-400 hover:to-cyan-400 shadow-lg"
+                  >
+                    <Play className="w-5 h-5 mr-2" />
+                    Iniciar Experiência
+                  </Button>
+                </motion.div>
+              </CardContent>
+            </Card>
+
+            {/* Visual Modes Grid */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-foreground">Modos Visuais</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {visualModes.map((mode, index) => (
+                  <motion.div
+                    key={mode.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                  >
+                    <Card
+                      className={cn(
+                        'cursor-pointer transition-all hover:scale-[1.02] border',
+                        `bg-gradient-to-br ${mode.color}`,
+                        mode.borderColor,
+                        selectedMode === mode.id && 'ring-2 ring-teal-500'
+                      )}
+                      onClick={() => setSelectedMode(mode.id)}
+                    >
+                      <CardContent className="p-5">
+                        <div className="flex items-start gap-4">
+                          <div className="p-3 rounded-xl bg-white/10">
+                            <mode.icon className="w-6 h-6 text-foreground" />
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-foreground">{mode.name}</h4>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              {mode.description}
+                            </p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                ))}
+              </div>
             </div>
 
-            {/* Controls */}
+            {/* Features */}
             <Card className="border-border/50">
-              <CardContent className="p-6 space-y-6">
-                {/* Playback controls */}
-                <div className="flex items-center justify-center gap-4">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={handleReset}
-                    className="rounded-full w-12 h-12"
-                  >
-                    <RotateCcw className="w-5 h-5" />
-                  </Button>
-
-                  <Button
-                    variant={isPlaying ? 'destructive' : 'default'}
-                    size="lg"
-                    onClick={handlePlayPause}
-                    className="rounded-full w-20 h-20 text-2xl"
-                  >
-                    {isPlaying ? <Pause className="w-8 h-8" /> : <Play className="w-8 h-8 ml-1" />}
-                  </Button>
-
-                  <Button variant="outline" size="icon" className="rounded-full w-12 h-12">
-                    <Share2 className="w-5 h-5" />
-                  </Button>
-                </div>
-
-                {/* Timeline */}
-                <div className="space-y-3">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Duração do ciclo</span>
-                    <Badge variant="secondary">{totalCycleDuration.toFixed(1)}s</Badge>
-                  </div>
-                  <div className="flex h-3 rounded-full overflow-hidden bg-muted">
-                    <div
-                      className="bg-gradient-to-r from-teal-500 to-cyan-500 transition-all"
-                      style={{
-                        width: `${(breathConfig.inhaleDuration / (totalCycleDuration * 1000)) * 100}%`,
-                      }}
-                    />
-                    <div
-                      className="bg-gradient-to-r from-blue-500 to-indigo-500 transition-all"
-                      style={{
-                        width: `${(breathConfig.holdInDuration / (totalCycleDuration * 1000)) * 100}%`,
-                      }}
-                    />
-                    <div
-                      className="bg-gradient-to-r from-orange-500 to-red-500 transition-all"
-                      style={{
-                        width: `${(breathConfig.exhaleDuration / (totalCycleDuration * 1000)) * 100}%`,
-                      }}
-                    />
-                    <div
-                      className="bg-gradient-to-r from-purple-500 to-pink-500 transition-all"
-                      style={{
-                        width: `${(breathConfig.holdOutDuration / (totalCycleDuration * 1000)) * 100}%`,
-                      }}
-                    />
-                  </div>
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>Inspirar</span>
-                    <span>Segurar</span>
-                    <span>Expirar</span>
-                    <span>Pausar</span>
-                  </div>
-                </div>
-
-                {/* Quick settings */}
-                <div className="grid grid-cols-2 gap-4">
-                  {/* Visualization type */}
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Visualização</label>
-                    <Select
-                      value={visualizationType}
-                      onValueChange={(v) => setVisualizationType(v as VisualizationType)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {visualizationOptions.map((opt) => (
-                          <SelectItem key={opt.id} value={opt.id}>
-                            <div className="flex items-center gap-2">
-                              <opt.icon className="w-4 h-4" />
-                              {opt.label}
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Color scheme */}
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Cores</label>
-                    <Select
-                      value={colorScheme}
-                      onValueChange={(v) => setColorScheme(v as ColorScheme)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {colorSchemeOptions.map((opt) => (
-                          <SelectItem key={opt.id} value={opt.id}>
-                            <div className="flex items-center gap-2">
-                              <div className="flex">
-                                {opt.colors.map((color, i) => (
-                                  <div
-                                    key={i}
-                                    className="w-3 h-3 rounded-full -ml-1 first:ml-0 border border-background"
-                                    style={{ backgroundColor: color }}
-                                  />
-                                ))}
-                              </div>
-                              {opt.label}
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                {/* Equation selector */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Equação da Animação</label>
-                  <Select
-                    value={selectedEquation.id}
-                    onValueChange={(v) => {
-                      const eq = breathEquations.find((e) => e.id === v);
-                      if (eq) setSelectedEquation(eq);
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {breathEquations.map((eq) => (
-                        <SelectItem key={eq.id} value={eq.id}>
-                          <div className="flex flex-col">
-                            <span>{eq.name}</span>
-                            <span className="text-xs text-muted-foreground">{eq.description}</span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Equation parameters */}
-                {selectedEquation.parameters.length > 0 && (
-                  <div className="space-y-4 pt-4 border-t">
-                    <h4 className="text-sm font-medium">Parâmetros</h4>
-                    {selectedEquation.parameters.map((param) => (
-                      <div key={param.name} className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span>{param.label}</span>
-                          <Badge variant="outline">
-                            {(equationParams[param.name] ?? param.default).toFixed(2)}
-                          </Badge>
-                        </div>
-                        <Slider
-                          value={[equationParams[param.name] ?? param.default]}
-                          onValueChange={([v]) =>
-                            setEquationParams((prev) => ({ ...prev, [param.name]: v }))
-                          }
-                          min={param.min}
-                          max={param.max}
-                          step={param.step}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* Breath timing sliders */}
-                <div className="space-y-4 pt-4 border-t">
-                  <h4 className="text-sm font-medium">Tempos de Respiração</h4>
-
+              <CardHeader>
+                <CardTitle className="text-lg">Características</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {[
-                    { key: 'inhaleDuration', label: 'Inspirar', icon: Wind },
-                    { key: 'holdInDuration', label: 'Segurar (entrada)', icon: CircleDot },
-                    { key: 'exhaleDuration', label: 'Expirar', icon: Wind },
-                    { key: 'holdOutDuration', label: 'Segurar (saída)', icon: CircleDot },
-                  ].map(({ key, label, icon: Icon }) => (
-                    <div key={key} className="space-y-2">
-                      <div className="flex justify-between items-center text-sm">
-                        <span className="flex items-center gap-2">
-                          <Icon className="w-4 h-4 text-muted-foreground" />
-                          {label}
-                        </span>
-                        <Badge variant="secondary">
-                          {(breathConfig[key as keyof BreathConfig] as number) / 1000}s
-                        </Badge>
-                      </div>
-                      <Slider
-                        value={[breathConfig[key as keyof BreathConfig] as number]}
-                        onValueChange={([v]) =>
-                          setBreathConfig((prev) => ({ ...prev, [key]: v }))
-                        }
-                        min={0}
-                        max={10000}
-                        step={500}
-                      />
+                    { label: '4 Fases', desc: 'State Machine completa' },
+                    { label: '6 Modos', desc: 'Visualizações únicas' },
+                    { label: 'Tempo Real', desc: 'Animações fluidas' },
+                    { label: 'Personalizável', desc: 'Cores e tempos' },
+                  ].map((feature) => (
+                    <div
+                      key={feature.label}
+                      className="text-center p-4 rounded-xl bg-muted/30"
+                    >
+                      <div className="text-xl font-bold text-teal-400">{feature.label}</div>
+                      <div className="text-xs text-muted-foreground">{feature.desc}</div>
                     </div>
                   ))}
-
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center text-sm">
-                      <span>Ciclos</span>
-                      <Badge variant="secondary">{breathConfig.cycles}</Badge>
-                    </div>
-                    <Slider
-                      value={[breathConfig.cycles]}
-                      onValueChange={([v]) =>
-                        setBreathConfig((prev) => ({ ...prev, cycles: v }))
-                      }
-                      min={1}
-                      max={20}
-                      step={1}
-                    />
-                  </div>
                 </div>
               </CardContent>
             </Card>
 
             {/* Presets */}
             <Card className="border-border/50">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg">Padrões Prontos</CardTitle>
+              <CardHeader>
+                <CardTitle className="text-lg">Padrões de Respiração</CardTitle>
+                <CardDescription>
+                  Clique para iniciar com um preset configurado
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   {[
-                    {
-                      name: 'Box Breathing',
-                      config: { inhaleDuration: 4000, holdInDuration: 4000, exhaleDuration: 4000, holdOutDuration: 4000, cycles: 4 },
-                    },
-                    {
-                      name: '4-7-8',
-                      config: { inhaleDuration: 4000, holdInDuration: 7000, exhaleDuration: 8000, holdOutDuration: 0, cycles: 4 },
-                    },
-                    {
-                      name: 'Coerência',
-                      config: { inhaleDuration: 5000, holdInDuration: 0, exhaleDuration: 5000, holdOutDuration: 0, cycles: 10 },
-                    },
-                    {
-                      name: 'Energizante',
-                      config: { inhaleDuration: 4000, holdInDuration: 0, exhaleDuration: 2000, holdOutDuration: 0, cycles: 6 },
-                    },
+                    { name: 'Box Breathing', pattern: '4-4-4-4', desc: 'Equilíbrio' },
+                    { name: '4-7-8', pattern: '4-7-8-0', desc: 'Relaxamento' },
+                    { name: 'Coerência', pattern: '5-0-5-0', desc: 'Harmonia' },
+                    { name: 'Energizante', pattern: '4-0-2-0', desc: 'Vitalidade' },
                   ].map((preset) => (
                     <Button
                       key={preset.name}
                       variant="outline"
-                      className="h-auto py-3 flex-col gap-1"
-                      onClick={() => setBreathConfig(preset.config)}
+                      className="h-auto py-4 flex-col gap-1"
+                      onClick={() => setShowEngine(true)}
                     >
-                      <span className="font-medium">{preset.name}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {preset.config.inhaleDuration / 1000}-{preset.config.holdInDuration / 1000}-
-                        {preset.config.exhaleDuration / 1000}-{preset.config.holdOutDuration / 1000}
-                      </span>
+                      <span className="font-semibold">{preset.name}</span>
+                      <span className="text-xs text-muted-foreground">{preset.pattern}</span>
+                      <Badge variant="secondary" className="mt-1 text-xs">
+                        {preset.desc}
+                      </Badge>
                     </Button>
                   ))}
                 </div>
@@ -670,11 +280,91 @@ export default function AnimationStudio() {
             </Card>
           </TabsContent>
 
+          {/* Preview Tab */}
+          <TabsContent value="preview" className="space-y-6">
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Wave Preview */}
+              <Card className="border-border/50 overflow-hidden">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Waves className="w-5 h-5 text-teal-400" />
+                    Visualizador de Ondas
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-4">
+                  <WaveVisualizer
+                    equation={breathEquations[0]}
+                    params={{ amplitude: 1, frequency: 0.5, phase: 0 }}
+                    currentTime={0.5}
+                    showGrid={true}
+                    colorScheme="calm"
+                    height={200}
+                  />
+                </CardContent>
+              </Card>
+
+              {/* Particles Preview */}
+              <Card className="border-border/50 overflow-hidden">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Droplets className="w-5 h-5 text-blue-400" />
+                    Partículas Fluidas
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-0 h-[250px]">
+                  <FluidParticles
+                    breathPhase="inhale"
+                    progress={0.5}
+                    colorScheme="calm"
+                    particleCount={60}
+                  />
+                </CardContent>
+              </Card>
+
+              {/* Mandala Preview */}
+              <Card className="border-border/50 overflow-hidden md:col-span-2">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Flower2 className="w-5 h-5 text-violet-400" />
+                    Mandala Visualizer
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-0 h-[350px]">
+                  <MandalaVisualizer
+                    breathPhase="inhale"
+                    progress={0.5}
+                    colorScheme="cosmic"
+                    layers={5}
+                    petalsPerLayer={8}
+                    rotationSpeed={0.3}
+                  />
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* Editor Tab */}
           <TabsContent value="editor">
-            <CurveEditor onSave={handleSaveCurve} />
+            <CurveEditor
+              onSave={(config) => {
+                toast.success('Configuração salva!');
+                console.log('Saved config:', config);
+              }}
+            />
           </TabsContent>
         </Tabs>
       </main>
+
+      {/* Fullscreen Engine */}
+      <AnimatePresence>
+        {showEngine && (
+          <BreathVisualizationEngine
+            onClose={() => setShowEngine(false)}
+            onComplete={handleEngineComplete}
+            fullscreen={true}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Motor de Visualização de Respiração</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.9/dat.gui.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      overflow: hidden;
+      background: #000;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+    }
+
+    #canvas-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .phase-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      text-align: center;
+      z-index: 100;
+      pointer-events: none;
+    }
+
+    .phase-name {
+      font-size: 2.5rem;
+      font-weight: 300;
+      color: rgba(255, 255, 255, 0.9);
+      text-shadow: 0 0 30px rgba(255, 255, 255, 0.5);
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      transition: all 0.5s ease;
+    }
+
+    .phase-timer {
+      font-size: 4rem;
+      font-weight: 100;
+      color: rgba(255, 255, 255, 0.8);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .progress-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #4ECDC4, #44A08D);
+      transition: width 0.1s linear;
+      box-shadow: 0 0 20px rgba(78, 205, 196, 0.8);
+    }
+
+    .cycle-indicator {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 8px;
+      z-index: 100;
+    }
+
+    .cycle-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      transition: all 0.3s ease;
+    }
+
+    .cycle-dot.active {
+      background: #4ECDC4;
+      box-shadow: 0 0 15px #4ECDC4;
+    }
+
+    .cycle-dot.complete {
+      background: rgba(78, 205, 196, 0.5);
+    }
+
+    .start-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      backdrop-filter: blur(10px);
+    }
+
+    .start-overlay h1 {
+      font-size: 2rem;
+      font-weight: 300;
+      color: white;
+      margin-bottom: 20px;
+      letter-spacing: 0.2em;
+    }
+
+    .start-btn {
+      padding: 20px 60px;
+      font-size: 1.2rem;
+      font-weight: 500;
+      color: white;
+      background: linear-gradient(135deg, #4ECDC4, #44A08D);
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      letter-spacing: 0.1em;
+      transition: all 0.3s ease;
+    }
+
+    .start-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 10px 40px rgba(78, 205, 196, 0.4);
+    }
+
+    .dg.ac {
+      z-index: 1000 !important;
+    }
+
+    .dg .property-name {
+      width: 45% !important;
+    }
+
+    .dg .c {
+      width: 55% !important;
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container"></div>
+
+  <div class="phase-indicator">
+    <div class="phase-name" id="phase-name">PREPARAR</div>
+    <div class="phase-timer" id="phase-timer">0</div>
+  </div>
+
+  <div class="progress-bar" id="progress-bar"></div>
+
+  <div class="cycle-indicator" id="cycle-indicator"></div>
+
+  <div class="start-overlay" id="start-overlay">
+    <h1>MOTOR DE RESPIRAÇÃO</h1>
+    <button class="start-btn" id="start-btn">INICIAR</button>
+  </div>
+
+  <script>
+// ==========================================
+// BREATH VISUALIZATION ENGINE
+// ==========================================
+
+// === CONFIGURATION ===
+const config = {
+  // Timing (seconds)
+  inhaleTime: 4,
+  holdFullTime: 4,
+  exhaleTime: 4,
+  holdEmptyTime: 4,
+  cycles: 4,
+
+  // Visual Mode
+  visualMode: 'starDust',
+
+  // Colors
+  primaryColor: '#4ECDC4',
+  backgroundColor: '#0a0a0f',
+
+  // Complexity
+  complexity: 50,
+
+  // Control
+  isRunning: false,
+  isPaused: false
+};
+
+// === STATE MACHINE ===
+const BreathState = {
+  IDLE: 'idle',
+  INHALE: 'inhale',
+  HOLD_FULL: 'holdFull',
+  EXHALE: 'exhale',
+  HOLD_EMPTY: 'holdEmpty',
+  COMPLETE: 'complete'
+};
+
+const PhaseNames = {
+  idle: 'PREPARAR',
+  inhale: 'INSPIRE',
+  holdFull: 'SEGURE',
+  exhale: 'EXPIRE',
+  holdEmpty: 'PAUSE',
+  complete: 'COMPLETO'
+};
+
+class BreathEngine {
+  constructor() {
+    this.state = BreathState.IDLE;
+    this.breathIntensity = 0;
+    this.phaseProgress = 0;
+    this.phaseStartTime = 0;
+    this.currentCycle = 0;
+    this.totalCycles = config.cycles;
+  }
+
+  start() {
+    this.currentCycle = 0;
+    this.transitionTo(BreathState.INHALE);
+    config.isRunning = true;
+  }
+
+  stop() {
+    this.state = BreathState.IDLE;
+    this.breathIntensity = 0;
+    this.phaseProgress = 0;
+    config.isRunning = false;
+  }
+
+  transitionTo(newState) {
+    this.state = newState;
+    this.phaseStartTime = millis();
+    this.phaseProgress = 0;
+
+    if (newState === BreathState.INHALE) {
+      this.currentCycle++;
+    }
+
+    updatePhaseIndicator(newState);
+    updateCycleIndicator(this.currentCycle, this.totalCycles);
+  }
+
+  getPhaseDuration() {
+    switch (this.state) {
+      case BreathState.INHALE: return config.inhaleTime * 1000;
+      case BreathState.HOLD_FULL: return config.holdFullTime * 1000;
+      case BreathState.EXHALE: return config.exhaleTime * 1000;
+      case BreathState.HOLD_EMPTY: return config.holdEmptyTime * 1000;
+      default: return 1000;
+    }
+  }
+
+  update() {
+    if (this.state === BreathState.IDLE || this.state === BreathState.COMPLETE) {
+      return;
+    }
+
+    const elapsed = millis() - this.phaseStartTime;
+    const duration = this.getPhaseDuration();
+    this.phaseProgress = constrain(elapsed / duration, 0, 1);
+
+    // Update breath intensity based on phase
+    switch (this.state) {
+      case BreathState.INHALE:
+        this.breathIntensity = this.easeInOutSine(this.phaseProgress);
+        break;
+      case BreathState.HOLD_FULL:
+        this.breathIntensity = 1.0;
+        break;
+      case BreathState.EXHALE:
+        this.breathIntensity = 1.0 - this.easeInOutSine(this.phaseProgress);
+        break;
+      case BreathState.HOLD_EMPTY:
+        this.breathIntensity = 0.0;
+        break;
+    }
+
+    // Update timer display
+    const remaining = Math.ceil((duration - elapsed) / 1000);
+    document.getElementById('phase-timer').textContent = Math.max(0, remaining);
+
+    // Update progress bar
+    const totalDuration = (config.inhaleTime + config.holdFullTime + config.exhaleTime + config.holdEmptyTime) * 1000;
+    let totalProgress = 0;
+
+    switch (this.state) {
+      case BreathState.INHALE:
+        totalProgress = this.phaseProgress * (config.inhaleTime / (totalDuration / 1000));
+        break;
+      case BreathState.HOLD_FULL:
+        totalProgress = config.inhaleTime / (totalDuration / 1000) +
+                       this.phaseProgress * (config.holdFullTime / (totalDuration / 1000));
+        break;
+      case BreathState.EXHALE:
+        totalProgress = (config.inhaleTime + config.holdFullTime) / (totalDuration / 1000) +
+                       this.phaseProgress * (config.exhaleTime / (totalDuration / 1000));
+        break;
+      case BreathState.HOLD_EMPTY:
+        totalProgress = (config.inhaleTime + config.holdFullTime + config.exhaleTime) / (totalDuration / 1000) +
+                       this.phaseProgress * (config.holdEmptyTime / (totalDuration / 1000));
+        break;
+    }
+
+    document.getElementById('progress-bar').style.width = `${totalProgress * 100}%`;
+
+    // Phase transitions
+    if (this.phaseProgress >= 1) {
+      this.nextPhase();
+    }
+  }
+
+  nextPhase() {
+    switch (this.state) {
+      case BreathState.INHALE:
+        if (config.holdFullTime > 0) {
+          this.transitionTo(BreathState.HOLD_FULL);
+        } else {
+          this.transitionTo(BreathState.EXHALE);
+        }
+        break;
+      case BreathState.HOLD_FULL:
+        this.transitionTo(BreathState.EXHALE);
+        break;
+      case BreathState.EXHALE:
+        if (config.holdEmptyTime > 0) {
+          this.transitionTo(BreathState.HOLD_EMPTY);
+        } else {
+          this.checkCycleComplete();
+        }
+        break;
+      case BreathState.HOLD_EMPTY:
+        this.checkCycleComplete();
+        break;
+    }
+  }
+
+  checkCycleComplete() {
+    if (this.currentCycle >= this.totalCycles) {
+      this.transitionTo(BreathState.COMPLETE);
+      config.isRunning = false;
+      setTimeout(() => {
+        document.getElementById('start-overlay').style.display = 'flex';
+      }, 2000);
+    } else {
+      this.transitionTo(BreathState.INHALE);
+    }
+  }
+
+  easeInOutSine(t) {
+    return -(Math.cos(Math.PI * t) - 1) / 2;
+  }
+
+  easeOutQuad(t) {
+    return 1 - (1 - t) * (1 - t);
+  }
+
+  easeInQuad(t) {
+    return t * t;
+  }
+}
+
+// === VISUAL MODES ===
+
+// Mode 1: Star Dust (Inverted Gravity)
+class StarDustMode {
+  constructor() {
+    this.particles = [];
+    this.init();
+  }
+
+  init() {
+    this.particles = [];
+    const count = config.complexity * 3;
+    for (let i = 0; i < count; i++) {
+      this.particles.push({
+        x: random(width),
+        y: height + random(50),
+        vx: 0,
+        vy: 0,
+        size: random(2, 6),
+        brightness: random(0.3, 1),
+        baseY: height + random(50)
+      });
+    }
+  }
+
+  update(intensity, state) {
+    const gravity = state === BreathState.INHALE ? -0.15 :
+                   state === BreathState.EXHALE ? 0.1 : 0;
+
+    for (let p of this.particles) {
+      if (state === BreathState.INHALE) {
+        p.vy += gravity;
+        p.vy *= 0.98;
+        p.vx += random(-0.3, 0.3);
+        p.vx *= 0.95;
+      } else if (state === BreathState.HOLD_FULL) {
+        // Floating vibration
+        p.vx += random(-0.5, 0.5);
+        p.vy += random(-0.3, 0.3);
+        p.vx *= 0.92;
+        p.vy *= 0.92;
+      } else if (state === BreathState.EXHALE) {
+        p.vy += gravity;
+        p.vy *= 0.99;
+        p.vx *= 0.98;
+      } else if (state === BreathState.HOLD_EMPTY) {
+        // Settle at bottom
+        p.vy += 0.02;
+        p.vy *= 0.9;
+        p.vx *= 0.9;
+        if (p.y > height - 10) {
+          p.y = height - 10;
+          p.vy = 0;
+        }
+      }
+
+      p.x += p.vx;
+      p.y += p.vy;
+
+      // Boundary wrapping
+      if (p.x < 0) p.x = width;
+      if (p.x > width) p.x = 0;
+      p.y = constrain(p.y, 0, height);
+    }
+  }
+
+  draw(intensity, state, primaryColor) {
+    const col = color(primaryColor);
+
+    for (let p of this.particles) {
+      let alpha = p.brightness;
+      let size = p.size;
+
+      if (state === BreathState.HOLD_FULL) {
+        alpha *= 0.8 + 0.2 * sin(frameCount * 0.1 + p.x * 0.01);
+        size *= 1.2;
+      } else if (state === BreathState.HOLD_EMPTY) {
+        alpha *= 0.2;
+        size *= 0.7;
+      } else {
+        alpha *= 0.3 + intensity * 0.7;
+      }
+
+      // Glow effect
+      noStroke();
+      for (let i = 3; i > 0; i--) {
+        fill(red(col), green(col), blue(col), alpha * 50 / i);
+        ellipse(p.x, p.y, size * i * 2, size * i * 2);
+      }
+
+      fill(255, 255, 255, alpha * 255);
+      ellipse(p.x, p.y, size, size);
+    }
+  }
+}
+
+// Mode 2: Viscous Fluid (Ink in Water)
+class FluidMode {
+  constructor() {
+    this.particles = [];
+    this.noiseOffset = 0;
+    this.init();
+  }
+
+  init() {
+    this.particles = [];
+    this.noiseOffset = random(1000);
+  }
+
+  update(intensity, state) {
+    if (state === BreathState.INHALE && frameCount % 3 === 0) {
+      // Inject ink particles
+      const count = Math.floor(intensity * 5) + 1;
+      for (let i = 0; i < count; i++) {
+        this.particles.push({
+          x: width / 2 + random(-50, 50),
+          y: height / 2 + random(-50, 50),
+          vx: random(-3, 3),
+          vy: random(-3, 3),
+          size: random(10, 40),
+          life: 1,
+          hue: random(-20, 20)
+        });
+      }
+    }
+
+    const turbulence = state === BreathState.INHALE ? 0.03 :
+                       state === BreathState.HOLD_FULL ? 0.01 :
+                       state === BreathState.EXHALE ? 0.005 : 0;
+
+    for (let i = this.particles.length - 1; i >= 0; i--) {
+      let p = this.particles[i];
+
+      // Noise-based movement
+      const angle = noise(p.x * 0.005, p.y * 0.005, this.noiseOffset) * TWO_PI * 2;
+      p.vx += cos(angle) * turbulence;
+      p.vy += sin(angle) * turbulence;
+
+      if (state === BreathState.EXHALE) {
+        // Pull towards center
+        const dx = width / 2 - p.x;
+        const dy = height / 2 - p.y;
+        p.vx += dx * 0.001 * (1 - intensity);
+        p.vy += dy * 0.001 * (1 - intensity);
+        p.life -= 0.008;
+      } else if (state === BreathState.HOLD_EMPTY) {
+        p.life -= 0.02;
+      }
+
+      p.vx *= 0.99;
+      p.vy *= 0.99;
+      p.x += p.vx;
+      p.y += p.vy;
+
+      if (p.life <= 0) {
+        this.particles.splice(i, 1);
+      }
+    }
+
+    this.noiseOffset += 0.005;
+  }
+
+  draw(intensity, state, primaryColor) {
+    const col = color(primaryColor);
+
+    for (let p of this.particles) {
+      const h = hue(col) + p.hue;
+      const s = saturation(col);
+      const b = brightness(col);
+
+      push();
+      colorMode(HSB, 360, 100, 100, 1);
+
+      // Soft glow
+      for (let i = 4; i > 0; i--) {
+        fill(h, s * 0.8, b, p.life * 0.1 / i);
+        noStroke();
+        ellipse(p.x, p.y, p.size * i, p.size * i);
+      }
+
+      pop();
+    }
+  }
+}
+
+// Mode 3: Crystallization (Order vs Chaos)
+class CrystalMode {
+  constructor() {
+    this.particles = [];
+    this.crystalPoints = [];
+    this.init();
+  }
+
+  init() {
+    this.particles = [];
+    this.crystalPoints = [];
+
+    // Create crystal structure points
+    const sides = 6;
+    const layers = 3;
+    for (let l = 0; l < layers; l++) {
+      const radius = 50 + l * 40;
+      for (let i = 0; i < sides; i++) {
+        const angle = (i / sides) * TWO_PI - HALF_PI;
+        this.crystalPoints.push({
+          x: width / 2 + cos(angle) * radius,
+          y: height / 2 + sin(angle) * radius,
+          homeX: width / 2 + cos(angle) * radius,
+          homeY: height / 2 + sin(angle) * radius
+        });
+      }
+    }
+
+    // Create particles for gas state
+    for (let i = 0; i < config.complexity * 2; i++) {
+      this.particles.push({
+        x: width / 2,
+        y: height / 2,
+        targetX: width / 2,
+        targetY: height / 2,
+        vx: 0,
+        vy: 0,
+        size: random(3, 8),
+        crystallized: true
+      });
+    }
+  }
+
+  update(intensity, state) {
+    for (let p of this.particles) {
+      if (state === BreathState.INHALE) {
+        // Sublimation - become gas
+        p.crystallized = false;
+        p.targetX = random(width * 0.1, width * 0.9);
+        p.targetY = random(height * 0.1, height * 0.9);
+        p.vx += random(-0.5, 0.5);
+        p.vy += random(-0.5, 0.5);
+      } else if (state === BreathState.HOLD_FULL) {
+        // Ethereal floating
+        p.vx += random(-0.3, 0.3);
+        p.vy += random(-0.3, 0.3);
+      } else if (state === BreathState.EXHALE) {
+        // Condense back to crystal
+        const crystalIndex = Math.floor(random(this.crystalPoints.length));
+        const crystal = this.crystalPoints[crystalIndex];
+        p.targetX = crystal.homeX + random(-20, 20);
+        p.targetY = crystal.homeY + random(-20, 20);
+
+        const dx = p.targetX - p.x;
+        const dy = p.targetY - p.y;
+        p.vx += dx * 0.02 * (1 - intensity);
+        p.vy += dy * 0.02 * (1 - intensity);
+      } else if (state === BreathState.HOLD_EMPTY) {
+        // Perfect crystal formation
+        p.crystallized = true;
+        p.vx *= 0.85;
+        p.vy *= 0.85;
+      }
+
+      p.vx *= 0.95;
+      p.vy *= 0.95;
+      p.x += p.vx;
+      p.y += p.vy;
+    }
+  }
+
+  draw(intensity, state, primaryColor) {
+    const col = color(primaryColor);
+
+    // Draw crystal structure in hold empty
+    if (state === BreathState.HOLD_EMPTY || (state === BreathState.EXHALE && intensity < 0.3)) {
+      stroke(red(col), green(col), blue(col), 100);
+      strokeWeight(1);
+      noFill();
+
+      // Connect crystal points
+      for (let i = 0; i < this.crystalPoints.length; i++) {
+        for (let j = i + 1; j < this.crystalPoints.length; j++) {
+          const d = dist(
+            this.crystalPoints[i].homeX, this.crystalPoints[i].homeY,
+            this.crystalPoints[j].homeX, this.crystalPoints[j].homeY
+          );
+          if (d < 100) {
+            line(
+              this.crystalPoints[i].homeX, this.crystalPoints[i].homeY,
+              this.crystalPoints[j].homeX, this.crystalPoints[j].homeY
+            );
+          }
+        }
+      }
+    }
+
+    // Draw particles
+    noStroke();
+    for (let p of this.particles) {
+      let alpha = p.crystallized ? 200 : 100 + intensity * 100;
+      let size = p.crystallized ? p.size * 0.8 : p.size * (0.5 + intensity * 0.5);
+
+      if (state === BreathState.HOLD_FULL) {
+        alpha *= 0.6 + 0.4 * sin(frameCount * 0.05 + p.x * 0.02);
+      }
+
+      fill(red(col), green(col), blue(col), alpha);
+
+      if (p.crystallized && state === BreathState.HOLD_EMPTY) {
+        // Draw as hexagon
+        push();
+        translate(p.x, p.y);
+        beginShape();
+        for (let i = 0; i < 6; i++) {
+          const angle = (i / 6) * TWO_PI - HALF_PI;
+          vertex(cos(angle) * size, sin(angle) * size);
+        }
+        endShape(CLOSE);
+        pop();
+      } else {
+        ellipse(p.x, p.y, size * 2, size * 2);
+      }
+    }
+  }
+}
+
+// Mode 4: Elastic Topography (3D Wireframe)
+class TopographyMode {
+  constructor() {
+    this.vertices = [];
+    this.resolution = 20;
+    this.init();
+  }
+
+  init() {
+    this.vertices = [];
+    const res = this.resolution;
+
+    for (let i = 0; i <= res; i++) {
+      this.vertices[i] = [];
+      for (let j = 0; j <= res; j++) {
+        const theta = (i / res) * PI;
+        const phi = (j / res) * TWO_PI;
+        const baseRadius = min(width, height) * 0.25;
+
+        this.vertices[i][j] = {
+          baseX: sin(theta) * cos(phi),
+          baseY: sin(theta) * sin(phi),
+          baseZ: cos(theta),
+          displacement: 0,
+          targetDisp: 0,
+          radius: baseRadius
+        };
+      }
+    }
+  }
+
+  update(intensity, state) {
+    const time = frameCount * 0.02;
+
+    for (let i = 0; i <= this.resolution; i++) {
+      for (let j = 0; j <= this.resolution; j++) {
+        const v = this.vertices[i][j];
+
+        if (state === BreathState.INHALE) {
+          // Create spiky peaks
+          const noiseVal = noise(v.baseX * 2 + time, v.baseY * 2, v.baseZ * 2);
+          v.targetDisp = noiseVal * intensity * 80;
+        } else if (state === BreathState.HOLD_FULL) {
+          // Vibrate at max tension
+          v.targetDisp += random(-5, 5);
+        } else if (state === BreathState.EXHALE) {
+          // Smooth out
+          v.targetDisp = v.targetDisp * intensity;
+        } else if (state === BreathState.HOLD_EMPTY) {
+          // Perfect sphere
+          v.targetDisp *= 0.9;
+        }
+
+        v.displacement += (v.targetDisp - v.displacement) * 0.1;
+      }
+    }
+  }
+
+  draw(intensity, state, primaryColor) {
+    const col = color(primaryColor);
+    const centerX = width / 2;
+    const centerY = height / 2;
+    const rotY = frameCount * 0.005;
+    const rotX = sin(frameCount * 0.003) * 0.3;
+
+    stroke(red(col), green(col), blue(col), state === BreathState.HOLD_EMPTY ? 80 : 150 + intensity * 100);
+    strokeWeight(state === BreathState.HOLD_FULL ? 1.5 : 1);
+    noFill();
+
+    const getProjected = (i, j) => {
+      const v = this.vertices[i][j];
+      const r = v.radius + v.displacement;
+
+      let x = v.baseX * r;
+      let y = v.baseY * r;
+      let z = v.baseZ * r;
+
+      // Rotate Y
+      const tempX = x * cos(rotY) - z * sin(rotY);
+      const tempZ = x * sin(rotY) + z * cos(rotY);
+      x = tempX;
+      z = tempZ;
+
+      // Rotate X
+      const tempY = y * cos(rotX) - z * sin(rotX);
+      z = y * sin(rotX) + z * cos(rotX);
+      y = tempY;
+
+      return {
+        x: centerX + x,
+        y: centerY + y,
+        z: z,
+        glow: v.displacement / 80
+      };
+    };
+
+    // Draw wireframe
+    for (let i = 0; i < this.resolution; i++) {
+      for (let j = 0; j < this.resolution; j++) {
+        const p1 = getProjected(i, j);
+        const p2 = getProjected(i + 1, j);
+        const p3 = getProjected(i, j + 1);
+
+        // Edge glow in hold full
+        if (state === BreathState.HOLD_FULL && p1.glow > 0.3) {
+          stroke(255, 255, 255, 100 + p1.glow * 150);
+        } else {
+          stroke(red(col), green(col), blue(col), 80 + intensity * 120);
+        }
+
+        line(p1.x, p1.y, p2.x, p2.y);
+        line(p1.x, p1.y, p3.x, p3.y);
+      }
+    }
+  }
+}
+
+// Mode 5: Bioluminescence (Neural Network)
+class BioMode {
+  constructor() {
+    this.nodes = [];
+    this.connections = [];
+    this.pulseProgress = 0;
+    this.init();
+  }
+
+  init() {
+    this.nodes = [];
+    this.connections = [];
+
+    // Create central node
+    this.nodes.push({
+      x: width / 2,
+      y: height / 2,
+      brightness: 1,
+      isCenter: true,
+      depth: 0
+    });
+
+    // Create branching structure
+    this.createBranches(width / 2, height / 2, 0, 5, 150);
+  }
+
+  createBranches(x, y, parentIndex, depth, length) {
+    if (depth <= 0) return;
+
+    const branches = depth > 3 ? 5 : 3;
+    const angleSpread = PI / (depth > 3 ? 3 : 2);
+    const baseAngle = random(TWO_PI);
+
+    for (let i = 0; i < branches; i++) {
+      const angle = baseAngle + (i / branches) * TWO_PI + random(-0.3, 0.3);
+      const len = length * (0.6 + random(0.4));
+      const newX = x + cos(angle) * len;
+      const newY = y + sin(angle) * len;
+
+      if (newX < 50 || newX > width - 50 || newY < 50 || newY > height - 50) continue;
+
+      const nodeIndex = this.nodes.length;
+      this.nodes.push({
+        x: newX,
+        y: newY,
+        brightness: 0,
+        isCenter: false,
+        depth: 5 - depth
+      });
+
+      this.connections.push({
+        from: parentIndex,
+        to: nodeIndex,
+        progress: 0,
+        depth: 5 - depth
+      });
+
+      this.createBranches(newX, newY, nodeIndex, depth - 1, length * 0.7);
+    }
+  }
+
+  update(intensity, state) {
+    if (state === BreathState.INHALE) {
+      this.pulseProgress = intensity;
+
+      // Pulse travels outward
+      for (let c of this.connections) {
+        const targetProgress = constrain((intensity * 5) - c.depth, 0, 1);
+        c.progress += (targetProgress - c.progress) * 0.1;
+      }
+
+      for (let n of this.nodes) {
+        if (n.isCenter) {
+          n.brightness = 0.3 + intensity * 0.7;
+        } else {
+          const targetBright = constrain((intensity * 5) - n.depth, 0, 1);
+          n.brightness += (targetBright - n.brightness) * 0.1;
+        }
+      }
+    } else if (state === BreathState.HOLD_FULL) {
+      // All tips glow bright
+      for (let n of this.nodes) {
+        n.brightness = 0.8 + 0.2 * sin(frameCount * 0.1 + n.x * 0.01);
+      }
+      for (let c of this.connections) {
+        c.progress = 1;
+      }
+    } else if (state === BreathState.EXHALE) {
+      // Light recedes to center
+      this.pulseProgress = 1 - intensity;
+
+      for (let c of this.connections) {
+        const targetProgress = constrain(((1 - intensity) * 5) - (4 - c.depth), 0, 1);
+        c.progress += (targetProgress - c.progress) * 0.1;
+      }
+
+      for (let n of this.nodes) {
+        if (n.isCenter) {
+          n.brightness = 0.3 + (1 - intensity) * 0.7;
+        } else {
+          const targetBright = constrain(((1 - intensity) * 5) - (4 - n.depth), 0, 1);
+          n.brightness += (targetBright - n.brightness) * 0.1;
+        }
+      }
+    } else if (state === BreathState.HOLD_EMPTY) {
+      // Only center pulses weakly
+      for (let n of this.nodes) {
+        if (n.isCenter) {
+          n.brightness = 0.15 + 0.1 * sin(frameCount * 0.05);
+        } else {
+          n.brightness *= 0.95;
+        }
+      }
+      for (let c of this.connections) {
+        c.progress *= 0.95;
+      }
+    }
+  }
+
+  draw(intensity, state, primaryColor) {
+    const col = color(primaryColor);
+
+    // Draw connections
+    for (let c of this.connections) {
+      const from = this.nodes[c.from];
+      const to = this.nodes[c.to];
+
+      const alpha = c.progress * 200;
+
+      // Glowing line
+      for (let i = 3; i > 0; i--) {
+        stroke(red(col), green(col), blue(col), alpha / i);
+        strokeWeight(i * 2);
+        line(from.x, from.y, to.x, to.y);
+      }
+    }
+
+    // Draw nodes
+    noStroke();
+    for (let n of this.nodes) {
+      const size = n.isCenter ? 15 : 8;
+      const alpha = n.brightness;
+
+      // Glow
+      for (let i = 4; i > 0; i--) {
+        fill(red(col), green(col), blue(col), alpha * 60 / i);
+        ellipse(n.x, n.y, size * i * 2, size * i * 2);
+      }
+
+      // Core
+      fill(255, 255, 255, alpha * 255);
+      ellipse(n.x, n.y, size, size);
+    }
+  }
+}
+
+// Mode 6: Atmosphere (Eclipse/Fog)
+class AtmosphereMode {
+  constructor() {
+    this.fogLayers = [];
+    this.lightIntensity = 0;
+    this.init();
+  }
+
+  init() {
+    this.fogLayers = [];
+    for (let i = 0; i < 8; i++) {
+      this.fogLayers.push({
+        x: random(width),
+        y: random(height),
+        size: random(200, 500),
+        density: random(0.3, 0.8),
+        speed: random(0.2, 0.5),
+        angle: random(TWO_PI)
+      });
+    }
+  }
+
+  update(intensity, state) {
+    if (state === BreathState.INHALE) {
+      // Fog dissipates
+      this.lightIntensity = intensity;
+      for (let f of this.fogLayers) {
+        f.density = 0.8 - intensity * 0.7;
+        f.size += (100 - f.size) * 0.02;
+      }
+    } else if (state === BreathState.HOLD_FULL) {
+      // Maximum light
+      this.lightIntensity = 1;
+      for (let f of this.fogLayers) {
+        f.density = 0.1;
+      }
+    } else if (state === BreathState.EXHALE) {
+      // Shadows grow, fog returns
+      this.lightIntensity = 1 - intensity;
+      for (let f of this.fogLayers) {
+        f.density = 0.1 + intensity * 0.7;
+        f.size += (400 - f.size) * 0.02;
+      }
+    } else if (state === BreathState.HOLD_EMPTY) {
+      // Near total darkness
+      this.lightIntensity *= 0.95;
+      for (let f of this.fogLayers) {
+        f.density = 0.9;
+      }
+    }
+
+    // Move fog
+    for (let f of this.fogLayers) {
+      f.x += cos(f.angle) * f.speed;
+      f.y += sin(f.angle) * f.speed;
+
+      if (f.x < -f.size) f.x = width + f.size;
+      if (f.x > width + f.size) f.x = -f.size;
+      if (f.y < -f.size) f.y = height + f.size;
+      if (f.y > height + f.size) f.y = -f.size;
+    }
+  }
+
+  draw(intensity, state, primaryColor) {
+    const col = color(primaryColor);
+
+    // Central light source
+    const lightSize = 100 + this.lightIntensity * 300;
+
+    // Light rays
+    push();
+    blendMode(ADD);
+    noStroke();
+
+    for (let i = 8; i > 0; i--) {
+      const rayAlpha = this.lightIntensity * 30 / i;
+      fill(red(col), green(col), blue(col), rayAlpha);
+      ellipse(width / 2, height / 2, lightSize * i, lightSize * i);
+    }
+
+    // Bright center
+    fill(255, 255, 255, this.lightIntensity * 200);
+    ellipse(width / 2, height / 2, lightSize * 0.3, lightSize * 0.3);
+    pop();
+
+    // Fog layers
+    noStroke();
+    for (let f of this.fogLayers) {
+      const fogCol = lerpColor(color(config.backgroundColor), color(50, 50, 60), 0.5);
+
+      for (let i = 3; i > 0; i--) {
+        fill(red(fogCol), green(fogCol), blue(fogCol), f.density * 80 / i);
+        ellipse(f.x, f.y, f.size * i, f.size * i);
+      }
+    }
+
+    // Edge shadows during exhale and hold empty
+    if (state === BreathState.EXHALE || state === BreathState.HOLD_EMPTY) {
+      const shadowIntensity = state === BreathState.HOLD_EMPTY ? 0.9 : intensity;
+
+      // Vignette effect
+      for (let i = 0; i < 10; i++) {
+        const alpha = shadowIntensity * 25 * (10 - i) / 10;
+        noFill();
+        stroke(0, 0, 0, alpha);
+        strokeWeight(50);
+        rect(-25 + i * 15, -25 + i * 15, width + 50 - i * 30, height + 50 - i * 30, 50);
+      }
+    }
+  }
+}
+
+// === GLOBAL VARIABLES ===
+let breathEngine;
+let currentMode;
+let modes = {};
+
+// === P5.JS SETUP ===
+function setup() {
+  const canvas = createCanvas(windowWidth, windowHeight);
+  canvas.parent('canvas-container');
+  colorMode(RGB, 255, 255, 255, 255);
+
+  breathEngine = new BreathEngine();
+
+  // Initialize all modes
+  modes = {
+    starDust: new StarDustMode(),
+    fluid: new FluidMode(),
+    crystal: new CrystalMode(),
+    topography: new TopographyMode(),
+    bio: new BioMode(),
+    atmosphere: new AtmosphereMode()
+  };
+
+  currentMode = modes[config.visualMode];
+
+  // Setup GUI
+  setupGUI();
+
+  // Setup start button
+  document.getElementById('start-btn').addEventListener('click', () => {
+    document.getElementById('start-overlay').style.display = 'none';
+    breathEngine.totalCycles = config.cycles;
+    breathEngine.start();
+  });
+}
+
+function draw() {
+  // Background
+  background(config.backgroundColor);
+
+  // Update engine
+  if (config.isRunning) {
+    breathEngine.update();
+  }
+
+  // Update and draw current mode
+  currentMode.update(breathEngine.breathIntensity, breathEngine.state);
+  currentMode.draw(breathEngine.breathIntensity, breathEngine.state, config.primaryColor);
+}
+
+function windowResized() {
+  resizeCanvas(windowWidth, windowHeight);
+
+  // Reinitialize modes
+  for (let key in modes) {
+    modes[key].init();
+  }
+}
+
+// === GUI SETUP ===
+function setupGUI() {
+  const gui = new dat.GUI({ width: 300 });
+
+  // Timing folder
+  const timingFolder = gui.addFolder('Tempos (segundos)');
+  timingFolder.add(config, 'inhaleTime', 1, 10, 0.5).name('Inspirar');
+  timingFolder.add(config, 'holdFullTime', 0, 10, 0.5).name('Segurar (cheio)');
+  timingFolder.add(config, 'exhaleTime', 1, 10, 0.5).name('Expirar');
+  timingFolder.add(config, 'holdEmptyTime', 0, 10, 0.5).name('Segurar (vazio)');
+  timingFolder.add(config, 'cycles', 1, 10, 1).name('Ciclos');
+  timingFolder.open();
+
+  // Visual mode
+  gui.add(config, 'visualMode', {
+    'Pó de Estrela': 'starDust',
+    'Fluido Viscoso': 'fluid',
+    'Cristalização': 'crystal',
+    'Topografia 3D': 'topography',
+    'Bioluminescência': 'bio',
+    'Atmosfera': 'atmosphere'
+  }).name('Modo Visual').onChange((value) => {
+    currentMode = modes[value];
+    currentMode.init();
+  });
+
+  // Colors
+  gui.addColor(config, 'primaryColor').name('Cor Principal');
+  gui.addColor(config, 'backgroundColor').name('Cor de Fundo');
+
+  // Complexity
+  gui.add(config, 'complexity', 10, 100, 5).name('Complexidade').onChange(() => {
+    currentMode.init();
+  });
+
+  // Presets folder
+  const presetsFolder = gui.addFolder('Presets');
+
+  const presets = {
+    'Box Breathing': () => {
+      config.inhaleTime = 4;
+      config.holdFullTime = 4;
+      config.exhaleTime = 4;
+      config.holdEmptyTime = 4;
+      updateGUI(gui);
+    },
+    '4-7-8 Relaxante': () => {
+      config.inhaleTime = 4;
+      config.holdFullTime = 7;
+      config.exhaleTime = 8;
+      config.holdEmptyTime = 0;
+      updateGUI(gui);
+    },
+    'Coerência': () => {
+      config.inhaleTime = 5;
+      config.holdFullTime = 0;
+      config.exhaleTime = 5;
+      config.holdEmptyTime = 0;
+      updateGUI(gui);
+    },
+    'Energizante': () => {
+      config.inhaleTime = 4;
+      config.holdFullTime = 0;
+      config.exhaleTime = 2;
+      config.holdEmptyTime = 0;
+      updateGUI(gui);
+    }
+  };
+
+  for (let name in presets) {
+    presetsFolder.add(presets, name);
+  }
+}
+
+function updateGUI(gui) {
+  for (let i in gui.__controllers) {
+    gui.__controllers[i].updateDisplay();
+  }
+  for (let folder in gui.__folders) {
+    updateGUI(gui.__folders[folder]);
+  }
+}
+
+// === UI HELPERS ===
+function updatePhaseIndicator(state) {
+  document.getElementById('phase-name').textContent = PhaseNames[state];
+}
+
+function updateCycleIndicator(current, total) {
+  const container = document.getElementById('cycle-indicator');
+  container.innerHTML = '';
+
+  for (let i = 1; i <= total; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'cycle-dot';
+    if (i < current) dot.classList.add('complete');
+    if (i === current) dot.classList.add('active');
+    container.appendChild(dot);
+  }
+}
+  </script>
+</body>
+</html>

@@ -378,100 +378,99 @@ export function BreathVisualizationEngine({
 
     switch (config.visualMode) {
       case 'rings': {
-        // Concentric rings animation
-        // Inhale: rings rise and stack upward (0 -> 1)
-        // HoldFull: rings stay stacked at top
-        // Exhale: rings descend and go below/invert (1 -> 0)
-        // HoldEmpty: rings stay stacked at bottom (inverted)
+        // Concentric rings animation - seamless loop
+        // The animation forms a continuous cycle:
+        // - Inhale: rings rise from bottom (inverted dome) to top (dome above)
+        // - Hold Full: rings float at top position
+        // - Exhale: rings descend from top (dome) to bottom (inverted dome)
+        // - Hold Empty: rings settle at bottom position
+        // - Next Inhale: starts from bottom = seamless loop!
 
         if (!state.rings) break;
 
-        const perspectiveY = state.perspectiveY || centerY + height * 0.15;
-        const maxStackHeight = height * 0.35; // Maximum vertical displacement
-        const easedIntensity = easeInOutCubic(intensity);
+        const perspectiveY = state.perspectiveY || centerY + height * 0.1;
+        const maxStackHeight = height * 0.32;
 
-        // Calculate ring positions based on breath phase
+        // Use progress (0-1) for smooth phase transitions
+        const easedProgress = easeInOutSine(progress);
+
+        // Calculate ring positions
         for (const ring of state.rings) {
           const ringIndex = ring.index;
           const ringCount = state.rings.length;
-          const normalizedIndex = ringIndex / (ringCount - 1); // 0 to 1, inner to outer
+          const normalizedIndex = ringIndex / (ringCount - 1); // 0 = inner, 1 = outer
 
-          // Stack offset: inner rings go higher/lower, outer rings stay closer to center
-          // When intensity = 1 (inhale complete): rings stacked above
-          // When intensity = 0 (exhale complete): rings flat or stacked below
+          // Stack factor: inner rings move more, outer rings move less
+          const stackFactor = 1 - normalizedIndex;
+
+          // Define key positions
+          const topPosition = -maxStackHeight * stackFactor;    // Dome above (negative Y = up)
+          const bottomPosition = maxStackHeight * stackFactor;  // Inverted dome below (positive Y = down)
 
           if (currentPhase === 'inhale') {
-            // Rings rise: inner rings go higher
-            const stackFactor = 1 - normalizedIndex; // Inner = 1, outer = 0
-            ring.yOffset = -easedIntensity * maxStackHeight * stackFactor;
+            // Rise from bottom to top
+            ring.yOffset = lerp(bottomPosition, topPosition, easedProgress);
           } else if (currentPhase === 'holdFull') {
-            // Keep stacked at top with subtle floating
-            const stackFactor = 1 - normalizedIndex;
-            const baseOffset = -maxStackHeight * stackFactor;
-            const float = Math.sin(state.time * 2 + ringIndex * 0.5) * 5;
-            ring.yOffset = baseOffset + float;
+            // Float at top with gentle breathing motion
+            const breathe = Math.sin(state.time * 1.5 + ringIndex * 0.3) * 4;
+            const drift = Math.sin(state.time * 0.8 + ringIndex * 0.7) * 2;
+            ring.yOffset = topPosition + breathe + drift;
           } else if (currentPhase === 'exhale') {
-            // Rings descend and go below
-            const stackFactor = 1 - normalizedIndex;
-            // From stacked above (-maxStackHeight) to stacked below (+maxStackHeight)
-            const targetOffset = maxStackHeight * stackFactor;
-            const startOffset = -maxStackHeight * stackFactor;
-            ring.yOffset = lerp(startOffset, targetOffset, easedIntensity);
+            // Descend from top to bottom
+            ring.yOffset = lerp(topPosition, bottomPosition, easedProgress);
           } else if (currentPhase === 'holdEmpty') {
-            // Keep stacked at bottom with subtle settling
-            const stackFactor = 1 - normalizedIndex;
-            const baseOffset = maxStackHeight * stackFactor;
-            const settle = Math.sin(state.time * 1.5 + ringIndex * 0.3) * 3;
-            ring.yOffset = baseOffset + settle;
+            // Settle at bottom with subtle pulsing
+            const pulse = Math.sin(state.time * 1.2 + ringIndex * 0.4) * 3;
+            ring.yOffset = bottomPosition + pulse;
           } else {
-            // Idle - flat
-            ring.yOffset = 0;
+            // Idle state - show at bottom position (ready for inhale)
+            ring.yOffset = bottomPosition;
           }
         }
 
-        // Draw rings from back to front (outer to inner when above, inner to outer when below)
-        // Sort rings by their Y position for proper depth ordering
+        // Sort rings for proper depth rendering
+        // Rings further from viewer (more extreme Y) should be drawn first
         const sortedRings = [...state.rings].sort((a, b) => {
-          // Rings with positive yOffset (below) should be drawn first
-          // Then rings with negative yOffset (above) should be drawn last
+          // Draw from back to front based on Y position
           return b.yOffset - a.yOffset;
         });
 
-        ctx.strokeStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.9)`;
-        ctx.lineWidth = 1.5;
-
+        // Draw the rings
         for (const ring of sortedRings) {
           const radius = ring.baseRadius;
           const yOffset = ring.yOffset;
 
-          // 3D perspective: ellipse becomes more circular as it rises
-          // and more flat as it approaches the viewing plane
-          const perspectiveFactor = 0.25 + Math.abs(yOffset) / (height * 0.6) * 0.15;
-          const ellipseHeight = radius * perspectiveFactor;
+          // 3D perspective calculation
+          // Ellipse height varies based on vertical position (foreshortening)
+          const distanceRatio = Math.abs(yOffset) / maxStackHeight;
+          const basePerspective = 0.22; // Base ellipse flatness
+          const perspectiveBonus = distanceRatio * 0.12; // More perspective when stacked
+          const ellipseHeight = radius * (basePerspective + perspectiveBonus);
 
-          // Position
+          // Position on canvas
           const x = centerX;
           const y = perspectiveY + yOffset;
 
-          // Calculate alpha based on position (fade distant rings slightly)
-          const distanceFromCenter = Math.abs(yOffset);
-          const alpha = 0.6 + (1 - distanceFromCenter / maxStackHeight) * 0.4;
+          // Calculate visual properties
+          const normalizedOffset = Math.abs(yOffset) / maxStackHeight;
+          const alpha = 0.7 + (1 - normalizedOffset * 0.3) * 0.3;
+          const lineWidth = 1.5 + (1 - normalizedOffset) * 0.5;
 
+          // Draw main ring
           ctx.strokeStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`;
-
-          // Draw ellipse
+          ctx.lineWidth = lineWidth;
           ctx.beginPath();
           ctx.ellipse(x, y, radius, ellipseHeight, 0, 0, Math.PI * 2);
           ctx.stroke();
 
-          // Add subtle glow for closer rings
+          // Add subtle glow effect during hold phases
           if (currentPhase === 'holdFull' || currentPhase === 'holdEmpty') {
-            ctx.strokeStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha * 0.2})`;
-            ctx.lineWidth = 4;
+            const glowIntensity = 0.5 + Math.sin(state.time * 2 + ring.index * 0.5) * 0.2;
+            ctx.strokeStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha * 0.15 * glowIntensity})`;
+            ctx.lineWidth = lineWidth + 3;
             ctx.beginPath();
             ctx.ellipse(x, y, radius, ellipseHeight, 0, 0, Math.PI * 2);
             ctx.stroke();
-            ctx.lineWidth = 1.5;
           }
         }
         break;

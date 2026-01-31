@@ -27,12 +27,13 @@ import {
   Repeat,
   ChevronRight,
   Info,
+  Circle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 // Types
-type VisualMode = 'starDust' | 'fluid' | 'crystal' | 'topography' | 'bio' | 'atmosphere';
+type VisualMode = 'rings' | 'starDust' | 'fluid' | 'crystal' | 'topography' | 'bio' | 'atmosphere';
 
 interface BreathPreset {
   id: string;
@@ -62,6 +63,20 @@ const visualModes: {
   gradient: string;
   iconBg: string;
 }[] = [
+  {
+    id: 'rings',
+    name: 'Anéis',
+    description: 'Anéis concêntricos que sobem e descem',
+    icon: Circle,
+    phases: {
+      inhale: 'Anéis sobem formando um domo',
+      holdFull: 'Empilhados no alto, flutuando',
+      exhale: 'Descem e invertem para baixo',
+      holdEmpty: 'Empilhados embaixo, em repouso',
+    },
+    gradient: 'from-slate-500/20 via-gray-500/10 to-zinc-500/20',
+    iconBg: 'bg-gradient-to-br from-slate-400 to-gray-600',
+  },
   {
     id: 'starDust',
     name: 'Pó de Estrela',
@@ -227,7 +242,7 @@ const breathPresets: BreathPreset[] = [
 export default function AnimationStudio() {
   const navigate = useNavigate();
   const [showEngine, setShowEngine] = useState(false);
-  const [selectedMode, setSelectedMode] = useState<VisualMode>('starDust');
+  const [selectedMode, setSelectedMode] = useState<VisualMode>('rings');
   const [selectedPreset, setSelectedPreset] = useState<BreathPreset | null>(null);
   const [showModeDetails, setShowModeDetails] = useState(false);
   const [customConfig, setCustomConfig] = useState({
@@ -332,7 +347,7 @@ export default function AnimationStudio() {
               Experiências Visuais de Respiração
             </h2>
             <p className="text-white/60 max-w-xl mx-auto text-lg">
-              6 modos visuais abstratos baseados em física e metáforas naturais.
+              7 modos visuais abstratos baseados em física e metáforas naturais.
               Cada modo reage de forma única às 4 fases do ciclo respiratório.
             </p>
           </motion.div>
@@ -577,7 +592,7 @@ export default function AnimationStudio() {
           <div className="grid md:grid-cols-4 gap-4">
             {[
               { label: '4 Fases', desc: 'State Machine completa' },
-              { label: '6 Modos', desc: 'Visualizações únicas' },
+              { label: '7 Modos', desc: 'Visualizações únicas' },
               { label: 'Tempo Real', desc: 'Canvas 60fps' },
               { label: 'Personalizável', desc: 'Tempos e cores' },
             ].map((item) => (
@@ -604,8 +619,8 @@ export default function AnimationStudio() {
               holdEmptyTime: customConfig.holdEmpty,
               cycles: customConfig.cycles,
               visualMode: selectedMode,
-              primaryColor: '#4ECDC4',
-              backgroundColor: '#0a0a0f',
+              primaryColor: selectedMode === 'rings' ? '#FFFFFF' : '#4ECDC4',
+              backgroundColor: '#000000',
               complexity: 50,
             }}
           />

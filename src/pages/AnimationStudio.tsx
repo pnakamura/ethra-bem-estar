@@ -28,12 +28,15 @@ import {
   ChevronRight,
   Info,
   Circle,
+  Waves,
+  Target,
+  RotateCw,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 // Types
-type VisualMode = 'rings' | 'starDust' | 'fluid' | 'crystal' | 'topography' | 'bio' | 'atmosphere';
+type VisualMode = 'rings' | 'ringsWave' | 'ringsExpand' | 'ringsSpiral' | 'starDust' | 'fluid' | 'crystal' | 'topography' | 'bio' | 'atmosphere';
 
 interface BreathPreset {
   id: string;
@@ -76,6 +79,48 @@ const visualModes: {
     },
     gradient: 'from-slate-500/20 via-gray-500/10 to-zinc-500/20',
     iconBg: 'bg-gradient-to-br from-slate-400 to-gray-600',
+  },
+  {
+    id: 'ringsWave',
+    name: 'Anéis Onda',
+    description: 'Onda propagando pelos anéis',
+    icon: Waves,
+    phases: {
+      inhale: 'Onda propaga do centro para fora',
+      holdFull: 'Ondulação suave no topo',
+      exhale: 'Onda retorna de fora para o centro',
+      holdEmpty: 'Leves ondulações em repouso',
+    },
+    gradient: 'from-blue-500/20 via-cyan-500/10 to-teal-500/20',
+    iconBg: 'bg-gradient-to-br from-blue-400 to-cyan-500',
+  },
+  {
+    id: 'ringsExpand',
+    name: 'Anéis Expansão',
+    description: 'Anéis expandem e contraem do centro',
+    icon: Target,
+    phases: {
+      inhale: 'Anéis expandem do centro',
+      holdFull: 'Pulsação suave no tamanho máximo',
+      exhale: 'Anéis contraem para o centro',
+      holdEmpty: 'Respiração sutil contraídos',
+    },
+    gradient: 'from-pink-500/20 via-rose-500/10 to-red-500/20',
+    iconBg: 'bg-gradient-to-br from-pink-400 to-rose-500',
+  },
+  {
+    id: 'ringsSpiral',
+    name: 'Anéis Espiral',
+    description: 'Anéis rotacionam em espiral',
+    icon: RotateCw,
+    phases: {
+      inhale: 'Anéis sobem girando em espiral',
+      holdFull: 'Rotação lenta no topo',
+      exhale: 'Anéis descem girando ao contrário',
+      holdEmpty: 'Rotação suave em repouso',
+    },
+    gradient: 'from-purple-500/20 via-violet-500/10 to-indigo-500/20',
+    iconBg: 'bg-gradient-to-br from-purple-400 to-violet-500',
   },
   {
     id: 'starDust',
@@ -347,7 +392,7 @@ export default function AnimationStudio() {
               Experiências Visuais de Respiração
             </h2>
             <p className="text-white/60 max-w-xl mx-auto text-lg">
-              7 modos visuais abstratos baseados em física e metáforas naturais.
+              10 modos visuais abstratos baseados em física e metáforas naturais.
               Cada modo reage de forma única às 4 fases do ciclo respiratório.
             </p>
           </motion.div>
@@ -592,7 +637,7 @@ export default function AnimationStudio() {
           <div className="grid md:grid-cols-4 gap-4">
             {[
               { label: '4 Fases', desc: 'State Machine completa' },
-              { label: '7 Modos', desc: 'Visualizações únicas' },
+              { label: '10 Modos', desc: 'Visualizações únicas' },
               { label: 'Tempo Real', desc: 'Canvas 60fps' },
               { label: 'Personalizável', desc: 'Tempos e cores' },
             ].map((item) => (
@@ -619,7 +664,7 @@ export default function AnimationStudio() {
               holdEmptyTime: customConfig.holdEmpty,
               cycles: customConfig.cycles,
               visualMode: selectedMode,
-              primaryColor: selectedMode === 'rings' ? '#FFFFFF' : '#4ECDC4',
+              primaryColor: selectedMode.startsWith('rings') ? '#FFFFFF' : '#4ECDC4',
               backgroundColor: '#000000',
               complexity: 50,
             }}

@@ -31,11 +31,14 @@ import {
   Zap,
   Cloud,
   Circle,
+  Waves,
+  Target,
+  RotateCw,
 } from 'lucide-react';
 
 // Types
 type BreathPhase = 'idle' | 'inhale' | 'holdFull' | 'exhale' | 'holdEmpty' | 'complete';
-type VisualMode = 'rings' | 'starDust' | 'fluid' | 'crystal' | 'topography' | 'bio' | 'atmosphere';
+type VisualMode = 'rings' | 'ringsWave' | 'ringsExpand' | 'ringsSpiral' | 'starDust' | 'fluid' | 'crystal' | 'topography' | 'bio' | 'atmosphere';
 
 interface BreathConfig {
   inhaleTime: number;
@@ -79,6 +82,9 @@ const phaseNames: Record<BreathPhase, string> = {
 
 const modeInfo: Record<VisualMode, { name: string; icon: React.ReactNode; description: string }> = {
   rings: { name: 'Anéis', icon: <Circle className="w-4 h-4" />, description: 'Anéis concêntricos que sobem e descem' },
+  ringsWave: { name: 'Anéis Onda', icon: <Waves className="w-4 h-4" />, description: 'Onda propagando pelos anéis' },
+  ringsExpand: { name: 'Anéis Expansão', icon: <Target className="w-4 h-4" />, description: 'Anéis expandem e contraem do centro' },
+  ringsSpiral: { name: 'Anéis Espiral', icon: <RotateCw className="w-4 h-4" />, description: 'Anéis rotacionam em espiral' },
   starDust: { name: 'Pó de Estrela', icon: <Sparkles className="w-4 h-4" />, description: 'Partículas com gravidade invertida' },
   fluid: { name: 'Fluido Viscoso', icon: <Droplets className="w-4 h-4" />, description: 'Tinta se dissolvendo na água' },
   crystal: { name: 'Cristalização', icon: <Snowflake className="w-4 h-4" />, description: 'Ordem emergindo do caos' },
@@ -157,21 +163,28 @@ export function BreathVisualizationEngine({
 
     switch (config.visualMode) {
       case 'rings':
-        // Concentric rings that rise and fall with breathing
-        const ringCount = 10;
+      case 'ringsWave':
+      case 'ringsExpand':
+      case 'ringsSpiral': {
+        // All ring modes share the same initialization
+        const ringCount = 12;
         state.rings = [];
-        const maxRadius = Math.min(width, height) * 0.45;
+        const maxRadius = Math.min(width, height) * 0.42;
         for (let i = 0; i < ringCount; i++) {
           const t = i / (ringCount - 1); // 0 to 1
           state.rings.push({
-            baseRadius: maxRadius * (0.1 + t * 0.9), // Inner to outer
+            baseRadius: maxRadius * (0.08 + t * 0.92), // Inner to outer
             index: i,
-            // Y offset range: from flat (0) to stacked above (+height) or below (-height)
             yOffset: 0,
+            scale: 1,
+            rotation: 0,
+            waveOffset: 0,
           });
         }
-        state.perspectiveY = centerY + height * 0.15; // Slightly below center for 3D perspective
+        state.perspectiveY = centerY + height * 0.12;
+        state.globalRotation = 0;
         break;
+      }
 
       case 'starDust':
         // Create particles at bottom - they will rise during inhale
@@ -472,6 +485,240 @@ export function BreathVisualizationEngine({
             ctx.ellipse(x, y, radius, ellipseHeight, 0, 0, Math.PI * 2);
             ctx.stroke();
           }
+        }
+        break;
+      }
+
+      case 'ringsWave': {
+        // Wave animation - rings undulate with a wave propagating through them
+        // Inhale: wave moves outward from center
+        // Exhale: wave moves inward to center
+        // Creates a continuous ripple effect synchronized with breathing
+
+        if (!state.rings) break;
+
+        const perspectiveY = state.perspectiveY || centerY + height * 0.1;
+        const maxWaveHeight = height * 0.25;
+        const easedProgress = easeInOutSine(progress);
+
+        for (const ring of state.rings) {
+          const ringIndex = ring.index;
+          const ringCount = state.rings.length;
+          const normalizedIndex = ringIndex / (ringCount - 1);
+
+          // Wave phase offset - creates ripple effect
+          const wavePhaseOffset = normalizedIndex * Math.PI * 2;
+
+          if (currentPhase === 'inhale') {
+            // Wave propagates outward: inner rings lead, outer rings follow
+            const waveProgress = easedProgress * Math.PI;
+            const delayedWave = Math.max(0, waveProgress - normalizedIndex * Math.PI * 0.5);
+            ring.yOffset = -Math.sin(delayedWave) * maxWaveHeight * (1 - normalizedIndex * 0.3);
+          } else if (currentPhase === 'holdFull') {
+            // Gentle undulation at peak
+            const wave = Math.sin(state.time * 2 + wavePhaseOffset) * maxWaveHeight * 0.15;
+            const baseOffset = -maxWaveHeight * 0.6 * (1 - normalizedIndex * 0.5);
+            ring.yOffset = baseOffset + wave;
+          } else if (currentPhase === 'exhale') {
+            // Wave propagates inward: outer rings lead, inner rings follow
+            const waveProgress = easedProgress * Math.PI;
+            const delayedWave = Math.max(0, waveProgress - (1 - normalizedIndex) * Math.PI * 0.5);
+            const startOffset = -maxWaveHeight * 0.6 * (1 - normalizedIndex * 0.5);
+            ring.yOffset = startOffset + Math.sin(delayedWave) * maxWaveHeight * (1 - normalizedIndex * 0.3) + delayedWave / Math.PI * maxWaveHeight * 0.6;
+          } else if (currentPhase === 'holdEmpty') {
+            // Subtle ripples at rest
+            const ripple = Math.sin(state.time * 1.5 + wavePhaseOffset * 0.5) * 4;
+            ring.yOffset = ripple;
+          } else {
+            ring.yOffset = 0;
+          }
+        }
+
+        // Draw rings sorted by Y position
+        const sortedRings = [...state.rings].sort((a, b) => b.yOffset - a.yOffset);
+
+        for (const ring of sortedRings) {
+          const radius = ring.baseRadius;
+          const yOffset = ring.yOffset;
+          const distanceRatio = Math.abs(yOffset) / maxWaveHeight;
+          const ellipseHeight = radius * (0.22 + distanceRatio * 0.1);
+          const x = centerX;
+          const y = perspectiveY + yOffset;
+          const alpha = 0.6 + (1 - distanceRatio * 0.4) * 0.4;
+
+          ctx.strokeStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`;
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.ellipse(x, y, radius, ellipseHeight, 0, 0, Math.PI * 2);
+          ctx.stroke();
+
+          // Glow on wave peaks
+          if (Math.abs(yOffset) > maxWaveHeight * 0.3) {
+            ctx.strokeStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha * 0.2})`;
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.ellipse(x, y, radius, ellipseHeight, 0, 0, Math.PI * 2);
+            ctx.stroke();
+          }
+        }
+        break;
+      }
+
+      case 'ringsExpand': {
+        // Expansion animation - rings expand from center on inhale, contract on exhale
+        // Creates a pulsing/breathing visual centered in the viewport
+
+        if (!state.rings) break;
+
+        const easedProgress = easeInOutSine(progress);
+        const minScale = 0.3;
+        const maxScale = 1.0;
+
+        for (const ring of state.rings) {
+          const ringIndex = ring.index;
+          const ringCount = state.rings.length;
+          const normalizedIndex = ringIndex / (ringCount - 1);
+
+          // Stagger the expansion - inner rings expand first
+          const staggerDelay = normalizedIndex * 0.2;
+
+          if (currentPhase === 'inhale') {
+            // Expand from contracted to full size
+            const delayedProgress = Math.max(0, Math.min(1, (easedProgress - staggerDelay) / (1 - staggerDelay)));
+            ring.scale = lerp(minScale, maxScale, delayedProgress);
+          } else if (currentPhase === 'holdFull') {
+            // Pulse at full size
+            const pulse = 1 + Math.sin(state.time * 2 + ringIndex * 0.3) * 0.03;
+            ring.scale = maxScale * pulse;
+          } else if (currentPhase === 'exhale') {
+            // Contract from full to small
+            const delayedProgress = Math.max(0, Math.min(1, (easedProgress - (1 - normalizedIndex) * 0.2) / (1 - (1 - normalizedIndex) * 0.2)));
+            ring.scale = lerp(maxScale, minScale, delayedProgress);
+          } else if (currentPhase === 'holdEmpty') {
+            // Subtle breathing at contracted state
+            const breathe = 1 + Math.sin(state.time * 1.5 + ringIndex * 0.4) * 0.05;
+            ring.scale = minScale * breathe;
+          } else {
+            ring.scale = minScale;
+          }
+        }
+
+        // Draw rings from outer to inner (larger first for proper layering)
+        const sortedRings = [...state.rings].sort((a, b) => b.baseRadius * b.scale - a.baseRadius * a.scale);
+
+        for (const ring of sortedRings) {
+          const scaledRadius = ring.baseRadius * ring.scale;
+          const ellipseHeight = scaledRadius * 0.25;
+          const x = centerX;
+          const y = centerY + height * 0.05;
+
+          // Alpha based on scale (more visible when expanded)
+          const alpha = 0.4 + ring.scale * 0.6;
+          const lineWidth = 1 + ring.scale * 1;
+
+          ctx.strokeStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`;
+          ctx.lineWidth = lineWidth;
+          ctx.beginPath();
+          ctx.ellipse(x, y, scaledRadius, ellipseHeight, 0, 0, Math.PI * 2);
+          ctx.stroke();
+
+          // Inner glow when expanded
+          if (ring.scale > 0.7) {
+            const glowAlpha = (ring.scale - 0.7) / 0.3 * 0.15;
+            ctx.strokeStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${glowAlpha})`;
+            ctx.lineWidth = lineWidth + 4;
+            ctx.beginPath();
+            ctx.ellipse(x, y, scaledRadius, ellipseHeight, 0, 0, Math.PI * 2);
+            ctx.stroke();
+          }
+        }
+        break;
+      }
+
+      case 'ringsSpiral': {
+        // Spiral animation - rings rotate while rising/falling
+        // Creates a mesmerizing spiral effect synchronized with breathing
+
+        if (!state.rings) break;
+
+        const perspectiveY = state.perspectiveY || centerY + height * 0.1;
+        const maxStackHeight = height * 0.3;
+        const maxRotation = Math.PI * 2; // Full rotation
+        const easedProgress = easeInOutSine(progress);
+
+        // Update global rotation for continuous motion
+        state.globalRotation = (state.globalRotation || 0) + 0.008;
+
+        for (const ring of state.rings) {
+          const ringIndex = ring.index;
+          const ringCount = state.rings.length;
+          const normalizedIndex = ringIndex / (ringCount - 1);
+          const stackFactor = 1 - normalizedIndex;
+
+          const topPosition = -maxStackHeight * stackFactor;
+          const bottomPosition = maxStackHeight * stackFactor;
+
+          // Rotation offset per ring (creates spiral)
+          const rotationOffset = normalizedIndex * Math.PI * 0.5;
+
+          if (currentPhase === 'inhale') {
+            ring.yOffset = lerp(bottomPosition, topPosition, easedProgress);
+            // Rotate as rings rise
+            ring.rotation = state.globalRotation + rotationOffset + easedProgress * maxRotation * stackFactor;
+          } else if (currentPhase === 'holdFull') {
+            const breathe = Math.sin(state.time * 1.5 + ringIndex * 0.3) * 3;
+            ring.yOffset = topPosition + breathe;
+            // Continue rotating slowly
+            ring.rotation = state.globalRotation + rotationOffset;
+          } else if (currentPhase === 'exhale') {
+            ring.yOffset = lerp(topPosition, bottomPosition, easedProgress);
+            // Rotate in opposite direction as rings fall
+            ring.rotation = state.globalRotation + rotationOffset - easedProgress * maxRotation * stackFactor;
+          } else if (currentPhase === 'holdEmpty') {
+            const pulse = Math.sin(state.time * 1.2 + ringIndex * 0.4) * 2;
+            ring.yOffset = bottomPosition + pulse;
+            ring.rotation = state.globalRotation + rotationOffset;
+          } else {
+            ring.yOffset = bottomPosition;
+            ring.rotation = state.globalRotation + rotationOffset;
+          }
+        }
+
+        // Sort by Y for depth
+        const sortedRings = [...state.rings].sort((a, b) => b.yOffset - a.yOffset);
+
+        for (const ring of sortedRings) {
+          const radius = ring.baseRadius;
+          const yOffset = ring.yOffset;
+          const rotation = ring.rotation;
+
+          const distanceRatio = Math.abs(yOffset) / maxStackHeight;
+          const ellipseHeight = radius * (0.2 + distanceRatio * 0.12);
+          const x = centerX;
+          const y = perspectiveY + yOffset;
+          const alpha = 0.6 + (1 - distanceRatio * 0.3) * 0.4;
+
+          ctx.save();
+          ctx.translate(x, y);
+          ctx.rotate(rotation);
+          ctx.translate(-x, -y);
+
+          ctx.strokeStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`;
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.ellipse(x, y, radius, ellipseHeight, 0, 0, Math.PI * 2);
+          ctx.stroke();
+
+          // Spiral trail effect
+          if (currentPhase === 'inhale' || currentPhase === 'exhale') {
+            ctx.strokeStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha * 0.1})`;
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.ellipse(x, y, radius, ellipseHeight, 0, 0, Math.PI * 2);
+            ctx.stroke();
+          }
+
+          ctx.restore();
         }
         break;
       }

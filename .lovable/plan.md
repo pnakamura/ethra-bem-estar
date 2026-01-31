@@ -1,98 +1,325 @@
 
-## Objetivo (o que vai ser corrigido)
-1) O botão **“Salvar Registro”** precisa ficar **visível de forma confiável** na etapa 5 (Reflexão), já que hoje ele “não aparece”, mas o clique embaixo acaba salvando (sinal de que o botão provavelmente está fora da área visível ou coberto).
-2) A **restauração do rascunho** precisa **parar de voltar para o passo 5** e, quando o usuário parou logo após energia, deve voltar para o **passo 4 (Energia)**.
-3) Após salvar um registro, **novo registro** deve começar no **passo 1**, e nunca “pular” direto para o passo 5.
+# Análise Completa do ETHRA - Plataforma de Bem-Estar Emocional
+
+## Resumo Executivo
+
+O ETHRA é uma aplicação de bem-estar emocional completa com 22 páginas, sistema de autenticação robusto, controle de acesso hierárquico e backend seguro via Edge Functions. A arquitetura é sólida, mas há algumas melhorias de segurança recomendadas.
 
 ---
 
-## Diagnóstico com base no código atual
-### A) Por que “o botão não aparece mas clicando embaixo salva”
-No `MealCheckModal.tsx` o botão existe (step `notes`, linhas ~654-667). Se ele não aparece mas clicar “no footer/parte de baixo” salva, o cenário mais provável é:
-- o botão está sendo renderizado, mas **fica abaixo da dobra** (precisa scroll) dentro do container `overflow-y-auto`, e o usuário clica na área onde ele está (mesmo sem perceber), ou
-- há algum efeito de layout/overflow/altura (`max-h-[80dvh]` + conteúdo) que faz o botão ficar **fora da área visível**, apesar de estar no DOM.
+## 1. Arquitetura de Navegação
 
-Atualmente ele não é `sticky` e vem **depois** de tags/prompts, o que empurra ele para baixo.
+### Mapa de Rotas
 
-### B) Por que volta para o passo 5 e novo registro também
-A restauração hoje depende do conteúdo salvo no localStorage (`nutrition-check-in-draft`) e da lógica:
-- Se `draft.step === 'notes'` e `notes` tem conteúdo “não vazio” (mesmo que seja lixo/whitespace), ele vai para `notes`.
-- Se o draft **não está sendo limpo** (ou está sendo regravado após limpar), ao abrir novamente ele restaura.
+```text
+┌─────────────────────────────────────────────────────────────────┐
+│                         ROTAS PÚBLICAS                          │
+├─────────────────────────────────────────────────────────────────┤
+│  /                 → Home (Dashboard)                           │
+│  /landing          → Página de apresentação                     │
+│  /onboarding       → Introdução para novos usuários             │
+│  /auth             → Login e recuperação de senha               │
+│  /privacy          → Política de privacidade                    │
+│  /plans            → Planos de assinatura                       │
+└─────────────────────────────────────────────────────────────────┘
 
-Além disso, hoje a restauração apenas checa `draft.step` ∈ `['category','energy','notes']`, mas não valida consistência (ex.: `step: notes` com `selectedMood`/`selectedHunger` ausentes).
+┌─────────────────────────────────────────────────────────────────┐
+│                    ROTAS AUTENTICADAS                           │
+├─────────────────────────────────────────────────────────────────┤
+│  /guide            → Chat com guia espiritual                   │
+│  /guide/select     → Seleção de guia                            │
+│  /journeys         → Jornadas ativas                            │
+│  /journeys/explore → Explorar jornadas                          │
+│  /journal          → Diário emocional                           │
+│  /nutrition        → Nutrição consciente                        │
+│  /insights         → Dashboard analítico                        │
+│  /favorites        → Conteúdos favoritos                        │
+│  /report           → Relatório de bem-estar (IA)                │
+│  /profile          → Perfil do usuário                          │
+│  /settings         → Configurações                              │
+│  /emotion-result   → Resultado do check-in emocional            │
+└─────────────────────────────────────────────────────────────────┘
 
----
+┌─────────────────────────────────────────────────────────────────┐
+│                    ROTAS ADMINISTRATIVAS                        │
+├─────────────────────────────────────────────────────────────────┤
+│  /admin/breathing      → Gerenciar técnicas de respiração       │
+│  /admin/meditation     → Gerenciar meditações                   │
+│  /admin/journeys       → Gerenciar jornadas                     │
+│  /admin/guides         → Gerenciar guias espirituais            │
+│  /admin/access         → Gerenciar permissões por plano         │
+└─────────────────────────────────────────────────────────────────┘
+```
 
-## Mudanças planejadas (implementação)
-### 1) Tornar o botão “Salvar Registro” inevitavelmente visível (etapa 5)
-No step `notes`, vamos:
-1. **Mover o botão para imediatamente após a textarea** (antes das tags/“reflection prompts”).  
-   - Isso sozinho já reduz muito o risco de ficar “abaixo”.
-2. Colocar o botão dentro de um container **`sticky bottom-0`** (dentro do scroll) para ficar sempre acessível mesmo com scroll/viewport menor.
-   - Exemplo de container:
-     - `className="sticky bottom-0 -mx-5 px-5 pt-3 bg-card border-t border-border/30 safe-area-bottom z-20"`
-3. Ajustar o espaçamento do scroll:
-   - Manter `pb-24` (ou ajustar para `pb-28`) no container scrollável principal, para garantir que o conteúdo final não fique escondido.
+### Navegação Inferior (BottomNavigation)
 
-Resultado esperado: na etapa 5, o botão aparece sempre; se o teclado abrir, ainda assim fica acessível.
-
-### 2) Eliminar qualquer “salvamento invisível” fora da etapa 5
-Hoje o usuário relata que clica “no footer” e salva, mesmo sem ver o botão. Para evitar confusão:
-- Garantir que **não exista nenhum botão/área clicável de submit** fora da etapa `notes`.
-- Revalidar a renderização do footer: no código atual o footer não renderiza em `notes`, então vamos confirmar que isso permanece e remover qualquer handler residual (se houver) que esteja causando submit indireto.
-
-### 3) Restauração à prova de inconsistência (sempre volta para o passo correto)
-Vamos reescrever a decisão do passo de restauração para ser **baseada em dados**, não só no `draft.step`.
-
-Regras novas (ordem de prioridade):
-1. Se o draft não tiver o mínimo necessário para o “modo rascunho” (ex.: `selectedMood` ou `selectedHunger` ausentes), então:
-   - **não restaurar**
-   - **limpar o draft** (`clearDraft()`)
-   - iniciar no passo `mood`
-2. Se `selectedCategory` existe e `selectedEnergy` **não existe** → restaurar em `energy` (passo 4) ou `category`?  
-   - Pelo fluxo do app: se já escolheu categoria, próximo é energia → restaurar em **`energy`** (mais útil).
-3. Se `selectedEnergy` existe e `notes.trim()` está vazio → restaurar em **`energy`** (passo 4).  
-   - Esse é o caso que você quer garantir.
-4. Se `notes.trim()` tem conteúdo real → restaurar em **`notes`** (passo 5).
-5. Caso contrário → restaurar em `category` (passo 3) apenas se for o primeiro incompleto.
-
-Isso evita “pular” para o passo 5 por `draft.step` inconsistente, e também evita voltar para 3 quando o correto é 4.
-
-### 4) Garantir que, após salvar, nunca exista draft residual que force passo 5
-Mesmo já chamando `clearDraft()` no `handleSubmit`, vamos reforçar com 2 camadas:
-1. Após salvar com sucesso, além de `clearDraft()`, também:
-   - setar um “flag” local em memória (ex.: `hasRestoredRef.current = true` e/ou um `justSavedRef`) para impedir qualquer restauração na mesma sessão por race de abertura/fechamento.
-2. Ao abrir o modal (`isOpen === true`), se `step` estiver em `mood` e existir draft, restaurar apenas se o draft for consistente (regra do item 3). Caso contrário, limpar e começar do zero.
-
-Isso cobre o cenário “salvou e depois novo registro já abre no passo 5”.
+| Posição | Ícone | Label | Rota |
+|---------|-------|-------|------|
+| 1 | Home | Início | `/` |
+| 2 | MessageCircle | Guia | `/guide` |
+| 3 | Heart | Favoritos | `/favorites` |
+| 4 | BookOpen | Diário | `/journal` |
+| 5 | User | Perfil | `/profile` |
 
 ---
 
-## Arquivos que serão alterados
-- `src/components/nutrition/MealCheckModal.tsx`
-  - Reposicionamento do botão “Salvar Registro”
-  - Container `sticky` no step `notes`
-  - Ajuste de padding no container scrollável (manter/ajustar `pb-24`)
-  - Reescrita da lógica de restauração com validação de consistência do draft
-  - Reforço do “clear draft” pós-sucesso e prevenção de re-restauração indevida
+## 2. Sistema de Autenticação
 
-Nenhuma mudança necessária em `useNutritionDraft.ts` a princípio (ele só persiste/expira), mas se identificarmos que drafts inconsistentes são frequentes, podemos endurecer validação também ali numa segunda rodada.
+### Fluxo de Login
+
+```text
+┌─────────────┐     ┌─────────────────┐     ┌──────────────┐
+│  Usuário    │────▶│ Supabase Auth   │────▶│ Tabela       │
+│  (email/    │     │ (valida         │     │ `usuarios`   │
+│   senha)    │     │  credenciais)   │     │ (verifica    │
+└─────────────┘     └─────────────────┘     │  autorização)│
+                                            └──────────────┘
+                                                   │
+                              ┌────────────────────┴────────────────────┐
+                              ▼                                         ▼
+                     ┌────────────────┐                       ┌─────────────────┐
+                     │ ✅ Autorizado  │                       │ ❌ Não existe   │
+                     │ (define        │                       │ na tabela       │
+                     │  usuario,      │                       │ → Logout +      │
+                     │  tipo, status) │                       │ "Não autorizado"│
+                     └────────────────┘                       └─────────────────┘
+```
+
+### Tipos de Usuário
+
+| Tipo | Descrição | Acesso Admin |
+|------|-----------|--------------|
+| `cliente` | Usuário padrão | ❌ |
+| `socio` | Administrador | ✅ |
+| `gestor` | Gerencia dependentes | ❌ |
+| `dependente` | Vinculado a gestor | ❌ |
+
+### Status de Conta
+
+- `ativa` - Acesso normal
+- `cancelada` - Conta cancelada
+- `suspensa` - Temporariamente bloqueada
+- `expirada` - Assinatura vencida
 
 ---
 
-## Critérios de aceitação (testes que você vai conseguir validar)
-1) Abrir modal → chegar na etapa 5:
-   - Botão “Salvar Registro” aparece **logo após a caixa de texto** e fica visível (sticky).
-2) Etapa 4 → selecionar energia → fechar imediatamente → reabrir:
-   - volta na **etapa 4 (Energia)**.
-3) Escrever uma nota real (texto) na etapa 5 → fechar → reabrir:
-   - volta na **etapa 5 (Reflexão)**.
-4) Salvar registro com sucesso → abrir novo registro:
-   - começa no **passo 1** (Humor), sem “pular” para o passo 5.
+## 3. Sistema de Controle de Acesso
+
+### Hierarquia de Permissões
+
+```text
+NÍVEIS DE ACESSO DO USUÁRIO (crescente):
+┌──────────┬──────────┬──────────┬──────────┐
+│   none   │  preview │  limited │   full   │
+│ (nenhum) │(só vê)   │(free+    │ (tudo)   │
+│          │          │ basic)   │          │
+└──────────┴──────────┴──────────┴──────────┘
+
+NÍVEIS DE CONTEÚDO (crescente):
+┌──────────┬──────────┬──────────┬───────────┐
+│   free   │  basic   │ premium  │ exclusive │
+│ (grátis) │(básico)  │(premium) │(exclusivo)│
+└──────────┴──────────┴──────────┴───────────┘
+```
+
+### Lógica de Acesso Cumulativo
+
+| Nível Usuário | Acessa Conteúdos |
+|---------------|------------------|
+| `none` | Apenas `free` |
+| `preview` | Visualiza todos (bloqueado) |
+| `limited` | `free` + `basic` |
+| `full` | Todos os níveis |
+
+### Componentes de Controle
+
+1. **FeatureGate** - Bloqueia módulos inteiros
+2. **ContentLock** - Bloqueia conteúdo específico com CTA de upgrade
+3. **UpgradeModal** - Modal de convite para assinatura
+4. **AdminGuard** - Protege rotas `/admin/*`
 
 ---
 
-## Notas técnicas (para evitar regressões)
-- Usar `notesTrimmed = (typeof notes === 'string' ? notes : '').trim()` em toda decisão.
-- Considerar “conteúdo real” para restaurar em `notes` apenas quando `notesTrimmed.length > 0`.
-- Validar consistência mínima do draft antes de restaurar (mood/hunger/categoria) para não cair em estados impossíveis.
+## 4. Segurança do Banco de Dados
+
+### Row Level Security (RLS)
+
+✅ **Habilitado em todas as 41 tabelas**
+
+### Políticas Principais
+
+```text
+┌────────────────────────────────────────────────────────────────┐
+│                    PADRÕES DE POLICY                           │
+├────────────────────────────────────────────────────────────────┤
+│  Dados do usuário: auth.uid() = user_id                        │
+│  Conteúdo público: is_active = true                            │
+│  Admin only: is_socio() OR is_admin()                          │
+│  Service role: current_setting('role') = 'service_role'        │
+└────────────────────────────────────────────────────────────────┘
+```
+
+### Funções de Segurança
+
+| Função | Propósito |
+|--------|-----------|
+| `is_socio()` | Verifica se é administrador |
+| `is_admin()` | Verifica role admin |
+| `has_role(uuid, role)` | Verifica role específica |
+| `check_feature_access(uuid, feature)` | Verifica permissão de feature |
+| `can_gestor_access_user(uuid)` | Verifica acesso de gestor |
+
+### Issues de Segurança Detectadas
+
+| Severidade | Issue | Descrição | Recomendação |
+|------------|-------|-----------|--------------|
+| ⚠️ WARN | Function Search Path | 6 funções sem search_path | Adicionar `SET search_path = public` |
+| ⚠️ WARN | Permissive Policy | Policy INSERT com `true` em pagamentos | Restringir para service_role |
+| ⚠️ WARN | OTP Expiry | Tempo de expiração muito longo | Reduzir para 10-15 minutos |
+| ⚠️ WARN | Leaked Password | Proteção desabilitada | Habilitar em Auth Settings |
+| ⚠️ WARN | Postgres Version | Patches de segurança disponíveis | Atualizar versão |
+| ℹ️ INFO | RLS No Policy | 1 tabela sem policy | Adicionar policy |
+
+---
+
+## 5. Edge Functions (Backend)
+
+### guide-chat
+
+```text
+┌─────────────────────────────────────────────────────────────────┐
+│                     FLUXO DE SEGURANÇA                          │
+├─────────────────────────────────────────────────────────────────┤
+│  1. Verifica Authorization header (Bearer token)                │
+│  2. Valida JWT via authClient.auth.getUser(token)               │
+│  3. Usa service_role para operações de banco                    │
+│  4. Aplica regras de segurança no prompt de IA:                 │
+│     - Não fornece diagnósticos médicos                          │
+│     - Não recomenda interromper tratamentos                     │
+│     - Sugere ajuda profissional quando apropriado               │
+│  5. Trata rate limits (429) e créditos (402)                    │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### generate-wellness-report
+
+```text
+┌─────────────────────────────────────────────────────────────────┐
+│                     FLUXO DE DADOS                              │
+├─────────────────────────────────────────────────────────────────┤
+│  1. Valida Authorization header                                 │
+│  2. Obtém user via getUser()                                    │
+│  3. Busca dados APENAS do próprio usuário:                      │
+│     - emotion_entries                                           │
+│     - breathing_sessions                                        │
+│     - journal_entries                                           │
+│     - registro_hidratacao                                       │
+│  4. Processa e envia para IA                                    │
+│  5. Retorna relatório personalizado                             │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 6. Módulos e Funcionalidades
+
+| Módulo | Funcionalidade | Persistência | Auth |
+|--------|----------------|--------------|------|
+| **Emoções** | Check-in com Roda de Plutchik, detecção de díades | `emotion_entries` | ✅ |
+| **Respiração** | Técnicas guiadas, animações, áudio ambiente | `breathing_sessions` | ✅ |
+| **Meditação** | Player de áudio, categorias, trilhas | `meditation_tracks` (read) | ✅ |
+| **Jornadas** | Trilhas de X dias, progresso, práticas | `user_journeys`, `journey_day_completions` | ✅ |
+| **Diário** | Escrita livre, detecção de emoções | `journal_entries` | ✅ |
+| **Nutrição** | Registro de refeições, contexto emocional | `emotion_nutrition_context` | ✅ |
+| **Hidratação** | Registro de água | `registro_hidratacao` | ✅ |
+| **Guia IA** | Chat com guias espirituais | `guide_conversations`, `guide_messages` | ✅ |
+| **Insights** | Dashboard analítico, padrões | Leitura de todas as tabelas | ✅ |
+| **Relatório** | Análise semanal por IA | Edge Function | ✅ |
+
+---
+
+## 7. Recomendações de Melhorias
+
+### Segurança (Prioridade Alta)
+
+1. **Corrigir search_path das funções SQL**
+   - Adicionar `SET search_path = public` em todas as funções SECURITY DEFINER
+
+2. **Restringir policy de pagamentos**
+   - Alterar INSERT policy para verificar service_role
+
+3. **Habilitar proteção contra senhas vazadas**
+   - Ativar em Supabase Dashboard > Auth > Settings
+
+4. **Reduzir OTP expiry**
+   - Configurar para 10-15 minutos máximo
+
+5. **Atualizar Postgres**
+   - Aplicar patches de segurança disponíveis
+
+### Funcionalidades (Prioridade Média)
+
+6. **Adicionar validação de status no contexto**
+   - Bloquear usuários com status `cancelada`, `suspensa`, `expirada`
+
+7. **Implementar logout automático**
+   - Quando status mudar para não-ativo
+
+### Código (Prioridade Baixa)
+
+8. **Remover console.logs de produção**
+   - Já há alguns em `signOut`, podem ser removidos
+
+9. **Adicionar testes de edge functions**
+   - Cobrir cenários de autenticação
+
+---
+
+## Seção Técnica
+
+### Estrutura de Diretórios
+
+```
+src/
+├── components/
+│   ├── access/           # FeatureGate, ContentLock, UpgradeModal
+│   ├── admin/            # Painel administrativo
+│   ├── dashboard/        # Widgets da Home
+│   ├── emotions/         # Roda de Plutchik
+│   ├── guide/            # Chat com guia
+│   ├── journeys/         # Componentes de jornadas
+│   └── ui/               # Componentes base (shadcn)
+├── contexts/
+│   └── AuthContext.tsx   # Estado de autenticação
+├── hooks/
+│   ├── useFeatureAccess.ts   # Verificação de permissões
+│   └── use*.ts               # Hooks de dados
+├── pages/                # 22 páginas
+└── integrations/
+    └── supabase/         # Client e types
+```
+
+### Dependências Chave
+
+- **React 18** + Vite + TypeScript
+- **Tailwind CSS** + shadcn/ui
+- **Framer Motion** (animações de respiração)
+- **TanStack Query** (cache e estado servidor)
+- **Supabase JS** (autenticação e dados)
+- **Zod** (validação)
+
+### Variáveis de Ambiente
+
+```
+VITE_SUPABASE_URL
+VITE_SUPABASE_PUBLISHABLE_KEY
+```
+
+### Edge Functions Secrets
+
+```
+SUPABASE_URL
+SUPABASE_ANON_KEY
+SUPABASE_SERVICE_ROLE_KEY
+LOVABLE_API_KEY
+```

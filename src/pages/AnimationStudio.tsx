@@ -31,12 +31,13 @@ import {
   Waves,
   Target,
   RotateCw,
+  Square,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 // Types
-type VisualMode = 'rings' | 'ringsWave' | 'ringsExpand' | 'ringsSpiral' | 'starDust' | 'fluid' | 'crystal' | 'topography' | 'bio' | 'atmosphere';
+type VisualMode = 'boxPath' | 'rings' | 'ringsWave' | 'ringsExpand' | 'ringsSpiral' | 'starDust' | 'fluid' | 'crystal' | 'topography' | 'bio' | 'atmosphere';
 
 interface BreathPreset {
   id: string;
@@ -66,6 +67,20 @@ const visualModes: {
   gradient: string;
   iconBg: string;
 }[] = [
+  {
+    id: 'boxPath',
+    name: 'Box Breathing',
+    description: 'Quadrado com indicador de progresso',
+    icon: Square,
+    phases: {
+      inhale: 'Bolinha sobe pelo lado esquerdo',
+      holdFull: 'Bolinha percorre o topo para direita',
+      exhale: 'Bolinha desce pelo lado direito',
+      holdEmpty: 'Bolinha percorre a base para esquerda',
+    },
+    gradient: 'from-amber-500/20 via-orange-500/10 to-yellow-500/20',
+    iconBg: 'bg-gradient-to-br from-amber-400 to-orange-500',
+  },
   {
     id: 'rings',
     name: 'Anéis',
@@ -219,8 +234,8 @@ const breathPresets: BreathPreset[] = [
     exhale: 4,
     holdEmpty: 4,
     cycles: 4,
-    recommendedMode: 'crystal',
-    color: 'from-violet-500 to-purple-600',
+    recommendedMode: 'boxPath',
+    color: 'from-amber-500 to-orange-600',
   },
   {
     id: '478',
@@ -392,7 +407,7 @@ export default function AnimationStudio() {
               Experiências Visuais de Respiração
             </h2>
             <p className="text-white/60 max-w-xl mx-auto text-lg">
-              10 modos visuais abstratos baseados em física e metáforas naturais.
+              11 modos visuais abstratos baseados em física e metáforas naturais.
               Cada modo reage de forma única às 4 fases do ciclo respiratório.
             </p>
           </motion.div>
@@ -637,7 +652,7 @@ export default function AnimationStudio() {
           <div className="grid md:grid-cols-4 gap-4">
             {[
               { label: '4 Fases', desc: 'State Machine completa' },
-              { label: '10 Modos', desc: 'Visualizações únicas' },
+              { label: '11 Modos', desc: 'Visualizações únicas' },
               { label: 'Tempo Real', desc: 'Canvas 60fps' },
               { label: 'Personalizável', desc: 'Tempos e cores' },
             ].map((item) => (
@@ -664,7 +679,8 @@ export default function AnimationStudio() {
               holdEmptyTime: customConfig.holdEmpty,
               cycles: customConfig.cycles,
               visualMode: selectedMode,
-              primaryColor: selectedMode.startsWith('rings') ? '#FFFFFF' : '#4ECDC4',
+              primaryColor: selectedMode === 'boxPath' ? '#FFFBEB' : selectedMode.startsWith('rings') ? '#FFFFFF' : '#4ECDC4',
+              secondaryColor: selectedMode === 'boxPath' ? '#FFFFFF' : '#4ECDC4',
               backgroundColor: '#000000',
               complexity: 50,
             }}

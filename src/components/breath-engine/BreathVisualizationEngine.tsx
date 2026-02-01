@@ -792,59 +792,86 @@ export function BreathVisualizationEngine({
       }
 
       case 'ringsWave': {
-        // WAVE MODE - Ripple effect with continuous flow
-        // Cycle: flat → wave up → flat → wave down (continuous)
+        // WAVE MODE - Beautiful sine wave propagating through rings
+        // Creates a flowing wave effect like ripples in water
 
         if (!state.rings) break;
 
-        const perspectiveY = state.perspectiveY || centerY + height * 0.1;
-        const maxWaveHeight = height * 0.28;
+        const perspectiveY = state.perspectiveY || centerY + height * 0.08;
+        const maxWaveAmplitude = height * 0.18;
         const easedProgress = easeInOutSine(progress);
 
-        // Track wave state for continuity
-        if (!state.wavePhase) state.wavePhase = 0;
+        // Continuous wave phase for animation
+        state.waveTime = (state.waveTime || 0) + 0.03;
 
         for (const ring of state.rings) {
           const ringIndex = ring.index;
           const ringCount = state.rings.length;
           const normalizedIndex = ringIndex / (ringCount - 1);
-          const wavePhaseOffset = normalizedIndex * Math.PI;
+
+          // Wave propagates from inner rings to outer rings
+          // Each ring has a phase offset based on its position
+          const phaseOffset = normalizedIndex * Math.PI * 2.5;
 
           if (currentPhase === 'inhale') {
-            // Wave rises from flat (0) to peak up (-maxWaveHeight)
-            const waveAmplitude = easedProgress * maxWaveHeight;
-            ring.yOffset = -Math.sin(wavePhaseOffset + easedProgress * Math.PI) * waveAmplitude * (1 - normalizedIndex * 0.4);
+            // Wave builds up and starts propagating outward
+            // Wave amplitude increases with progress
+            const amplitude = easedProgress * maxWaveAmplitude;
+            // Wave travels outward during inhale
+            const wavePosition = state.waveTime + easedProgress * Math.PI * 2 - phaseOffset;
+            ring.yOffset = Math.sin(wavePosition) * amplitude * (1 - normalizedIndex * 0.3);
+            // Also subtle scale variation
+            ring.scale = 1 + Math.sin(wavePosition) * 0.05 * easedProgress;
           } else if (currentPhase === 'holdFull') {
-            // Continuous undulation at peak
-            const baseWave = -maxWaveHeight * 0.5 * (1 - normalizedIndex * 0.4);
-            const motion = doPulse ? Math.sin(state.time * 2 + wavePhaseOffset) * maxWaveHeight * 0.2 : 0;
-            ring.yOffset = baseWave + motion;
+            // Continuous flowing wave at full amplitude
+            const amplitude = maxWaveAmplitude;
+            const speed = doPulse ? 2.5 : 1.5;
+            const wavePosition = state.waveTime * speed - phaseOffset;
+            ring.yOffset = Math.sin(wavePosition) * amplitude * (1 - normalizedIndex * 0.3);
+            ring.scale = 1 + Math.sin(wavePosition) * 0.06;
+            // Add secondary harmonic for richness
+            ring.yOffset += Math.sin(wavePosition * 2 + Math.PI / 4) * amplitude * 0.15;
           } else if (currentPhase === 'exhale') {
-            // Wave descends from peak to flat, transitioning through
-            const startOffset = -maxWaveHeight * 0.5 * (1 - normalizedIndex * 0.4);
-            ring.yOffset = lerp(startOffset, 0, easedProgress);
+            // Wave amplitude decreases, wave slows down
+            const amplitude = (1 - easedProgress) * maxWaveAmplitude;
+            const wavePosition = state.waveTime * (1.5 - easedProgress * 0.8) - phaseOffset;
+            ring.yOffset = Math.sin(wavePosition) * amplitude * (1 - normalizedIndex * 0.3);
+            ring.scale = 1 + Math.sin(wavePosition) * 0.05 * (1 - easedProgress);
           } else if (currentPhase === 'holdEmpty') {
-            // Subtle ripples at rest
-            const motion = doPulse ? Math.sin(state.time * 1.5 + wavePhaseOffset * 0.5) * 5 : 0;
-            ring.yOffset = motion;
+            // Very subtle ripples at rest
+            const amplitude = doPulse ? 8 : 3;
+            const wavePosition = state.waveTime * 0.8 - phaseOffset * 0.3;
+            ring.yOffset = Math.sin(wavePosition) * amplitude;
+            ring.scale = 1 + Math.sin(wavePosition) * 0.01;
           } else {
             ring.yOffset = 0;
+            ring.scale = 1;
           }
         }
 
+        // Sort rings by their y position for proper depth rendering
         const sortedRings = [...state.rings].sort((a, b) => b.yOffset - a.yOffset);
 
         for (const ring of sortedRings) {
-          const distanceRatio = Math.abs(ring.yOffset) / maxWaveHeight;
-          const ellipseHeight = ring.baseRadius * (0.22 + distanceRatio * 0.1);
-          const alpha = 0.6 + (1 - distanceRatio * 0.3) * 0.4;
+          const normalizedY = ring.yOffset / maxWaveAmplitude;
+          // Ellipse height varies with wave position (more oval when at extremes)
+          const ellipseHeight = ring.baseRadius * (0.2 + Math.abs(normalizedY) * 0.08) * (ring.scale || 1);
+          // Alpha based on position - brighter at peaks
+          const alpha = 0.5 + Math.abs(normalizedY) * 0.3 + (ring.scale - 1) * 2;
+          // Radius scales slightly
+          const scaledRadius = ring.baseRadius * (ring.scale || 1);
+
+          // Use secondary color for rings at wave peaks
+          const useSecondary = ring.yOffset < -maxWaveAmplitude * 0.5;
 
           drawRing(
             centerX,
             perspectiveY + ring.yOffset,
-            ring.baseRadius,
+            scaledRadius,
             ellipseHeight,
-            alpha
+            Math.min(1, alpha),
+            0,
+            useSecondary
           );
         }
         break;

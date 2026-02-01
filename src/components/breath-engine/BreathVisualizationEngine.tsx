@@ -4,6 +4,8 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -47,9 +49,18 @@ interface BreathConfig {
   holdEmptyTime: number;
   cycles: number;
   visualMode: VisualMode;
+  // Visual customization
   primaryColor: string;
+  secondaryColor: string;
   backgroundColor: string;
   complexity: number;
+  // Effects
+  glowIntensity: number;      // 0-100: neon/glow effect strength
+  lineThickness: number;      // 1-5: base line width
+  shadowEnabled: boolean;     // Enable drop shadow
+  shadowBlur: number;         // 0-50: shadow blur amount
+  trailEffect: boolean;       // Enable motion trail
+  pulseOnHold: boolean;       // Pulse animation during hold phases
 }
 
 interface BreathVisualizationEngineProps {
@@ -67,8 +78,15 @@ const defaultConfig: BreathConfig = {
   cycles: 4,
   visualMode: 'rings',
   primaryColor: '#FFFFFF',
+  secondaryColor: '#4ECDC4',
   backgroundColor: '#000000',
   complexity: 50,
+  glowIntensity: 50,
+  lineThickness: 2,
+  shadowEnabled: true,
+  shadowBlur: 20,
+  trailEffect: false,
+  pulseOnHold: true,
 };
 
 const phaseNames: Record<BreathPhase, string> = {
@@ -388,266 +406,89 @@ export function BreathVisualizationEngine({
     ctx.fillRect(0, 0, width, height);
 
     const rgb = hexToRgb(config.primaryColor);
+    const rgb2 = hexToRgb(config.secondaryColor);
+
+    // Visual effect parameters from config
+    const glowAmount = config.glowIntensity / 100;
+    const baseLineWidth = config.lineThickness;
+    const shadowOn = config.shadowEnabled;
+    const shadowBlurAmount = config.shadowBlur;
+    const showTrail = config.trailEffect;
+    const doPulse = config.pulseOnHold;
+
+    // Helper function to draw a ring with all effects
+    const drawRing = (
+      x: number,
+      y: number,
+      radiusX: number,
+      radiusY: number,
+      alpha: number,
+      rotation: number = 0,
+      useSecondary: boolean = false
+    ) => {
+      const color = useSecondary ? rgb2 : rgb;
+
+      ctx.save();
+
+      if (rotation !== 0) {
+        ctx.translate(x, y);
+        ctx.rotate(rotation);
+        ctx.translate(-x, -y);
+      }
+
+      // Shadow effect
+      if (shadowOn && alpha > 0.3) {
+        ctx.shadowColor = `rgba(${color.r}, ${color.g}, ${color.b}, ${alpha * 0.5})`;
+        ctx.shadowBlur = shadowBlurAmount * glowAmount;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+      }
+
+      // Trail effect (wider, more transparent line behind)
+      if (showTrail && (currentPhase === 'inhale' || currentPhase === 'exhale')) {
+        ctx.strokeStyle = `rgba(${color.r}, ${color.g}, ${color.b}, ${alpha * 0.15})`;
+        ctx.lineWidth = baseLineWidth + 6;
+        ctx.beginPath();
+        ctx.ellipse(x, y, radiusX, radiusY, 0, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      // Glow layers (neon effect)
+      if (glowAmount > 0.1) {
+        const glowLayers = 3;
+        for (let i = glowLayers; i > 0; i--) {
+          const layerAlpha = alpha * glowAmount * 0.2 / i;
+          const layerWidth = baseLineWidth + i * 3 * glowAmount;
+          ctx.strokeStyle = `rgba(${color.r}, ${color.g}, ${color.b}, ${layerAlpha})`;
+          ctx.lineWidth = layerWidth;
+          ctx.beginPath();
+          ctx.ellipse(x, y, radiusX, radiusY, 0, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+      }
+
+      // Main ring stroke
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = `rgba(${color.r}, ${color.g}, ${color.b}, ${alpha})`;
+      ctx.lineWidth = baseLineWidth;
+      ctx.beginPath();
+      ctx.ellipse(x, y, radiusX, radiusY, 0, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.restore();
+    };
 
     switch (config.visualMode) {
       case 'rings': {
-        // Concentric rings animation - seamless loop
-        // The animation forms a continuous cycle:
-        // - Inhale: rings rise from bottom (inverted dome) to top (dome above)
-        // - Hold Full: rings float at top position
-        // - Exhale: rings descend from top (dome) to bottom (inverted dome)
-        // - Hold Empty: rings settle at bottom position
-        // - Next Inhale: starts from bottom = seamless loop!
+        // RINGS MODE - Seamless loop with perfect phase continuity
+        // Cycle: bottom → top → bottom → top (continuous)
+        // End of each phase matches start of next phase exactly
 
         if (!state.rings) break;
 
         const perspectiveY = state.perspectiveY || centerY + height * 0.1;
         const maxStackHeight = height * 0.32;
-
-        // Use progress (0-1) for smooth phase transitions
         const easedProgress = easeInOutSine(progress);
-
-        // Calculate ring positions
-        for (const ring of state.rings) {
-          const ringIndex = ring.index;
-          const ringCount = state.rings.length;
-          const normalizedIndex = ringIndex / (ringCount - 1); // 0 = inner, 1 = outer
-
-          // Stack factor: inner rings move more, outer rings move less
-          const stackFactor = 1 - normalizedIndex;
-
-          // Define key positions
-          const topPosition = -maxStackHeight * stackFactor;    // Dome above (negative Y = up)
-          const bottomPosition = maxStackHeight * stackFactor;  // Inverted dome below (positive Y = down)
-
-          if (currentPhase === 'inhale') {
-            // Rise from bottom to top
-            ring.yOffset = lerp(bottomPosition, topPosition, easedProgress);
-          } else if (currentPhase === 'holdFull') {
-            // Float at top with gentle breathing motion
-            const breathe = Math.sin(state.time * 1.5 + ringIndex * 0.3) * 4;
-            const drift = Math.sin(state.time * 0.8 + ringIndex * 0.7) * 2;
-            ring.yOffset = topPosition + breathe + drift;
-          } else if (currentPhase === 'exhale') {
-            // Descend from top to bottom
-            ring.yOffset = lerp(topPosition, bottomPosition, easedProgress);
-          } else if (currentPhase === 'holdEmpty') {
-            // Settle at bottom with subtle pulsing
-            const pulse = Math.sin(state.time * 1.2 + ringIndex * 0.4) * 3;
-            ring.yOffset = bottomPosition + pulse;
-          } else {
-            // Idle state - show at bottom position (ready for inhale)
-            ring.yOffset = bottomPosition;
-          }
-        }
-
-        // Sort rings for proper depth rendering
-        // Rings further from viewer (more extreme Y) should be drawn first
-        const sortedRings = [...state.rings].sort((a, b) => {
-          // Draw from back to front based on Y position
-          return b.yOffset - a.yOffset;
-        });
-
-        // Draw the rings
-        for (const ring of sortedRings) {
-          const radius = ring.baseRadius;
-          const yOffset = ring.yOffset;
-
-          // 3D perspective calculation
-          // Ellipse height varies based on vertical position (foreshortening)
-          const distanceRatio = Math.abs(yOffset) / maxStackHeight;
-          const basePerspective = 0.22; // Base ellipse flatness
-          const perspectiveBonus = distanceRatio * 0.12; // More perspective when stacked
-          const ellipseHeight = radius * (basePerspective + perspectiveBonus);
-
-          // Position on canvas
-          const x = centerX;
-          const y = perspectiveY + yOffset;
-
-          // Calculate visual properties
-          const normalizedOffset = Math.abs(yOffset) / maxStackHeight;
-          const alpha = 0.7 + (1 - normalizedOffset * 0.3) * 0.3;
-          const lineWidth = 1.5 + (1 - normalizedOffset) * 0.5;
-
-          // Draw main ring
-          ctx.strokeStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`;
-          ctx.lineWidth = lineWidth;
-          ctx.beginPath();
-          ctx.ellipse(x, y, radius, ellipseHeight, 0, 0, Math.PI * 2);
-          ctx.stroke();
-
-          // Add subtle glow effect during hold phases
-          if (currentPhase === 'holdFull' || currentPhase === 'holdEmpty') {
-            const glowIntensity = 0.5 + Math.sin(state.time * 2 + ring.index * 0.5) * 0.2;
-            ctx.strokeStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha * 0.15 * glowIntensity})`;
-            ctx.lineWidth = lineWidth + 3;
-            ctx.beginPath();
-            ctx.ellipse(x, y, radius, ellipseHeight, 0, 0, Math.PI * 2);
-            ctx.stroke();
-          }
-        }
-        break;
-      }
-
-      case 'ringsWave': {
-        // Wave animation - rings undulate with a wave propagating through them
-        // Inhale: wave moves outward from center
-        // Exhale: wave moves inward to center
-        // Creates a continuous ripple effect synchronized with breathing
-
-        if (!state.rings) break;
-
-        const perspectiveY = state.perspectiveY || centerY + height * 0.1;
-        const maxWaveHeight = height * 0.25;
-        const easedProgress = easeInOutSine(progress);
-
-        for (const ring of state.rings) {
-          const ringIndex = ring.index;
-          const ringCount = state.rings.length;
-          const normalizedIndex = ringIndex / (ringCount - 1);
-
-          // Wave phase offset - creates ripple effect
-          const wavePhaseOffset = normalizedIndex * Math.PI * 2;
-
-          if (currentPhase === 'inhale') {
-            // Wave propagates outward: inner rings lead, outer rings follow
-            const waveProgress = easedProgress * Math.PI;
-            const delayedWave = Math.max(0, waveProgress - normalizedIndex * Math.PI * 0.5);
-            ring.yOffset = -Math.sin(delayedWave) * maxWaveHeight * (1 - normalizedIndex * 0.3);
-          } else if (currentPhase === 'holdFull') {
-            // Gentle undulation at peak
-            const wave = Math.sin(state.time * 2 + wavePhaseOffset) * maxWaveHeight * 0.15;
-            const baseOffset = -maxWaveHeight * 0.6 * (1 - normalizedIndex * 0.5);
-            ring.yOffset = baseOffset + wave;
-          } else if (currentPhase === 'exhale') {
-            // Wave propagates inward: outer rings lead, inner rings follow
-            const waveProgress = easedProgress * Math.PI;
-            const delayedWave = Math.max(0, waveProgress - (1 - normalizedIndex) * Math.PI * 0.5);
-            const startOffset = -maxWaveHeight * 0.6 * (1 - normalizedIndex * 0.5);
-            ring.yOffset = startOffset + Math.sin(delayedWave) * maxWaveHeight * (1 - normalizedIndex * 0.3) + delayedWave / Math.PI * maxWaveHeight * 0.6;
-          } else if (currentPhase === 'holdEmpty') {
-            // Subtle ripples at rest
-            const ripple = Math.sin(state.time * 1.5 + wavePhaseOffset * 0.5) * 4;
-            ring.yOffset = ripple;
-          } else {
-            ring.yOffset = 0;
-          }
-        }
-
-        // Draw rings sorted by Y position
-        const sortedRings = [...state.rings].sort((a, b) => b.yOffset - a.yOffset);
-
-        for (const ring of sortedRings) {
-          const radius = ring.baseRadius;
-          const yOffset = ring.yOffset;
-          const distanceRatio = Math.abs(yOffset) / maxWaveHeight;
-          const ellipseHeight = radius * (0.22 + distanceRatio * 0.1);
-          const x = centerX;
-          const y = perspectiveY + yOffset;
-          const alpha = 0.6 + (1 - distanceRatio * 0.4) * 0.4;
-
-          ctx.strokeStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`;
-          ctx.lineWidth = 1.5;
-          ctx.beginPath();
-          ctx.ellipse(x, y, radius, ellipseHeight, 0, 0, Math.PI * 2);
-          ctx.stroke();
-
-          // Glow on wave peaks
-          if (Math.abs(yOffset) > maxWaveHeight * 0.3) {
-            ctx.strokeStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha * 0.2})`;
-            ctx.lineWidth = 4;
-            ctx.beginPath();
-            ctx.ellipse(x, y, radius, ellipseHeight, 0, 0, Math.PI * 2);
-            ctx.stroke();
-          }
-        }
-        break;
-      }
-
-      case 'ringsExpand': {
-        // Expansion animation - rings expand from center on inhale, contract on exhale
-        // Creates a pulsing/breathing visual centered in the viewport
-
-        if (!state.rings) break;
-
-        const easedProgress = easeInOutSine(progress);
-        const minScale = 0.3;
-        const maxScale = 1.0;
-
-        for (const ring of state.rings) {
-          const ringIndex = ring.index;
-          const ringCount = state.rings.length;
-          const normalizedIndex = ringIndex / (ringCount - 1);
-
-          // Stagger the expansion - inner rings expand first
-          const staggerDelay = normalizedIndex * 0.2;
-
-          if (currentPhase === 'inhale') {
-            // Expand from contracted to full size
-            const delayedProgress = Math.max(0, Math.min(1, (easedProgress - staggerDelay) / (1 - staggerDelay)));
-            ring.scale = lerp(minScale, maxScale, delayedProgress);
-          } else if (currentPhase === 'holdFull') {
-            // Pulse at full size
-            const pulse = 1 + Math.sin(state.time * 2 + ringIndex * 0.3) * 0.03;
-            ring.scale = maxScale * pulse;
-          } else if (currentPhase === 'exhale') {
-            // Contract from full to small
-            const delayedProgress = Math.max(0, Math.min(1, (easedProgress - (1 - normalizedIndex) * 0.2) / (1 - (1 - normalizedIndex) * 0.2)));
-            ring.scale = lerp(maxScale, minScale, delayedProgress);
-          } else if (currentPhase === 'holdEmpty') {
-            // Subtle breathing at contracted state
-            const breathe = 1 + Math.sin(state.time * 1.5 + ringIndex * 0.4) * 0.05;
-            ring.scale = minScale * breathe;
-          } else {
-            ring.scale = minScale;
-          }
-        }
-
-        // Draw rings from outer to inner (larger first for proper layering)
-        const sortedRings = [...state.rings].sort((a, b) => b.baseRadius * b.scale - a.baseRadius * a.scale);
-
-        for (const ring of sortedRings) {
-          const scaledRadius = ring.baseRadius * ring.scale;
-          const ellipseHeight = scaledRadius * 0.25;
-          const x = centerX;
-          const y = centerY + height * 0.05;
-
-          // Alpha based on scale (more visible when expanded)
-          const alpha = 0.4 + ring.scale * 0.6;
-          const lineWidth = 1 + ring.scale * 1;
-
-          ctx.strokeStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`;
-          ctx.lineWidth = lineWidth;
-          ctx.beginPath();
-          ctx.ellipse(x, y, scaledRadius, ellipseHeight, 0, 0, Math.PI * 2);
-          ctx.stroke();
-
-          // Inner glow when expanded
-          if (ring.scale > 0.7) {
-            const glowAlpha = (ring.scale - 0.7) / 0.3 * 0.15;
-            ctx.strokeStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${glowAlpha})`;
-            ctx.lineWidth = lineWidth + 4;
-            ctx.beginPath();
-            ctx.ellipse(x, y, scaledRadius, ellipseHeight, 0, 0, Math.PI * 2);
-            ctx.stroke();
-          }
-        }
-        break;
-      }
-
-      case 'ringsSpiral': {
-        // Spiral animation - rings rotate while rising/falling
-        // Creates a mesmerizing spiral effect synchronized with breathing
-
-        if (!state.rings) break;
-
-        const perspectiveY = state.perspectiveY || centerY + height * 0.1;
-        const maxStackHeight = height * 0.3;
-        const maxRotation = Math.PI * 2; // Full rotation
-        const easedProgress = easeInOutSine(progress);
-
-        // Update global rotation for continuous motion
-        state.globalRotation = (state.globalRotation || 0) + 0.008;
 
         for (const ring of state.rings) {
           const ringIndex = ring.index;
@@ -658,25 +499,194 @@ export function BreathVisualizationEngine({
           const topPosition = -maxStackHeight * stackFactor;
           const bottomPosition = maxStackHeight * stackFactor;
 
-          // Rotation offset per ring (creates spiral)
-          const rotationOffset = normalizedIndex * Math.PI * 0.5;
+          // Continuous phase transitions - each phase ends where next begins
+          if (currentPhase === 'inhale') {
+            // Start: bottom position, End: top position
+            ring.yOffset = lerp(bottomPosition, topPosition, easedProgress);
+          } else if (currentPhase === 'holdFull') {
+            // Base: top position + subtle animation if enabled
+            const motion = doPulse ? Math.sin(state.time * 1.5 + ringIndex * 0.3) * 4 + Math.sin(state.time * 0.8 + ringIndex * 0.7) * 2 : 0;
+            ring.yOffset = topPosition + motion;
+          } else if (currentPhase === 'exhale') {
+            // Start: top position, End: bottom position
+            ring.yOffset = lerp(topPosition, bottomPosition, easedProgress);
+          } else if (currentPhase === 'holdEmpty') {
+            // Base: bottom position + subtle animation if enabled
+            const motion = doPulse ? Math.sin(state.time * 1.2 + ringIndex * 0.4) * 3 : 0;
+            ring.yOffset = bottomPosition + motion;
+          } else {
+            ring.yOffset = bottomPosition;
+          }
+        }
+
+        const sortedRings = [...state.rings].sort((a, b) => b.yOffset - a.yOffset);
+
+        for (const ring of sortedRings) {
+          const distanceRatio = Math.abs(ring.yOffset) / maxStackHeight;
+          const ellipseHeight = ring.baseRadius * (0.22 + distanceRatio * 0.12);
+          const alpha = 0.7 + (1 - distanceRatio * 0.3) * 0.3;
+
+          drawRing(
+            centerX,
+            perspectiveY + ring.yOffset,
+            ring.baseRadius,
+            ellipseHeight,
+            alpha
+          );
+        }
+        break;
+      }
+
+      case 'ringsWave': {
+        // WAVE MODE - Ripple effect with continuous flow
+        // Cycle: flat → wave up → flat → wave down (continuous)
+
+        if (!state.rings) break;
+
+        const perspectiveY = state.perspectiveY || centerY + height * 0.1;
+        const maxWaveHeight = height * 0.28;
+        const easedProgress = easeInOutSine(progress);
+
+        // Track wave state for continuity
+        if (!state.wavePhase) state.wavePhase = 0;
+
+        for (const ring of state.rings) {
+          const ringIndex = ring.index;
+          const ringCount = state.rings.length;
+          const normalizedIndex = ringIndex / (ringCount - 1);
+          const wavePhaseOffset = normalizedIndex * Math.PI;
+
+          if (currentPhase === 'inhale') {
+            // Wave rises from flat (0) to peak up (-maxWaveHeight)
+            const waveAmplitude = easedProgress * maxWaveHeight;
+            ring.yOffset = -Math.sin(wavePhaseOffset + easedProgress * Math.PI) * waveAmplitude * (1 - normalizedIndex * 0.4);
+          } else if (currentPhase === 'holdFull') {
+            // Continuous undulation at peak
+            const baseWave = -maxWaveHeight * 0.5 * (1 - normalizedIndex * 0.4);
+            const motion = doPulse ? Math.sin(state.time * 2 + wavePhaseOffset) * maxWaveHeight * 0.2 : 0;
+            ring.yOffset = baseWave + motion;
+          } else if (currentPhase === 'exhale') {
+            // Wave descends from peak to flat, transitioning through
+            const startOffset = -maxWaveHeight * 0.5 * (1 - normalizedIndex * 0.4);
+            ring.yOffset = lerp(startOffset, 0, easedProgress);
+          } else if (currentPhase === 'holdEmpty') {
+            // Subtle ripples at rest
+            const motion = doPulse ? Math.sin(state.time * 1.5 + wavePhaseOffset * 0.5) * 5 : 0;
+            ring.yOffset = motion;
+          } else {
+            ring.yOffset = 0;
+          }
+        }
+
+        const sortedRings = [...state.rings].sort((a, b) => b.yOffset - a.yOffset);
+
+        for (const ring of sortedRings) {
+          const distanceRatio = Math.abs(ring.yOffset) / maxWaveHeight;
+          const ellipseHeight = ring.baseRadius * (0.22 + distanceRatio * 0.1);
+          const alpha = 0.6 + (1 - distanceRatio * 0.3) * 0.4;
+
+          drawRing(
+            centerX,
+            perspectiveY + ring.yOffset,
+            ring.baseRadius,
+            ellipseHeight,
+            alpha
+          );
+        }
+        break;
+      }
+
+      case 'ringsExpand': {
+        // EXPAND MODE - Pulsing from center with continuous scaling
+        // Cycle: contracted → expanded → contracted (continuous)
+
+        if (!state.rings) break;
+
+        const easedProgress = easeInOutSine(progress);
+        const minScale = 0.25;
+        const maxScale = 1.0;
+
+        for (const ring of state.rings) {
+          const ringIndex = ring.index;
+          const ringCount = state.rings.length;
+          const normalizedIndex = ringIndex / (ringCount - 1);
+
+          if (currentPhase === 'inhale') {
+            // Expand: contracted → full (staggered from inner to outer)
+            const staggeredProgress = Math.max(0, Math.min(1, (easedProgress - normalizedIndex * 0.15) / (1 - normalizedIndex * 0.15)));
+            ring.scale = lerp(minScale, maxScale, staggeredProgress);
+          } else if (currentPhase === 'holdFull') {
+            // Pulse at full size
+            const motion = doPulse ? 1 + Math.sin(state.time * 2 + ringIndex * 0.3) * 0.04 : 1;
+            ring.scale = maxScale * motion;
+          } else if (currentPhase === 'exhale') {
+            // Contract: full → contracted (staggered from outer to inner)
+            const staggeredProgress = Math.max(0, Math.min(1, (easedProgress - (1 - normalizedIndex) * 0.15) / (1 - (1 - normalizedIndex) * 0.15)));
+            ring.scale = lerp(maxScale, minScale, staggeredProgress);
+          } else if (currentPhase === 'holdEmpty') {
+            // Subtle breathing at contracted state
+            const motion = doPulse ? 1 + Math.sin(state.time * 1.5 + ringIndex * 0.4) * 0.06 : 1;
+            ring.scale = minScale * motion;
+          } else {
+            ring.scale = minScale;
+          }
+        }
+
+        const sortedRings = [...state.rings].sort((a, b) => b.baseRadius * b.scale - a.baseRadius * a.scale);
+
+        for (const ring of sortedRings) {
+          const scaledRadius = ring.baseRadius * ring.scale;
+          const ellipseHeight = scaledRadius * 0.25;
+          const alpha = 0.3 + ring.scale * 0.7;
+
+          drawRing(
+            centerX,
+            centerY + height * 0.05,
+            scaledRadius,
+            ellipseHeight,
+            alpha
+          );
+        }
+        break;
+      }
+
+      case 'ringsSpiral': {
+        // SPIRAL MODE - Rotation while rising/falling with continuity
+        // Cycle: bottom+rot0 → top+rot360 → bottom+rot0 (continuous)
+
+        if (!state.rings) break;
+
+        const perspectiveY = state.perspectiveY || centerY + height * 0.1;
+        const maxStackHeight = height * 0.3;
+        const maxRotation = Math.PI * 1.5;
+        const easedProgress = easeInOutSine(progress);
+
+        // Continuous global rotation
+        state.globalRotation = (state.globalRotation || 0) + 0.006;
+
+        for (const ring of state.rings) {
+          const ringIndex = ring.index;
+          const ringCount = state.rings.length;
+          const normalizedIndex = ringIndex / (ringCount - 1);
+          const stackFactor = 1 - normalizedIndex;
+          const rotationOffset = normalizedIndex * Math.PI * 0.4;
+
+          const topPosition = -maxStackHeight * stackFactor;
+          const bottomPosition = maxStackHeight * stackFactor;
 
           if (currentPhase === 'inhale') {
             ring.yOffset = lerp(bottomPosition, topPosition, easedProgress);
-            // Rotate as rings rise
             ring.rotation = state.globalRotation + rotationOffset + easedProgress * maxRotation * stackFactor;
           } else if (currentPhase === 'holdFull') {
-            const breathe = Math.sin(state.time * 1.5 + ringIndex * 0.3) * 3;
-            ring.yOffset = topPosition + breathe;
-            // Continue rotating slowly
-            ring.rotation = state.globalRotation + rotationOffset;
+            const motion = doPulse ? Math.sin(state.time * 1.5 + ringIndex * 0.3) * 3 : 0;
+            ring.yOffset = topPosition + motion;
+            ring.rotation = state.globalRotation + rotationOffset + maxRotation * stackFactor;
           } else if (currentPhase === 'exhale') {
             ring.yOffset = lerp(topPosition, bottomPosition, easedProgress);
-            // Rotate in opposite direction as rings fall
-            ring.rotation = state.globalRotation + rotationOffset - easedProgress * maxRotation * stackFactor;
+            ring.rotation = state.globalRotation + rotationOffset + maxRotation * stackFactor - easedProgress * maxRotation * stackFactor;
           } else if (currentPhase === 'holdEmpty') {
-            const pulse = Math.sin(state.time * 1.2 + ringIndex * 0.4) * 2;
-            ring.yOffset = bottomPosition + pulse;
+            const motion = doPulse ? Math.sin(state.time * 1.2 + ringIndex * 0.4) * 2 : 0;
+            ring.yOffset = bottomPosition + motion;
             ring.rotation = state.globalRotation + rotationOffset;
           } else {
             ring.yOffset = bottomPosition;
@@ -684,41 +694,21 @@ export function BreathVisualizationEngine({
           }
         }
 
-        // Sort by Y for depth
         const sortedRings = [...state.rings].sort((a, b) => b.yOffset - a.yOffset);
 
         for (const ring of sortedRings) {
-          const radius = ring.baseRadius;
-          const yOffset = ring.yOffset;
-          const rotation = ring.rotation;
-
-          const distanceRatio = Math.abs(yOffset) / maxStackHeight;
-          const ellipseHeight = radius * (0.2 + distanceRatio * 0.12);
-          const x = centerX;
-          const y = perspectiveY + yOffset;
+          const distanceRatio = Math.abs(ring.yOffset) / maxStackHeight;
+          const ellipseHeight = ring.baseRadius * (0.2 + distanceRatio * 0.12);
           const alpha = 0.6 + (1 - distanceRatio * 0.3) * 0.4;
 
-          ctx.save();
-          ctx.translate(x, y);
-          ctx.rotate(rotation);
-          ctx.translate(-x, -y);
-
-          ctx.strokeStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`;
-          ctx.lineWidth = 1.5;
-          ctx.beginPath();
-          ctx.ellipse(x, y, radius, ellipseHeight, 0, 0, Math.PI * 2);
-          ctx.stroke();
-
-          // Spiral trail effect
-          if (currentPhase === 'inhale' || currentPhase === 'exhale') {
-            ctx.strokeStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha * 0.1})`;
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.ellipse(x, y, radius, ellipseHeight, 0, 0, Math.PI * 2);
-            ctx.stroke();
-          }
-
-          ctx.restore();
+          drawRing(
+            centerX,
+            perspectiveY + ring.yOffset,
+            ring.baseRadius,
+            ellipseHeight,
+            alpha,
+            ring.rotation
+          );
         }
         break;
       }
@@ -1470,6 +1460,174 @@ export function BreathVisualizationEngine({
                     step={5}
                     className="[&_[role=slider]]:bg-teal-500"
                   />
+                </div>
+
+                {/* Separator */}
+                <div className="border-t border-white/10 pt-4">
+                  <h3 className="text-sm font-medium text-white/80 mb-4">Efeitos Visuais</h3>
+                </div>
+
+                {/* Colors */}
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label className="text-sm text-white/70">Cor Primária</Label>
+                    <div className="flex gap-2 items-center">
+                      <input
+                        type="color"
+                        value={config.primaryColor}
+                        onChange={(e) => setConfig(c => ({ ...c, primaryColor: e.target.value }))}
+                        className="w-10 h-10 rounded cursor-pointer bg-transparent border border-white/20"
+                      />
+                      <span className="text-white/60 text-sm">{config.primaryColor}</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-sm text-white/70">Cor Secundária</Label>
+                    <div className="flex gap-2 items-center">
+                      <input
+                        type="color"
+                        value={config.secondaryColor}
+                        onChange={(e) => setConfig(c => ({ ...c, secondaryColor: e.target.value }))}
+                        className="w-10 h-10 rounded cursor-pointer bg-transparent border border-white/20"
+                      />
+                      <span className="text-white/60 text-sm">{config.secondaryColor}</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-sm text-white/70">Cor de Fundo</Label>
+                    <div className="flex gap-2 items-center">
+                      <input
+                        type="color"
+                        value={config.backgroundColor}
+                        onChange={(e) => setConfig(c => ({ ...c, backgroundColor: e.target.value }))}
+                        className="w-10 h-10 rounded cursor-pointer bg-transparent border border-white/20"
+                      />
+                      <span className="text-white/60 text-sm">{config.backgroundColor}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Glow Intensity */}
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-white/70">Intensidade do Brilho (Neon)</span>
+                    <Badge variant="secondary" className="bg-white/10">{config.glowIntensity}%</Badge>
+                  </div>
+                  <Slider
+                    value={[config.glowIntensity]}
+                    onValueChange={([v]) => setConfig(c => ({ ...c, glowIntensity: v }))}
+                    min={0}
+                    max={100}
+                    step={5}
+                    className="[&_[role=slider]]:bg-cyan-500"
+                  />
+                </div>
+
+                {/* Line Thickness */}
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-white/70">Espessura da Linha</span>
+                    <Badge variant="secondary" className="bg-white/10">{config.lineThickness}px</Badge>
+                  </div>
+                  <Slider
+                    value={[config.lineThickness]}
+                    onValueChange={([v]) => setConfig(c => ({ ...c, lineThickness: v }))}
+                    min={1}
+                    max={5}
+                    step={0.5}
+                    className="[&_[role=slider]]:bg-cyan-500"
+                  />
+                </div>
+
+                {/* Shadow Controls */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="shadow-enabled" className="text-sm text-white/70">Sombra</Label>
+                    <Switch
+                      id="shadow-enabled"
+                      checked={config.shadowEnabled}
+                      onCheckedChange={(checked) => setConfig(c => ({ ...c, shadowEnabled: checked }))}
+                    />
+                  </div>
+
+                  {config.shadowEnabled && (
+                    <div className="space-y-2 pl-2 border-l-2 border-white/10">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-white/70">Intensidade da Sombra</span>
+                        <Badge variant="secondary" className="bg-white/10">{config.shadowBlur}px</Badge>
+                      </div>
+                      <Slider
+                        value={[config.shadowBlur]}
+                        onValueChange={([v]) => setConfig(c => ({ ...c, shadowBlur: v }))}
+                        min={0}
+                        max={50}
+                        step={5}
+                        className="[&_[role=slider]]:bg-cyan-500"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Trail Effect */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="trail-effect" className="text-sm text-white/70">Efeito de Rastro</Label>
+                    <p className="text-xs text-white/40">Rastro durante movimento</p>
+                  </div>
+                  <Switch
+                    id="trail-effect"
+                    checked={config.trailEffect}
+                    onCheckedChange={(checked) => setConfig(c => ({ ...c, trailEffect: checked }))}
+                  />
+                </div>
+
+                {/* Pulse on Hold */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="pulse-hold" className="text-sm text-white/70">Pulso ao Segurar</Label>
+                    <p className="text-xs text-white/40">Animação sutil durante pausa</p>
+                  </div>
+                  <Switch
+                    id="pulse-hold"
+                    checked={config.pulseOnHold}
+                    onCheckedChange={(checked) => setConfig(c => ({ ...c, pulseOnHold: checked }))}
+                  />
+                </div>
+
+                {/* Color Presets */}
+                <div className="space-y-2 pt-4 border-t border-white/10">
+                  <Label className="text-sm font-medium text-white/80">Temas de Cor</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { name: 'Oceano', primary: '#4ECDC4', secondary: '#00B4DB', bg: '#000000' },
+                      { name: 'Aurora', primary: '#FF6B6B', secondary: '#FFE66D', bg: '#1a0a2e' },
+                      { name: 'Noite', primary: '#FFFFFF', secondary: '#8B5CF6', bg: '#0f0f23' },
+                      { name: 'Floresta', primary: '#22C55E', secondary: '#84CC16', bg: '#0a1f0a' },
+                      { name: 'Fogo', primary: '#F97316', secondary: '#EF4444', bg: '#1a0505' },
+                      { name: 'Zen', primary: '#E2E8F0', secondary: '#94A3B8', bg: '#0f172a' },
+                    ].map(theme => (
+                      <Button
+                        key={theme.name}
+                        variant="outline"
+                        size="sm"
+                        className="border-white/20 text-white hover:bg-white/10 justify-start gap-2"
+                        onClick={() => setConfig(c => ({
+                          ...c,
+                          primaryColor: theme.primary,
+                          secondaryColor: theme.secondary,
+                          backgroundColor: theme.bg,
+                        }))}
+                      >
+                        <div
+                          className="w-3 h-3 rounded-full"
+                          style={{ background: `linear-gradient(135deg, ${theme.primary}, ${theme.secondary})` }}
+                        />
+                        {theme.name}
+                      </Button>
+                    ))}
+                  </div>
                 </div>
               </div>
             </SheetContent>

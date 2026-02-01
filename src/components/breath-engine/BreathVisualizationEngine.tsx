@@ -500,7 +500,10 @@ export function BreathVisualizationEngine({
     switch (config.visualMode) {
       case 'boxPath': {
         // BOX PATH MODE - Rounded square with moving indicator
-        // Path: bottom-left → top (inhale) → right (hold) → bottom (exhale) → left (hold)
+        // Inhale: ball travels from bottom-left → up left side → across top to top-right
+        // Hold Full: ball rests at top-right corner (subtle pulse)
+        // Exhale: ball travels from top-right → down right side → across bottom to bottom-left
+        // Hold Empty: ball rests at bottom-left corner (subtle pulse)
 
         if (!state.boxPath) break;
 
@@ -508,131 +511,147 @@ export function BreathVisualizationEngine({
         const halfSize = box.size / 2;
         const cr = box.cornerRadius;
 
-        // Calculate the total path perimeter for proper positioning
-        // Path segments: left side up, top side right, right side down, bottom side left
-        const straightLength = box.size - 2 * cr;
-        const cornerLength = (Math.PI / 2) * cr; // Quarter circle arc
-        const totalPerimeter = 4 * straightLength + 4 * cornerLength;
+        const left = centerX - halfSize;
+        const right = centerX + halfSize;
+        const top = centerY - halfSize;
+        const bottom = centerY + halfSize;
 
-        // Segment lengths (normalized)
-        const leftSideLen = (straightLength + 2 * cornerLength) / totalPerimeter;   // ~0.25 for square
-        const topSideLen = (straightLength + 2 * cornerLength) / totalPerimeter;    // ~0.25
-        const rightSideLen = (straightLength + 2 * cornerLength) / totalPerimeter;  // ~0.25
-        const bottomSideLen = (straightLength + 2 * cornerLength) / totalPerimeter; // ~0.25
+        // Key positions (corners of the rounded rectangle)
+        const bottomLeft = { x: left, y: bottom - cr };
+        const topRight = { x: right, y: top + cr };
 
         const easedProgress = easeInOutSine(progress);
 
-        // Calculate indicator position based on phase
-        // Path starts at bottom-left corner
-        let pathProgress = 0;
+        // Function to get position along a path segment
+        const getPathPosition = (startPos: number, endPos: number, t: number) => {
+          // Path goes: bottom-left corner → up left → top-left corner → across top → top-right corner
+          // This covers half the perimeter (0 to 0.5)
+          // Then: top-right corner → down right → bottom-right corner → across bottom → bottom-left corner
+          // This covers the other half (0.5 to 1)
 
-        if (currentPhase === 'inhale') {
-          // Move up the left side (0 → leftSideLen)
-          pathProgress = easedProgress * leftSideLen;
-        } else if (currentPhase === 'holdFull') {
-          // Move right along top (leftSideLen → leftSideLen + topSideLen)
-          const baseProgress = leftSideLen + easedProgress * topSideLen;
-          const pulse = doPulse ? Math.sin(state.time * 3) * 0.01 : 0;
-          pathProgress = baseProgress + pulse;
-        } else if (currentPhase === 'exhale') {
-          // Move down the right side
-          pathProgress = leftSideLen + topSideLen + easedProgress * rightSideLen;
-        } else if (currentPhase === 'holdEmpty') {
-          // Move left along bottom back to start
-          const baseProgress = leftSideLen + topSideLen + rightSideLen + easedProgress * bottomSideLen;
-          const pulse = doPulse ? Math.sin(state.time * 3) * 0.01 : 0;
-          pathProgress = (baseProgress + pulse) % 1;
-        } else {
-          pathProgress = 0;
-        }
+          const straightLength = box.size - 2 * cr;
+          const cornerArcLength = (Math.PI / 2) * cr;
+          const halfPerimeter = 2 * straightLength + 2 * cornerArcLength;
 
-        // Function to get position on the rounded rectangle path
-        const getPositionOnPath = (t: number) => {
-          // Normalize t to [0, 1)
-          t = ((t % 1) + 1) % 1;
+          // Position along path (0 = bottom-left, 0.5 = top-right, 1 = back to bottom-left)
+          const pathPos = lerp(startPos, endPos, t);
+          const normalizedPos = ((pathPos % 1) + 1) % 1;
 
-          // Corner arc function
-          const cornerArc = (cx: number, cy: number, startAngle: number, arcProgress: number) => {
-            const angle = startAngle + arcProgress * (Math.PI / 2);
-            return {
-              x: cx + Math.cos(angle) * cr,
-              y: cy + Math.sin(angle) * cr
-            };
-          };
+          // Calculate cumulative lengths for first half (bottom-left to top-right)
+          const seg1 = cornerArcLength / halfPerimeter / 2;           // bottom-left corner arc (half)
+          const seg2 = seg1 + straightLength / halfPerimeter / 2;     // left side up
+          const seg3 = seg2 + cornerArcLength / halfPerimeter / 2;    // top-left corner arc
+          const seg4 = seg3 + straightLength / halfPerimeter / 2;     // top side right
+          const seg5 = 0.5;                                            // top-right corner
 
-          // Segment boundaries (cumulative)
-          const seg1End = (cr * Math.PI / 2) / totalPerimeter;                      // bottom-left corner arc
-          const seg2End = seg1End + straightLength / totalPerimeter;                // left straight
-          const seg3End = seg2End + (cr * Math.PI / 2) / totalPerimeter;            // top-left corner arc
-          const seg4End = seg3End + straightLength / totalPerimeter;                // top straight
-          const seg5End = seg4End + (cr * Math.PI / 2) / totalPerimeter;            // top-right corner arc
-          const seg6End = seg5End + straightLength / totalPerimeter;                // right straight
-          const seg7End = seg6End + (cr * Math.PI / 2) / totalPerimeter;            // bottom-right corner arc
-          // seg8 is bottom straight back to start
+          // And for second half (top-right to bottom-left)
+          const seg6 = 0.5 + cornerArcLength / halfPerimeter / 2;
+          const seg7 = seg6 + straightLength / halfPerimeter / 2;
+          const seg8 = seg7 + cornerArcLength / halfPerimeter / 2;
+          const seg9 = seg8 + straightLength / halfPerimeter / 2;
 
-          const left = centerX - halfSize;
-          const right = centerX + halfSize;
-          const top = centerY - halfSize;
-          const bottom = centerY + halfSize;
+          // Corner arc helper
+          const cornerArc = (cx: number, cy: number, startAngle: number, arcT: number) => ({
+            x: cx + Math.cos(startAngle + arcT * (Math.PI / 2)) * cr,
+            y: cy + Math.sin(startAngle + arcT * (Math.PI / 2)) * cr
+          });
 
-          if (t < seg1End) {
-            // Bottom-left corner arc (going up)
-            const arcT = t / seg1End;
-            return cornerArc(left + cr, bottom - cr, Math.PI, arcT);
-          } else if (t < seg2End) {
-            // Left straight (going up)
-            const segT = (t - seg1End) / (seg2End - seg1End);
-            return { x: left, y: bottom - cr - segT * straightLength };
-          } else if (t < seg3End) {
+          if (normalizedPos < seg1) {
+            // Bottom-left corner arc (starting from bottom, going up-left)
+            const t = normalizedPos / seg1;
+            return cornerArc(left + cr, bottom - cr, Math.PI * 0.5, t * 0.5);
+          } else if (normalizedPos < seg2) {
+            // Left side going up
+            const t = (normalizedPos - seg1) / (seg2 - seg1);
+            return { x: left, y: bottom - cr - t * straightLength };
+          } else if (normalizedPos < seg3) {
             // Top-left corner arc
-            const arcT = (t - seg2End) / (seg3End - seg2End);
-            return cornerArc(left + cr, top + cr, Math.PI * 1.5, arcT);
-          } else if (t < seg4End) {
-            // Top straight (going right)
-            const segT = (t - seg3End) / (seg4End - seg3End);
-            return { x: left + cr + segT * straightLength, y: top };
-          } else if (t < seg5End) {
-            // Top-right corner arc
-            const arcT = (t - seg4End) / (seg5End - seg4End);
-            return cornerArc(right - cr, top + cr, 0, arcT);
-          } else if (t < seg6End) {
-            // Right straight (going down)
-            const segT = (t - seg5End) / (seg6End - seg5End);
-            return { x: right, y: top + cr + segT * straightLength };
-          } else if (t < seg7End) {
+            const t = (normalizedPos - seg2) / (seg3 - seg2);
+            return cornerArc(left + cr, top + cr, Math.PI, t);
+          } else if (normalizedPos < seg4) {
+            // Top side going right
+            const t = (normalizedPos - seg3) / (seg4 - seg3);
+            return { x: left + cr + t * straightLength, y: top };
+          } else if (normalizedPos < seg5) {
+            // Top-right corner arc (first half)
+            const t = (normalizedPos - seg4) / (seg5 - seg4);
+            return cornerArc(right - cr, top + cr, Math.PI * 1.5, t * 0.5);
+          } else if (normalizedPos < seg6) {
+            // Top-right corner arc (second half, going down)
+            const t = (normalizedPos - seg5) / (seg6 - seg5);
+            return cornerArc(right - cr, top + cr, 0, t * 0.5);
+          } else if (normalizedPos < seg7) {
+            // Right side going down
+            const t = (normalizedPos - seg6) / (seg7 - seg6);
+            return { x: right, y: top + cr + t * straightLength };
+          } else if (normalizedPos < seg8) {
             // Bottom-right corner arc
-            const arcT = (t - seg6End) / (seg7End - seg6End);
-            return cornerArc(right - cr, bottom - cr, Math.PI * 0.5, arcT);
+            const t = (normalizedPos - seg7) / (seg8 - seg7);
+            return cornerArc(right - cr, bottom - cr, 0, t);
+          } else if (normalizedPos < seg9) {
+            // Bottom side going left
+            const t = (normalizedPos - seg8) / (seg9 - seg8);
+            return { x: right - cr - t * straightLength, y: bottom };
           } else {
-            // Bottom straight (going left)
-            const segT = (t - seg7End) / (1 - seg7End);
-            return { x: right - cr - segT * straightLength, y: bottom };
+            // Bottom-left corner arc (final part)
+            const t = (normalizedPos - seg9) / (1 - seg9);
+            return cornerArc(left + cr, bottom - cr, Math.PI * 0.5, 0.5 + t * 0.5);
           }
         };
 
-        // Draw the outer rounded rectangle (cream/yellow color from image)
+        // Calculate indicator position based on phase
+        let indicatorPos: { x: number; y: number };
+        let indicatorScale = 1;
+
+        if (currentPhase === 'inhale') {
+          // Travel from bottom-left (0) to top-right (0.5)
+          indicatorPos = getPathPosition(0, 0.5, easedProgress);
+        } else if (currentPhase === 'holdFull') {
+          // Rest at top-right (0.5) with subtle pulse
+          indicatorPos = getPathPosition(0.5, 0.5, 0);
+          if (doPulse) {
+            const pulse = Math.sin(state.time * 2) * 3;
+            indicatorPos.x += pulse;
+            indicatorPos.y += pulse * 0.5;
+            indicatorScale = 1 + Math.sin(state.time * 3) * 0.08;
+          }
+        } else if (currentPhase === 'exhale') {
+          // Travel from top-right (0.5) to bottom-left (1.0)
+          indicatorPos = getPathPosition(0.5, 1.0, easedProgress);
+        } else if (currentPhase === 'holdEmpty') {
+          // Rest at bottom-left (0) with subtle pulse
+          indicatorPos = getPathPosition(0, 0, 0);
+          if (doPulse) {
+            const pulse = Math.sin(state.time * 1.5) * 2;
+            indicatorPos.x += pulse * 0.5;
+            indicatorPos.y += pulse;
+            indicatorScale = 1 + Math.sin(state.time * 2) * 0.05;
+          }
+        } else {
+          // Idle - at bottom-left
+          indicatorPos = getPathPosition(0, 0, 0);
+        }
+
+        // Draw the rounded rectangle path
         const drawRoundedRect = (offset: number, alpha: number, lineWidth: number, color: { r: number; g: number; b: number }) => {
-          const left = centerX - halfSize - offset;
-          const right = centerX + halfSize + offset;
-          const top = centerY - halfSize - offset;
-          const bottom = centerY + halfSize + offset;
-          const r = cr + offset;
+          const l = left - offset;
+          const r = right + offset;
+          const t = top - offset;
+          const b = bottom + offset;
+          const radius = cr + offset;
 
           ctx.strokeStyle = `rgba(${color.r}, ${color.g}, ${color.b}, ${alpha})`;
           ctx.lineWidth = lineWidth;
           ctx.beginPath();
-
-          // Start from bottom-left corner going up
-          ctx.moveTo(left, bottom - r);
-          ctx.lineTo(left, top + r);
-          ctx.arcTo(left, top, left + r, top, r);
-          ctx.lineTo(right - r, top);
-          ctx.arcTo(right, top, right, top + r, r);
-          ctx.lineTo(right, bottom - r);
-          ctx.arcTo(right, bottom, right - r, bottom, r);
-          ctx.lineTo(left + r, bottom);
-          ctx.arcTo(left, bottom, left, bottom - r, r);
-
+          ctx.moveTo(l, b - radius);
+          ctx.lineTo(l, t + radius);
+          ctx.arcTo(l, t, l + radius, t, radius);
+          ctx.lineTo(r - radius, t);
+          ctx.arcTo(r, t, r, t + radius, radius);
+          ctx.lineTo(r, b - radius);
+          ctx.arcTo(r, b, r - radius, b, radius);
+          ctx.lineTo(l + radius, b);
+          ctx.arcTo(l, b, l, b - radius, radius);
           ctx.closePath();
           ctx.stroke();
         };
@@ -654,44 +673,44 @@ export function BreathVisualizationEngine({
         // Draw main outer box
         drawRoundedRect(0, 0.9, baseLineWidth + 2, rgb);
 
-        // Draw inner box (white/lighter)
-        drawRoundedRect(-12, 0.6, baseLineWidth, rgb2);
+        // Draw inner box (lighter)
+        drawRoundedRect(-12, 0.5, baseLineWidth, rgb2);
 
         if (shadowOn) {
           ctx.restore();
         }
 
-        // Get current indicator position
-        const indicatorPos = getPositionOnPath(pathProgress);
-
         // Update trail for motion effect
-        if (showTrail) {
+        if (showTrail && (currentPhase === 'inhale' || currentPhase === 'exhale')) {
           state.boxPath.trail.unshift({ x: indicatorPos.x, y: indicatorPos.y, alpha: 1 });
-          if (state.boxPath.trail.length > 15) {
+          if (state.boxPath.trail.length > 20) {
             state.boxPath.trail.pop();
           }
 
           // Draw trail
           for (let i = state.boxPath.trail.length - 1; i >= 0; i--) {
             const t = state.boxPath.trail[i];
-            t.alpha *= 0.85;
+            t.alpha *= 0.88;
             if (t.alpha > 0.05) {
               ctx.beginPath();
-              ctx.fillStyle = `rgba(255, 180, 50, ${t.alpha * 0.3})`;
-              ctx.arc(t.x, t.y, 12 - i * 0.5, 0, Math.PI * 2);
+              ctx.fillStyle = `rgba(255, 180, 50, ${t.alpha * 0.25})`;
+              ctx.arc(t.x, t.y, 14 - i * 0.4, 0, Math.PI * 2);
               ctx.fill();
             }
           }
+        } else {
+          // Clear trail during hold phases
+          state.boxPath.trail = [];
         }
 
-        // Draw indicator (orange/gold ball like in the reference)
-        const indicatorSize = 18;
+        // Draw indicator (orange/gold ball)
+        const indicatorSize = 18 * indicatorScale;
 
         // Indicator glow
         for (let i = 4; i > 0; i--) {
           ctx.beginPath();
-          ctx.fillStyle = `rgba(255, 180, 50, ${0.15 / i})`;
-          ctx.arc(indicatorPos.x, indicatorPos.y, indicatorSize * i * 1.2, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255, 180, 50, ${0.12 / i})`;
+          ctx.arc(indicatorPos.x, indicatorPos.y, indicatorSize * i * 1.3, 0, Math.PI * 2);
           ctx.fill();
         }
 
@@ -702,17 +721,17 @@ export function BreathVisualizationEngine({
           ctx.shadowBlur = 20;
         }
 
-        // Main indicator
+        // Main indicator gradient
         const gradient = ctx.createRadialGradient(
-          indicatorPos.x - indicatorSize * 0.3,
-          indicatorPos.y - indicatorSize * 0.3,
+          indicatorPos.x - indicatorSize * 0.25,
+          indicatorPos.y - indicatorSize * 0.25,
           0,
           indicatorPos.x,
           indicatorPos.y,
           indicatorSize
         );
         gradient.addColorStop(0, '#FFE066');
-        gradient.addColorStop(0.5, '#FFB830');
+        gradient.addColorStop(0.4, '#FFB830');
         gradient.addColorStop(1, '#F59E0B');
 
         ctx.beginPath();
@@ -722,8 +741,14 @@ export function BreathVisualizationEngine({
 
         // Highlight
         ctx.beginPath();
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-        ctx.arc(indicatorPos.x - indicatorSize * 0.3, indicatorPos.y - indicatorSize * 0.3, indicatorSize * 0.35, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+        ctx.arc(
+          indicatorPos.x - indicatorSize * 0.3,
+          indicatorPos.y - indicatorSize * 0.3,
+          indicatorSize * 0.3,
+          0,
+          Math.PI * 2
+        );
         ctx.fill();
 
         if (shadowOn) {

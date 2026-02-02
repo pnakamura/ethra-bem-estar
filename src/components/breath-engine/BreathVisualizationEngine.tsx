@@ -223,27 +223,59 @@ export function BreathVisualizationEngine({
         break;
       }
 
-      case 'starDust':
-        // Create particles at bottom - they will rise during inhale
+      case 'starDust': {
+        // Enhanced Star Dust with parallax layers, trails, and cosmic colors
+        const starColors = ['gold', 'amber', 'white', 'blue'] as const;
+        const colorWeights = [0.4, 0.3, 0.2, 0.1]; // Gold more common
+        
+        const pickColor = () => {
+          const r = Math.random();
+          let cumulative = 0;
+          for (let i = 0; i < colorWeights.length; i++) {
+            cumulative += colorWeights[i];
+            if (r < cumulative) return starColors[i];
+          }
+          return 'gold';
+        };
+
         for (let i = 0; i < count; i++) {
+          const layer = Math.floor(Math.random() * 3); // 0=back, 1=mid, 2=front
+          const layerScale = 0.5 + layer * 0.25; // Back smaller, front bigger
           const angle = Math.random() * Math.PI * 2;
           const dist = Math.random() * Math.min(width, height) * 0.4;
+          const isFlare = Math.random() < 0.05; // 5% chance of special flare particle
+          
           state.particles.push({
             // Start position (bottom, spread out)
             startX: centerX + (Math.random() - 0.5) * width * 0.8,
-            startY: height + 20,
+            startY: height + 20 + layer * 10,
             // End position (top area, more centered)
             endX: centerX + Math.cos(angle) * dist * 0.5,
             endY: centerY - height * 0.3 + Math.sin(angle) * dist * 0.3,
             // Current position
             x: 0,
             y: 0,
-            size: Math.random() * 4 + 2,
-            brightness: Math.random() * 0.7 + 0.3,
-            delay: Math.random() * 0.3, // Stagger animation
+            // Enhanced properties
+            layer,
+            layerScale,
+            size: (Math.random() * 3 + 1.5) * layerScale * (isFlare ? 2.5 : 1),
+            brightness: (Math.random() * 0.5 + 0.5) * layerScale,
+            delay: Math.random() * 0.3,
+            // Twinkling
+            twinkleSpeed: 2 + Math.random() * 4,
+            twinklePhase: Math.random() * Math.PI * 2,
+            // Color
+            baseColor: pickColor(),
+            // Trail history
+            trail: [] as { x: number; y: number }[],
+            trailMaxLength: 6 + Math.floor(Math.random() * 4),
+            // Special effects
+            isFlare,
+            connectionRadius: 60 + Math.random() * 40,
           });
         }
         break;
+      }
 
       case 'fluid':
         // Initialize fluid blobs that expand from center
@@ -1013,58 +1045,155 @@ export function BreathVisualizationEngine({
       }
 
       case 'starDust': {
-        // Calculate particle positions based on breath intensity
-        // Inhale: particles rise from bottom to top (intensity 0->1)
-        // HoldFull: particles float at top with subtle movement
-        // Exhale: particles descend (intensity 1->0)
-        // HoldEmpty: particles rest at bottom
+        // Enhanced Star Dust with parallax, trails, twinkling, and constellations
+        // Color palette for cosmic effect
+        const starColorMap = {
+          gold: { r: 255, g: 215, b: 0 },
+          amber: { r: 255, g: 140, b: 0 },
+          white: { r: 255, g: 248, b: 220 },
+          blue: { r: 135, g: 206, b: 235 },
+        };
 
-        for (const p of state.particles) {
-          const delayedProgress = Math.max(0, Math.min(1, (progress - p.delay) / (1 - p.delay)));
-          const easedIntensity = easeInOutCubic(intensity);
+        // Sort particles by layer for proper depth rendering (back to front)
+        const sortedParticles = [...state.particles].sort((a, b) => a.layer - b.layer);
 
-          // Interpolate position based on intensity
-          p.x = lerp(p.startX, p.endX, easedIntensity);
-          p.y = lerp(p.startY, p.endY, easedIntensity);
+        // Draw subtle nebula background during holdFull
+        if (currentPhase === 'holdFull' || currentPhase === 'holdEmpty') {
+          const nebulaAlpha = currentPhase === 'holdFull' ? 0.08 : 0.03;
+          const gradient = ctx.createRadialGradient(centerX, centerY - height * 0.1, 0, centerX, centerY - height * 0.1, width * 0.5);
+          gradient.addColorStop(0, `rgba(255, 140, 0, ${nebulaAlpha})`);
+          gradient.addColorStop(0.5, `rgba(255, 215, 0, ${nebulaAlpha * 0.5})`);
+          gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+          ctx.fillStyle = gradient;
+          ctx.fillRect(0, 0, width, height);
+        }
+
+        // Draw constellation connections during holdFull (front layer only)
+        if (currentPhase === 'holdFull') {
+          const frontParticles = sortedParticles.filter(p => p.layer === 2);
+          ctx.strokeStyle = 'rgba(255, 215, 0, 0.15)';
+          ctx.lineWidth = 0.5;
+          
+          for (let i = 0; i < frontParticles.length; i++) {
+            for (let j = i + 1; j < frontParticles.length; j++) {
+              const p1 = frontParticles[i];
+              const p2 = frontParticles[j];
+              const dist = Math.hypot(p1.x - p2.x, p1.y - p2.y);
+              
+              if (dist < p1.connectionRadius && dist < p2.connectionRadius) {
+                const lineAlpha = (1 - dist / Math.min(p1.connectionRadius, p2.connectionRadius)) * 0.2;
+                ctx.strokeStyle = `rgba(255, 215, 0, ${lineAlpha})`;
+                ctx.beginPath();
+                ctx.moveTo(p1.x, p1.y);
+                ctx.lineTo(p2.x, p2.y);
+                ctx.stroke();
+              }
+            }
+          }
+        }
+
+        for (const p of sortedParticles) {
+          // Parallax: slower movement for back layers
+          const layerSpeed = 1 - (p.layer * 0.2); // layer 0=1.0, 1=0.8, 2=0.6 (inverted for visual)
+          const adjustedIntensity = easeInOutCubic(intensity) * layerSpeed + (1 - layerSpeed) * easeInOutCubic(intensity) * 0.7;
+
+          // Calculate position with parallax
+          const prevX = p.x;
+          const prevY = p.y;
+          p.x = lerp(p.startX, p.endX, adjustedIntensity);
+          p.y = lerp(p.startY, p.endY, adjustedIntensity);
 
           // Add floating motion during hold phases
           if (currentPhase === 'holdFull') {
-            const floatAmount = 15;
-            p.x += Math.sin(state.time * 2 + p.startX * 0.01) * floatAmount;
-            p.y += Math.cos(state.time * 1.5 + p.startY * 0.01) * floatAmount * 0.5;
+            const floatAmount = 12 * p.layerScale;
+            p.x += Math.sin(state.time * 1.5 + p.twinklePhase) * floatAmount;
+            p.y += Math.cos(state.time * 1.2 + p.twinklePhase * 1.3) * floatAmount * 0.6;
           } else if (currentPhase === 'holdEmpty') {
-            // Subtle settling at bottom
-            p.y = Math.min(height - 10, p.y + Math.sin(state.time + p.startX * 0.02) * 2);
+            p.y = Math.min(height - 10, p.startY + Math.sin(state.time * 0.8 + p.twinklePhase) * 4);
+            p.x = p.startX + Math.sin(state.time * 0.5 + p.twinklePhase) * 3;
           }
 
-          // Calculate visual properties
-          let alpha = p.brightness;
-          let size = p.size;
+          // Update trail (only during movement phases)
+          if (currentPhase === 'inhale' || currentPhase === 'exhale') {
+            p.trail.push({ x: p.x, y: p.y });
+            if (p.trail.length > p.trailMaxLength) {
+              p.trail.shift();
+            }
+          } else if (currentPhase === 'holdFull' || currentPhase === 'holdEmpty') {
+            // Slowly fade trail during holds
+            if (p.trail.length > 0 && Math.random() < 0.05) {
+              p.trail.shift();
+            }
+          }
 
+          // Calculate twinkling
+          const twinkle = 0.6 + 0.4 * Math.sin(state.time * p.twinkleSpeed + p.twinklePhase);
+          
+          // Calculate base alpha based on phase
+          let baseAlpha = p.brightness;
+          let sizeMultiplier = 1;
+          
           if (currentPhase === 'holdFull') {
-            // Pulsing glow at full
-            alpha *= 0.8 + 0.2 * Math.sin(state.time * 3 + p.startX * 0.02);
-            size *= 1.3;
+            baseAlpha *= 0.9 + 0.1 * Math.sin(state.time * 2 + p.twinklePhase);
+            sizeMultiplier = 1.2;
           } else if (currentPhase === 'holdEmpty') {
-            alpha *= 0.15;
-            size *= 0.6;
+            baseAlpha *= 0.2;
+            sizeMultiplier = 0.7;
           } else {
-            alpha *= 0.2 + easedIntensity * 0.8;
+            baseAlpha *= 0.3 + easeInOutCubic(intensity) * 0.7;
           }
 
-          // Draw glow layers
-          for (let i = 3; i > 0; i--) {
+          const alpha = baseAlpha * twinkle;
+          const size = p.size * sizeMultiplier;
+          const color = starColorMap[p.baseColor as keyof typeof starColorMap];
+
+          // Draw trail
+          if (p.trail.length > 1) {
+            for (let i = 0; i < p.trail.length - 1; i++) {
+              const t = i / p.trail.length;
+              const trailAlpha = alpha * t * 0.25;
+              const trailSize = size * (0.2 + t * 0.4);
+              
+              ctx.beginPath();
+              ctx.fillStyle = `rgba(${color.r}, ${color.g}, ${color.b}, ${trailAlpha})`;
+              ctx.arc(p.trail[i].x, p.trail[i].y, trailSize, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          }
+
+          // Draw outer glow layers (amber/gold gradient)
+          const glowLayers = p.isFlare ? 5 : 4;
+          for (let i = glowLayers; i > 0; i--) {
+            const glowAlpha = alpha * 0.12 / i;
+            const glowSize = size * i * (p.isFlare ? 3.5 : 2.5);
+            const glowColor = i > 2 ? starColorMap.amber : color;
+            
             ctx.beginPath();
-            ctx.fillStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha * 0.15 / i})`;
-            ctx.arc(p.x, p.y, size * i * 2.5, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(${glowColor.r}, ${glowColor.g}, ${glowColor.b}, ${glowAlpha})`;
+            ctx.arc(p.x, p.y, glowSize, 0, Math.PI * 2);
             ctx.fill();
           }
 
-          // Draw core
+          // Draw inner glow (white/gold)
+          ctx.beginPath();
+          ctx.fillStyle = `rgba(255, 248, 220, ${alpha * 0.6})`;
+          ctx.arc(p.x, p.y, size * 1.5, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Draw bright core
           ctx.beginPath();
           ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
-          ctx.arc(p.x, p.y, size, 0, Math.PI * 2);
+          ctx.arc(p.x, p.y, size * 0.8, 0, Math.PI * 2);
           ctx.fill();
+
+          // Extra flare effect
+          if (p.isFlare && currentPhase === 'holdFull') {
+            const flareAlpha = alpha * 0.3 * (0.5 + 0.5 * Math.sin(state.time * 4 + p.twinklePhase));
+            ctx.beginPath();
+            ctx.fillStyle = `rgba(255, 255, 255, ${flareAlpha})`;
+            ctx.arc(p.x, p.y, size * 4, 0, Math.PI * 2);
+            ctx.fill();
+          }
         }
         break;
       }

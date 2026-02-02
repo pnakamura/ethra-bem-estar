@@ -531,167 +531,117 @@ export function BreathVisualizationEngine({
 
     switch (config.visualMode) {
       case 'boxPath': {
-        // BOX PATH MODE - Rounded square with moving indicator
-        // Inhale: ball travels from bottom-left → up left side → across top to top-right
-        // Hold Full: ball rests at top-right corner (subtle pulse)
-        // Exhale: ball travels from top-right → down right side → across bottom to bottom-left
-        // Hold Empty: ball rests at bottom-left corner (subtle pulse)
+        // BOX BREATHING MODE - Each side represents one phase
+        // ┌────────●────────┐  ← HOLD FULL (top side, ball at center)
+        // │                 │
+        // ↑                 ↓
+        // INHALE            EXHALE
+        // │                 │
+        // └────────●────────┘  → HOLD EMPTY (bottom side, ball at center)
+        
+        // Inhale: bottom-left → top-left (up the left side)
+        // Hold Full: ball stays at center of top side, pulsing
+        // Exhale: top-right → bottom-right (down the right side)
+        // Hold Empty: ball stays at center of bottom side, pulsing
 
         if (!state.boxPath) break;
 
         const box = state.boxPath;
         const halfSize = box.size / 2;
-        const cr = box.cornerRadius;
 
         const left = centerX - halfSize;
         const right = centerX + halfSize;
-        const top = centerY - halfSize;
-        const bottom = centerY + halfSize;
-
-        // Key positions (corners of the rounded rectangle)
-        const bottomLeft = { x: left, y: bottom - cr };
-        const topRight = { x: right, y: top + cr };
+        const topY = centerY - halfSize;
+        const bottomY = centerY + halfSize;
 
         const easedProgress = easeInOutSine(progress);
 
-        // Function to get position along a path segment
-        const getPathPosition = (startPos: number, endPos: number, t: number) => {
-          // Path goes: bottom-left corner → up left → top-left corner → across top → top-right corner
-          // This covers half the perimeter (0 to 0.5)
-          // Then: top-right corner → down right → bottom-right corner → across bottom → bottom-left corner
-          // This covers the other half (0.5 to 1)
-
-          const straightLength = box.size - 2 * cr;
-          const cornerArcLength = (Math.PI / 2) * cr;
-          const halfPerimeter = 2 * straightLength + 2 * cornerArcLength;
-
-          // Position along path (0 = bottom-left, 0.5 = top-right, 1 = back to bottom-left)
-          const pathPos = lerp(startPos, endPos, t);
-          const normalizedPos = ((pathPos % 1) + 1) % 1;
-
-          // Calculate cumulative lengths for first half (bottom-left to top-right)
-          const seg1 = cornerArcLength / halfPerimeter / 2;           // bottom-left corner arc (half)
-          const seg2 = seg1 + straightLength / halfPerimeter / 2;     // left side up
-          const seg3 = seg2 + cornerArcLength / halfPerimeter / 2;    // top-left corner arc
-          const seg4 = seg3 + straightLength / halfPerimeter / 2;     // top side right
-          const seg5 = 0.5;                                            // top-right corner
-
-          // And for second half (top-right to bottom-left)
-          const seg6 = 0.5 + cornerArcLength / halfPerimeter / 2;
-          const seg7 = seg6 + straightLength / halfPerimeter / 2;
-          const seg8 = seg7 + cornerArcLength / halfPerimeter / 2;
-          const seg9 = seg8 + straightLength / halfPerimeter / 2;
-
-          // Corner arc helper
-          const cornerArc = (cx: number, cy: number, startAngle: number, arcT: number) => ({
-            x: cx + Math.cos(startAngle + arcT * (Math.PI / 2)) * cr,
-            y: cy + Math.sin(startAngle + arcT * (Math.PI / 2)) * cr
-          });
-
-          if (normalizedPos < seg1) {
-            // Bottom-left corner arc (starting from bottom, going up-left)
-            const t = normalizedPos / seg1;
-            return cornerArc(left + cr, bottom - cr, Math.PI * 0.5, t * 0.5);
-          } else if (normalizedPos < seg2) {
-            // Left side going up
-            const t = (normalizedPos - seg1) / (seg2 - seg1);
-            return { x: left, y: bottom - cr - t * straightLength };
-          } else if (normalizedPos < seg3) {
-            // Top-left corner arc
-            const t = (normalizedPos - seg2) / (seg3 - seg2);
-            return cornerArc(left + cr, top + cr, Math.PI, t);
-          } else if (normalizedPos < seg4) {
-            // Top side going right
-            const t = (normalizedPos - seg3) / (seg4 - seg3);
-            return { x: left + cr + t * straightLength, y: top };
-          } else if (normalizedPos < seg5) {
-            // Top-right corner arc (first half)
-            const t = (normalizedPos - seg4) / (seg5 - seg4);
-            return cornerArc(right - cr, top + cr, Math.PI * 1.5, t * 0.5);
-          } else if (normalizedPos < seg6) {
-            // Top-right corner arc (second half, going down)
-            const t = (normalizedPos - seg5) / (seg6 - seg5);
-            return cornerArc(right - cr, top + cr, 0, t * 0.5);
-          } else if (normalizedPos < seg7) {
-            // Right side going down
-            const t = (normalizedPos - seg6) / (seg7 - seg6);
-            return { x: right, y: top + cr + t * straightLength };
-          } else if (normalizedPos < seg8) {
-            // Bottom-right corner arc
-            const t = (normalizedPos - seg7) / (seg8 - seg7);
-            return cornerArc(right - cr, bottom - cr, 0, t);
-          } else if (normalizedPos < seg9) {
-            // Bottom side going left
-            const t = (normalizedPos - seg8) / (seg9 - seg8);
-            return { x: right - cr - t * straightLength, y: bottom };
-          } else {
-            // Bottom-left corner arc (final part)
-            const t = (normalizedPos - seg9) / (1 - seg9);
-            return cornerArc(left + cr, bottom - cr, Math.PI * 0.5, 0.5 + t * 0.5);
-          }
-        };
-
-        // Calculate indicator position based on phase
+        // Calculate indicator position based on phase - each side = one phase
         let indicatorPos: { x: number; y: number };
         let indicatorScale = 1;
+        let activeSide: 'left' | 'top' | 'right' | 'bottom' | null = null;
 
         if (currentPhase === 'inhale') {
-          // Travel from bottom-left (0) to top-right (0.5)
-          indicatorPos = getPathPosition(0, 0.5, easedProgress);
+          // Left side: bottom → top (y decreases)
+          activeSide = 'left';
+          indicatorPos = {
+            x: left,
+            y: lerp(bottomY, topY, easedProgress)
+          };
         } else if (currentPhase === 'holdFull') {
-          // Rest at top-right (0.5) with subtle pulse
-          indicatorPos = getPathPosition(0.5, 0.5, 0);
-          if (doPulse) {
-            const pulse = Math.sin(state.time * 2) * 3;
-            indicatorPos.x += pulse;
-            indicatorPos.y += pulse * 0.5;
-            indicatorScale = 1 + Math.sin(state.time * 3) * 0.08;
-          }
+          // Top side: ball stays at center, pulsing
+          activeSide = 'top';
+          const pulseIntensity = doPulse ? 0.5 + 0.5 * Math.sin(state.time * 3) : 1;
+          indicatorScale = 1 + (doPulse ? Math.sin(state.time * 2.5) * 0.12 : 0);
+          indicatorPos = {
+            x: centerX,
+            y: topY
+          };
         } else if (currentPhase === 'exhale') {
-          // Travel from top-right (0.5) to bottom-left (1.0)
-          indicatorPos = getPathPosition(0.5, 1.0, easedProgress);
+          // Right side: top → bottom (y increases)
+          activeSide = 'right';
+          indicatorPos = {
+            x: right,
+            y: lerp(topY, bottomY, easedProgress)
+          };
         } else if (currentPhase === 'holdEmpty') {
-          // Rest at bottom-left (0) with subtle pulse
-          indicatorPos = getPathPosition(0, 0, 0);
-          if (doPulse) {
-            const pulse = Math.sin(state.time * 1.5) * 2;
-            indicatorPos.x += pulse * 0.5;
-            indicatorPos.y += pulse;
-            indicatorScale = 1 + Math.sin(state.time * 2) * 0.05;
-          }
+          // Bottom side: ball stays at center, pulsing
+          activeSide = 'bottom';
+          indicatorScale = 1 + (doPulse ? Math.sin(state.time * 2) * 0.08 : 0);
+          indicatorPos = {
+            x: centerX,
+            y: bottomY
+          };
         } else {
-          // Idle - at bottom-left
-          indicatorPos = getPathPosition(0, 0, 0);
+          // Idle - at bottom-left corner
+          indicatorPos = { x: left, y: bottomY };
         }
 
-        // Draw the rounded rectangle path
-        const drawRoundedRect = (offset: number, alpha: number, lineWidth: number, color: { r: number; g: number; b: number }) => {
+        // Draw phase labels (subtle)
+        const drawPhaseLabel = (text: string, x: number, y: number, isActive: boolean) => {
+          ctx.save();
+          ctx.font = `${isActive ? 'bold ' : ''}11px system-ui, -apple-system, sans-serif`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${isActive ? 0.9 : 0.35})`;
+          ctx.fillText(text, x, y);
+          ctx.restore();
+        };
+
+        // Draw the square with sharp corners (true "box")
+        const drawBox = (offset: number, alpha: number, lineWidth: number, color: { r: number; g: number; b: number }, highlightSide?: 'left' | 'top' | 'right' | 'bottom' | null) => {
           const l = left - offset;
           const r = right + offset;
-          const t = top - offset;
-          const b = bottom + offset;
-          const radius = cr + offset;
+          const t = topY - offset;
+          const b = bottomY + offset;
 
-          ctx.strokeStyle = `rgba(${color.r}, ${color.g}, ${color.b}, ${alpha})`;
-          ctx.lineWidth = lineWidth;
-          ctx.beginPath();
-          ctx.moveTo(l, b - radius);
-          ctx.lineTo(l, t + radius);
-          ctx.arcTo(l, t, l + radius, t, radius);
-          ctx.lineTo(r - radius, t);
-          ctx.arcTo(r, t, r, t + radius, radius);
-          ctx.lineTo(r, b - radius);
-          ctx.arcTo(r, b, r - radius, b, radius);
-          ctx.lineTo(l + radius, b);
-          ctx.arcTo(l, b, l, b - radius, radius);
-          ctx.closePath();
-          ctx.stroke();
+          // Draw each side separately to allow highlighting
+          const sides = [
+            { name: 'left', x1: l, y1: b, x2: l, y2: t },
+            { name: 'top', x1: l, y1: t, x2: r, y2: t },
+            { name: 'right', x1: r, y1: t, x2: r, y2: b },
+            { name: 'bottom', x1: r, y1: b, x2: l, y2: b },
+          ];
+
+          for (const side of sides) {
+            const isHighlighted = side.name === highlightSide;
+            const sideAlpha = isHighlighted ? Math.min(1, alpha * 1.8) : alpha;
+            const sideWidth = isHighlighted ? lineWidth * 1.5 : lineWidth;
+
+            ctx.strokeStyle = `rgba(${color.r}, ${color.g}, ${color.b}, ${sideAlpha})`;
+            ctx.lineWidth = sideWidth;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(side.x1, side.y1);
+            ctx.lineTo(side.x2, side.y2);
+            ctx.stroke();
+          }
         };
 
         // Draw glow layers for outer box
         if (glowAmount > 0.1) {
           for (let i = 3; i > 0; i--) {
-            drawRoundedRect(i * 4, 0.1 * glowAmount / i, baseLineWidth + i * 3, rgb);
+            drawBox(i * 4, 0.1 * glowAmount / i, baseLineWidth + i * 3, rgb);
           }
         }
 
@@ -702,31 +652,62 @@ export function BreathVisualizationEngine({
           ctx.shadowBlur = shadowBlurAmount;
         }
 
-        // Draw main outer box
-        drawRoundedRect(0, 0.9, baseLineWidth + 2, rgb);
+        // Draw main outer box with active side highlight
+        drawBox(0, 0.6, baseLineWidth + 1, rgb, activeSide);
 
-        // Draw inner box (lighter)
-        drawRoundedRect(-12, 0.5, baseLineWidth, rgb2);
+        // Draw inner box (lighter, no highlight)
+        drawBox(-12, 0.3, baseLineWidth, rgb2);
 
         if (shadowOn) {
           ctx.restore();
         }
 
-        // Update trail for motion effect
+        // Draw phase labels around the box
+        const labelOffset = 28;
+        drawPhaseLabel('INSPIRE', left - labelOffset, centerY, activeSide === 'left');
+        drawPhaseLabel('SEGURE', centerX, topY - labelOffset, activeSide === 'top');
+        drawPhaseLabel('EXPIRE', right + labelOffset, centerY, activeSide === 'right');
+        drawPhaseLabel('PAUSE', centerX, bottomY + labelOffset, activeSide === 'bottom');
+
+        // Draw directional arrows on sides (subtle)
+        const drawArrow = (x: number, y: number, angle: number, isActive: boolean) => {
+          if (!isActive && !showTrail) return;
+          ctx.save();
+          ctx.translate(x, y);
+          ctx.rotate(angle);
+          const arrowSize = 8;
+          const arrowAlpha = isActive ? 0.7 : 0.2;
+          ctx.fillStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${arrowAlpha})`;
+          ctx.beginPath();
+          ctx.moveTo(0, -arrowSize);
+          ctx.lineTo(arrowSize * 0.6, arrowSize * 0.5);
+          ctx.lineTo(-arrowSize * 0.6, arrowSize * 0.5);
+          ctx.closePath();
+          ctx.fill();
+          ctx.restore();
+        };
+
+        // Arrows showing direction of movement
+        drawArrow(left - 8, centerY, -Math.PI / 2, activeSide === 'left'); // Left: pointing up
+        drawArrow(centerX, topY - 8, 0, activeSide === 'top'); // Top: pointing right (or static)
+        drawArrow(right + 8, centerY, Math.PI / 2, activeSide === 'right'); // Right: pointing down
+        drawArrow(centerX, bottomY + 8, Math.PI, activeSide === 'bottom'); // Bottom: pointing left (or static)
+
+        // Update trail for motion effect (only during movement phases)
         if (showTrail && (currentPhase === 'inhale' || currentPhase === 'exhale')) {
           state.boxPath.trail.unshift({ x: indicatorPos.x, y: indicatorPos.y, alpha: 1 });
-          if (state.boxPath.trail.length > 20) {
+          if (state.boxPath.trail.length > 25) {
             state.boxPath.trail.pop();
           }
 
           // Draw trail
           for (let i = state.boxPath.trail.length - 1; i >= 0; i--) {
             const t = state.boxPath.trail[i];
-            t.alpha *= 0.88;
+            t.alpha *= 0.9;
             if (t.alpha > 0.05) {
               ctx.beginPath();
-              ctx.fillStyle = `rgba(255, 180, 50, ${t.alpha * 0.25})`;
-              ctx.arc(t.x, t.y, 14 - i * 0.4, 0, Math.PI * 2);
+              ctx.fillStyle = `rgba(255, 180, 50, ${t.alpha * 0.3})`;
+              ctx.arc(t.x, t.y, 12 - i * 0.35, 0, Math.PI * 2);
               ctx.fill();
             }
           }
@@ -736,13 +717,23 @@ export function BreathVisualizationEngine({
         }
 
         // Draw indicator (orange/gold ball)
-        const indicatorSize = 18 * indicatorScale;
+        const indicatorSize = 16 * indicatorScale;
 
-        // Indicator glow
+        // Extra glow during hold phases
+        const isHolding = currentPhase === 'holdFull' || currentPhase === 'holdEmpty';
+        if (isHolding && doPulse) {
+          const breathGlow = 0.3 + 0.2 * Math.sin(state.time * 2);
+          ctx.beginPath();
+          ctx.fillStyle = `rgba(255, 200, 100, ${breathGlow * 0.15})`;
+          ctx.arc(indicatorPos.x, indicatorPos.y, indicatorSize * 4, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Indicator glow layers
         for (let i = 4; i > 0; i--) {
           ctx.beginPath();
-          ctx.fillStyle = `rgba(255, 180, 50, ${0.12 / i})`;
-          ctx.arc(indicatorPos.x, indicatorPos.y, indicatorSize * i * 1.3, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255, 180, 50, ${0.1 / i})`;
+          ctx.arc(indicatorPos.x, indicatorPos.y, indicatorSize * i * 1.4, 0, Math.PI * 2);
           ctx.fill();
         }
 

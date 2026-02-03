@@ -61,6 +61,8 @@ export function BottomNavigation() {
               key={item.path}
               to={item.path}
               className="relative"
+              aria-label={`Ir para ${item.label}`}
+              aria-current={isActive ? 'page' : undefined}
             >
               <motion.div
                 initial={{ opacity: 0, y: 20 }}

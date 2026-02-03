@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -7,29 +7,33 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { SplashLoader } from "@/components/ui/SplashLoader";
+import { OfflineBanner } from "@/components/ui/OfflineBanner";
 import { initAccessibility } from "@/hooks/useAccessibility";
-import Index from "./pages/Index";
-import Home from "./pages/Home";
-import Onboarding from "./pages/Onboarding";
-import Landing from "./pages/Landing";
-import Nutrition from "./pages/Nutrition";
-import Journal from "./pages/Journal";
-import Insights from "./pages/Insights";
-import Profile from "./pages/Profile";
-import Settings from "./pages/Settings";
-import Privacy from "./pages/Privacy";
-import EmotionResult from "./pages/EmotionResult";
-import Auth from "./pages/Auth";
-import Admin from "./pages/Admin";
-import Journeys from "./pages/Journeys";
-import JourneysExplore from "./pages/JourneysExplore";
-import Favorites from "./pages/Favorites";
-import WellnessReport from "./pages/WellnessReport";
-import GuideChat from "./pages/GuideChat";
-import GuideSelect from "./pages/GuideSelect";
-import Plans from "./pages/Plans";
-import AnimationStudio from "./pages/AnimationStudio";
-import NotFound from "./pages/NotFound";
+
+// Lazy load all pages for better initial bundle size
+const Index = lazy(() => import("./pages/Index"));
+const Home = lazy(() => import("./pages/Home"));
+const Onboarding = lazy(() => import("./pages/Onboarding"));
+const Landing = lazy(() => import("./pages/Landing"));
+const Nutrition = lazy(() => import("./pages/Nutrition"));
+const Journal = lazy(() => import("./pages/Journal"));
+const Insights = lazy(() => import("./pages/Insights"));
+const Profile = lazy(() => import("./pages/Profile"));
+const Settings = lazy(() => import("./pages/Settings"));
+const Privacy = lazy(() => import("./pages/Privacy"));
+const EmotionResult = lazy(() => import("./pages/EmotionResult"));
+const Auth = lazy(() => import("./pages/Auth"));
+const Admin = lazy(() => import("./pages/Admin"));
+const Journeys = lazy(() => import("./pages/Journeys"));
+const JourneysExplore = lazy(() => import("./pages/JourneysExplore"));
+const Favorites = lazy(() => import("./pages/Favorites"));
+const WellnessReport = lazy(() => import("./pages/WellnessReport"));
+const GuideChat = lazy(() => import("./pages/GuideChat"));
+const GuideSelect = lazy(() => import("./pages/GuideSelect"));
+const Plans = lazy(() => import("./pages/Plans"));
+const AnimationStudio = lazy(() => import("./pages/AnimationStudio"));
+const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
 
@@ -44,32 +48,35 @@ const App: React.FC = () => (
           <TooltipProvider>
             <Toaster />
             <Sonner />
+            <OfflineBanner />
             <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/onboarding" element={<Onboarding />} />
-                <Route path="/landing" element={<Landing />} />
-                <Route path="/nutrition" element={<Nutrition />} />
-                <Route path="/legacy" element={<Index />} />
-                <Route path="/journal" element={<Journal />} />
-                <Route path="/insights" element={<Insights />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/settings" element={<Settings />} />
-                <Route path="/privacy" element={<Privacy />} />
-                <Route path="/emotion-result" element={<ErrorBoundary><EmotionResult /></ErrorBoundary>} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/journeys" element={<ErrorBoundary><Journeys /></ErrorBoundary>} />
-                <Route path="/journeys/explore" element={<JourneysExplore />} />
-                <Route path="/favorites" element={<Favorites />} />
-                <Route path="/report" element={<WellnessReport />} />
-                <Route path="/guide" element={<ErrorBoundary><GuideChat /></ErrorBoundary>} />
-                <Route path="/guide/select" element={<GuideSelect />} />
-                <Route path="/plans" element={<Plans />} />
-                <Route path="/animation-studio" element={<AnimationStudio />} />
-                <Route path="/admin/*" element={<Admin />} />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
+              <Suspense fallback={<SplashLoader />}>
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/onboarding" element={<Onboarding />} />
+                  <Route path="/landing" element={<Landing />} />
+                  <Route path="/nutrition" element={<Nutrition />} />
+                  <Route path="/legacy" element={<Index />} />
+                  <Route path="/journal" element={<Journal />} />
+                  <Route path="/insights" element={<Insights />} />
+                  <Route path="/profile" element={<Profile />} />
+                  <Route path="/settings" element={<Settings />} />
+                  <Route path="/privacy" element={<Privacy />} />
+                  <Route path="/emotion-result" element={<ErrorBoundary><EmotionResult /></ErrorBoundary>} />
+                  <Route path="/auth" element={<Auth />} />
+                  <Route path="/journeys" element={<ErrorBoundary><Journeys /></ErrorBoundary>} />
+                  <Route path="/journeys/explore" element={<JourneysExplore />} />
+                  <Route path="/favorites" element={<Favorites />} />
+                  <Route path="/report" element={<WellnessReport />} />
+                  <Route path="/guide" element={<ErrorBoundary><GuideChat /></ErrorBoundary>} />
+                  <Route path="/guide/select" element={<GuideSelect />} />
+                  <Route path="/plans" element={<Plans />} />
+                  <Route path="/animation-studio" element={<AnimationStudio />} />
+                  <Route path="/admin/*" element={<Admin />} />
+                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Suspense>
             </BrowserRouter>
           </TooltipProvider>
         </AuthProvider>

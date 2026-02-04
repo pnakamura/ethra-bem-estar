@@ -20,10 +20,23 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_current_user: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "user"
+      tipo_intensidade_exercicio: "leve" | "moderada" | "intensa"
+      tipo_lembrete: "agua" | "refeicao" | "peso" | "exercicio" | "meditacao"
+      tipo_liquido: "água" | "suco" | "chá" | "café" | "refrigerante" | "outro"
+      tipo_nivel_dificuldade: "facil" | "moderado" | "dificil"
+      tipo_objetivo:
+        | "perder_peso"
+        | "manter_peso"
+        | "ganhar_peso"
+        | "melhorar_saude"
+      tipo_status_assinatura: "ativa" | "cancelada" | "suspensa" | "expirada"
+      tipo_status_envio: "pendente" | "enviado" | "erro"
+      tipo_status_pagamento: "pendente" | "aprovado" | "recusado" | "estornado"
+      tipo_usuario: "cliente" | "socio" | "gestor" | "dependente"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +163,22 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "user"],
+      tipo_intensidade_exercicio: ["leve", "moderada", "intensa"],
+      tipo_lembrete: ["agua", "refeicao", "peso", "exercicio", "meditacao"],
+      tipo_liquido: ["água", "suco", "chá", "café", "refrigerante", "outro"],
+      tipo_nivel_dificuldade: ["facil", "moderado", "dificil"],
+      tipo_objetivo: [
+        "perder_peso",
+        "manter_peso",
+        "ganhar_peso",
+        "melhorar_saude",
+      ],
+      tipo_status_assinatura: ["ativa", "cancelada", "suspensa", "expirada"],
+      tipo_status_envio: ["pendente", "enviado", "erro"],
+      tipo_status_pagamento: ["pendente", "aprovado", "recusado", "estornado"],
+      tipo_usuario: ["cliente", "socio", "gestor", "dependente"],
+    },
   },
 } as const

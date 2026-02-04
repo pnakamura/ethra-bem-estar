@@ -325,14 +325,16 @@ export default function Home() {
               onClick={handleInsights}
               delay={0.4}
             />
-            <QuickActionCard
-              emoji="✨"
-              icon={Wand2}
-              label="Studio"
-              color="studio"
-              onClick={handleAnimationStudio}
-              delay={0.45}
-            />
+            {usuario?.tipo_usuario === 'socio' && (
+              <QuickActionCard
+                emoji="✨"
+                icon={Wand2}
+                label="Studio"
+                color="studio"
+                onClick={handleAnimationStudio}
+                delay={0.45}
+              />
+            )}
           </div>
         </motion.div>
 

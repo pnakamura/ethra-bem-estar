@@ -1,88 +1,62 @@
 
-# Restringir Acesso ao Animation Studio para Sócios
+# Executar 00_enums_and_functions.sql
 
 ## Resumo
 
-A funcionalidade Animation Studio deve ser exclusiva para usuários `socio`. Isso envolve duas alterações:
-1. Proteger a rota `/animation-studio` para impedir acesso direto
-2. Ocultar o card "Studio" nas Ações Rápidas da Home para não-sócios
+Vou executar o arquivo SQL que cria os tipos customizados (ENUMs) e funções fundamentais do banco de dados ETHRA.
 
 ---
 
-## Arquivos a Modificar
+## O que será criado
 
-| Arquivo | Alteração |
-|---------|-----------|
-| `src/App.tsx` | Envolver rota AnimationStudio com AdminGuard |
-| `src/pages/Home.tsx` | Renderizar card Studio condicionalmente |
+### Tipos Customizados (ENUMs)
 
----
+| Tipo | Valores | Uso |
+|------|---------|-----|
+| `app_role` | admin, moderator, user | Roles de permissão |
+| `tipo_usuario` | cliente, socio, gestor, dependente | Tipos de usuário |
+| `tipo_status_assinatura` | ativa, cancelada, suspensa, expirada | Status de assinatura |
+| `tipo_status_pagamento` | pendente, aprovado, recusado, estornado | Status de pagamento |
+| `tipo_lembrete` | agua, refeicao, peso, exercicio, meditacao | Tipos de lembrete |
+| `tipo_liquido` | água, suco, chá, café, refrigerante, outro | Tipos de líquido |
+| `tipo_intensidade_exercicio` | leve, moderada, intensa | Intensidade de exercício |
+| `tipo_status_envio` | pendente, enviado, erro | Status de envio |
+| `tipo_objetivo` | perder_peso, manter_peso, ganhar_peso, melhorar_saude | Objetivos |
+| `tipo_nivel_dificuldade` | facil, moderado, dificil | Níveis de dificuldade |
 
-## 1. Proteção da Rota
+### Funções de Verificação
 
-### App.tsx
+- `is_socio()` - Verifica se usuário é sócio
+- `is_admin()` - Verifica se usuário é admin
+- `has_role()` - Verifica se usuário tem uma role específica
+- `get_current_user_role()` - Retorna o tipo do usuário atual
+- `is_current_user()` - Verifica se é o próprio usuário
 
-Importar `AdminGuard` e envolver a rota:
+### Funções de Trigger
 
-```typescript
-import { AdminGuard } from "@/components/admin/AdminGuard";
+- `update_updated_at_column()` - Atualiza timestamp automaticamente
+- `update_guide_updated_at()` - Atualiza timestamp de guias
 
-// Na seção de Routes:
-<Route path="/animation-studio" element={
-  <AdminGuard>
-    <AnimationStudio />
-  </AdminGuard>
-} />
-```
+### Funções de Rate Limiting
 
----
+- `check_rate_limit()` - Controle de taxa de requisições
+- `cleanup_old_rate_limits()` - Limpeza de registros antigos
 
-## 2. Ocultar Card nas Ações Rápidas
+### Funções de Controle de Acesso
 
-### Home.tsx
+- `can_manage_dependents()` - Verifica permissão para gerenciar dependentes
+- `can_gestor_access_user()` - Verifica acesso de gestor a usuário
+- `can_manage_user_type()` - Verifica permissão por tipo de usuário
+- `has_higher_or_equal_privilege()` - Verifica hierarquia de privilégios
 
-O card "Studio" só será renderizado se `usuario?.tipo_usuario === 'socio'`:
+### Funções de Auditoria e Perfil
 
-```typescript
-// Na grid de Quick Actions (linha ~247)
-{usuario?.tipo_usuario === 'socio' && (
-  <QuickActionCard
-    emoji="✨"
-    icon={Wand2}
-    label="Studio"
-    color="studio"
-    onClick={handleAnimationStudio}
-    delay={0.45}
-  />
-)}
-```
-
----
-
-## Comportamento Esperado
-
-| Cenário | Card Studio | Acesso à Rota |
-|---------|-------------|---------------|
-| Não logado | Oculto | Redirecionado para `/` |
-| Logado (cliente/gestor) | Oculto | Redirecionado para `/` |
-| Logado (socio) | Visível | Acesso permitido |
+- `log_admin_action()` - Registra ações administrativas
+- `handle_new_user()` - Trigger para novos usuários
+- `make_user_admin()` - Promove usuário a admin
 
 ---
 
-## Seção Técnica
+## Próximo Passo
 
-### Verificação de Permissão
-
-O `AuthContext` já fornece o objeto `usuario` com o campo `tipo_usuario`. A verificação é simples:
-
-```typescript
-const { usuario } = useAuth();
-const isSocio = usuario?.tipo_usuario === 'socio';
-```
-
-### Proteção em Duas Camadas
-
-1. **UI Layer**: Card oculto impede descoberta da funcionalidade
-2. **Route Layer**: AdminGuard bloqueia acesso direto via URL
-
-Essa abordagem de "defense in depth" garante que mesmo que alguém descubra a URL, não conseguirá acessar sem a permissão adequada.
+Após aprovar, executarei a migração com este SQL. Depois disso, você poderá enviar os arquivos de criação de tabelas (CREATE TABLE) e o seed-data para completar a estrutura do banco.

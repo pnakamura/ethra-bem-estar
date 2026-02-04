@@ -39,10 +39,11 @@ export interface NutritionEntry {
 
 export interface HydrationEntry {
   id: string;
-  usuario_id: string;
+  user_id: string;
   quantidade_ml: number;
   tipo_liquido: string | null;
-  horario: string | null;
+  horario: string;
+  created_at: string | null;
 }
 
 export interface MealCategory {
@@ -142,12 +143,12 @@ export function useHydrationEntries() {
       const { data, error } = await supabase
         .from('registro_hidratacao')
         .select('*')
-        .is('deletado_em', null)
+        .eq('user_id', user.id)
         .gte('horario', today.toISOString())
         .order('horario', { ascending: false });
       
       if (error) throw error;
-      return data as HydrationEntry[];
+      return (data || []) as HydrationEntry[];
     },
     enabled: !!user?.id,
   });
@@ -159,9 +160,9 @@ export function useHydrationEntries() {
       const { data, error } = await supabase
         .from('registro_hidratacao')
         .insert([{
-          usuario_id: user.id,
+          user_id: user.id,
           quantidade_ml,
-          tipo_liquido: tipo_liquido as 'água' | 'café' | 'chá' | 'suco' | 'outro',
+          tipo_liquido: tipo_liquido as 'água' | 'café' | 'chá' | 'suco' | 'refrigerante' | 'outro',
         }])
         .select()
         .single();

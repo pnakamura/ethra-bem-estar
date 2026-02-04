@@ -89,10 +89,12 @@ export function useGardenState() {
   const { data: stats, isLoading } = useGamificationStats();
 
   const currentStreak = stats?.sequencia_atual ?? 0;
-  const bestStreak = stats?.melhor_sequencia ?? 0;
+  const bestStreak = stats?.maior_sequencia ?? 0;
   const level = stats?.nivel ?? 1;
   const totalPoints = stats?.total_pontos ?? 0;
-  const achievementsUnlocked = stats?.conquistas_desbloqueadas ?? 0;
+  const achievementsUnlocked = Array.isArray(stats?.conquistas_desbloqueadas) 
+    ? stats.conquistas_desbloqueadas.length 
+    : 0;
 
   const currentStage = useMemo(() => {
     // Find the highest stage the user has reached

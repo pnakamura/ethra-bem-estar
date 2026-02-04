@@ -8,11 +8,11 @@ export interface UserJourney {
   user_id: string;
   journey_id: string;
   current_day: number;
-  started_at: string;
+  started_at: string | null;
   completed_at: string | null;
-  last_activity_at: string;
-  streak_count: number;
-  is_active: boolean;
+  last_activity_at: string | null;
+  streak_count: number | null;
+  is_completed: boolean | null;
 }
 
 export interface DayCompletion {
@@ -43,7 +43,7 @@ export function useActiveUserJourney() {
           journey:journeys(title, icon, duration_days, theme_color)
         `)
         .eq('user_id', user.id)
-        .eq('is_active', true)
+        .eq('is_completed', false)
         .is('completed_at', null)
         .maybeSingle();
 
@@ -58,7 +58,7 @@ export function useActiveUserJourney() {
       return {
         ...data,
         journey: Array.isArray(data.journey) ? data.journey[0] : data.journey,
-      };
+      } as UserJourney & { journey: { title: string; icon: string; duration_days: number; theme_color: string } };
     },
     enabled: !!user?.id,
   });
@@ -84,7 +84,7 @@ export function useUserJourneys() {
         throw error;
       }
 
-      return data || [];
+      return (data || []) as UserJourney[];
     },
     enabled: !!user?.id,
   });
@@ -122,12 +122,12 @@ export function useStartJourney() {
     mutationFn: async (journeyId: string) => {
       if (!user?.id) throw new Error('User not authenticated');
 
-      // Deactivate any current active journey
+      // Mark any current active journey as completed
       await supabase
         .from('user_journeys')
-        .update({ is_active: false })
+        .update({ is_completed: true })
         .eq('user_id', user.id)
-        .eq('is_active', true);
+        .eq('is_completed', false);
 
       // Start new journey
       const { data, error } = await supabase
@@ -136,7 +136,7 @@ export function useStartJourney() {
           user_id: user.id,
           journey_id: journeyId,
           current_day: 1,
-          is_active: true,
+          is_completed: false,
         })
         .select()
         .single();
@@ -227,7 +227,7 @@ export function useCompleteJourney() {
         .from('user_journeys')
         .update({
           completed_at: new Date().toISOString(),
-          is_active: false,
+          is_completed: true,
         })
         .eq('id', userJourneyId);
 

@@ -429,8 +429,7 @@ export function useInsightsData(period: Period) {
       const { data, error } = await supabase
         .from('registro_hidratacao')
         .select('*')
-        .eq('usuario_id', user.id)
-        .is('deletado_em', null)
+        .eq('user_id', user.id)
         .gte('horario', startDate.toISOString())
         .order('horario', { ascending: true });
 

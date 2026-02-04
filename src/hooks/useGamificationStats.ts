@@ -4,17 +4,20 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
 interface GamificationStats {
+  id: string;
   usuario_id: string;
-  nivel: number;
-  total_pontos: number;
-  sequencia_atual: number;
-  melhor_sequencia: number;
-  conquistas_desbloqueadas: number;
-  total_conquistas: number;
-  registros_agua_30_dias: number;
-  registros_nutricao_30_dias: number;
-  registros_peso_30_dias: number;
-  atualizado_em: string;
+  nivel: number | null;
+  total_pontos: number | null;
+  sequencia_atual: number | null;
+  maior_sequencia: number | null;
+  total_sessoes_respiracao: number | null;
+  total_minutos_meditacao: number | null;
+  total_checkins_emocao: number | null;
+  total_entradas_diario: number | null;
+  conquistas_desbloqueadas: unknown;
+  ultima_atividade: string | null;
+  created_at: string | null;
+  updated_at: string | null;
 }
 
 export function useGamificationStats() {
@@ -54,7 +57,7 @@ export function useRefreshGamificationStats() {
       if (!user?.id) return null;
 
       const { data, error } = await supabase
-        .rpc('refresh_user_gamification', { u_id: user.id });
+        .rpc('refresh_user_gamification', { p_user_id: user.id });
 
       if (error) {
         console.error('Error refreshing gamification:', error);

@@ -9,6 +9,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { SplashLoader } from "@/components/ui/SplashLoader";
 import { OfflineBanner } from "@/components/ui/OfflineBanner";
+import { AdminGuard } from "@/components/admin/AdminGuard";
 import { initAccessibility } from "@/hooks/useAccessibility";
 
 // Lazy load all pages for better initial bundle size
@@ -71,7 +72,7 @@ const App: React.FC = () => (
                   <Route path="/guide" element={<ErrorBoundary><GuideChat /></ErrorBoundary>} />
                   <Route path="/guide/select" element={<GuideSelect />} />
                   <Route path="/plans" element={<Plans />} />
-                  <Route path="/animation-studio" element={<AnimationStudio />} />
+                  <Route path="/animation-studio" element={<AdminGuard><AnimationStudio /></AdminGuard>} />
                   <Route path="/admin/*" element={<Admin />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />

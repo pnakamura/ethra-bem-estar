@@ -29,7 +29,6 @@ interface Recommendation {
   icon: React.ReactNode;
   title: string;
   description: string;
-  color: string;
 }
 
 const getRecommendations = (goals: UserGoal[]): Recommendation[] => {
@@ -40,7 +39,6 @@ const getRecommendations = (goals: UserGoal[]): Recommendation[] => {
       icon: <Wind className="w-5 h-5" />,
       title: 'Respiração 4-7-8',
       description: 'Técnica calmante para alívio imediato',
-      color: '#5f735f'
     });
   }
   if (goals.includes('sleep_better')) {
@@ -48,7 +46,6 @@ const getRecommendations = (goals: UserGoal[]): Recommendation[] => {
       icon: <Moon className="w-5 h-5" />,
       title: 'Meditação Noturna',
       description: 'Sons e guias para dormir melhor',
-      color: '#4a5b4a'
     });
   }
   if (goals.includes('focus')) {
@@ -56,7 +53,6 @@ const getRecommendations = (goals: UserGoal[]): Recommendation[] => {
       icon: <Target className="w-5 h-5" />,
       title: 'Respiração Energizante',
       description: 'Aumente seu foco e concentração',
-      color: '#a88b6c'
     });
   }
   if (goals.includes('self_knowledge')) {
@@ -64,7 +60,6 @@ const getRecommendations = (goals: UserGoal[]): Recommendation[] => {
       icon: <BookOpen className="w-5 h-5" />,
       title: 'Diário Emocional',
       description: 'Registre e compreenda suas emoções',
-      color: '#7d8f7d'
     });
   }
   if (goals.includes('emotional_balance')) {
@@ -72,7 +67,6 @@ const getRecommendations = (goals: UserGoal[]): Recommendation[] => {
       icon: <Heart className="w-5 h-5" />,
       title: 'Jornadas Guiadas',
       description: 'Programas de 7 dias para equilíbrio',
-      color: '#6f5a45'
     });
   }
   if (goals.includes('mindfulness')) {
@@ -80,7 +74,6 @@ const getRecommendations = (goals: UserGoal[]): Recommendation[] => {
       icon: <Compass className="w-5 h-5" />,
       title: 'Guias Espirituais',
       description: 'Conversas com mentores virtuais',
-      color: '#5f735f'
     });
   }
 
@@ -90,7 +83,6 @@ const getRecommendations = (goals: UserGoal[]): Recommendation[] => {
       icon: <Wind className="w-5 h-5" />,
       title: 'Técnicas de Respiração',
       description: 'Comece com práticas simples',
-      color: '#5f735f'
     });
   }
 
@@ -184,20 +176,16 @@ export default function Onboarding() {
                 className="relative mb-8"
               >
                 <motion.div
-                  className="w-32 h-32 rounded-full flex items-center justify-center shadow-[0_12px_40px_rgba(95,115,95,0.25)]"
-                  style={{
-                    background: 'linear-gradient(135deg, #7d8f7d 0%, #5f735f 50%, #4a5b4a 100%)',
-                  }}
+                  className="w-32 h-32 rounded-full flex items-center justify-center shadow-xl btn-primary-gradient dark:btn-glow-primary"
                   animate={{
                     scale: [1, 1.05, 1],
                   }}
                   transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
                 >
-                  <Leaf className="w-16 h-16 text-cream-50" />
+                  <Leaf className="w-16 h-16 text-secondary-foreground" />
                 </motion.div>
                 <motion.div
-                  className="absolute inset-0 rounded-full"
-                  style={{ background: 'linear-gradient(135deg, #7d8f7d40 0%, #5f735f20 100%)' }}
+                  className="absolute inset-0 rounded-full bg-secondary/20"
                   animate={{
                     scale: [1, 1.5, 1],
                     opacity: [0.4, 0, 0.4],
@@ -214,7 +202,7 @@ export default function Onboarding() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 }}
-                className="font-display text-6xl font-light text-sage-900 mb-3 tracking-tight"
+                className="font-display text-6xl font-light text-foreground mb-3 tracking-tight dark:text-glow"
               >
                 ETHRA
               </motion.h1>
@@ -223,7 +211,7 @@ export default function Onboarding() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
-                className="font-display text-2xl font-light mb-4 text-sage-600"
+                className="font-display text-2xl font-light mb-4 text-muted-foreground"
               >
                 Encontre sua paz interior
               </motion.p>
@@ -232,7 +220,7 @@ export default function Onboarding() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.6 }}
-                className="font-body text-sage-500 text-base max-w-xs"
+                className="font-body text-muted-foreground text-base max-w-xs"
               >
                 Meditação, respiração e autoconhecimento em um só lugar
               </motion.p>
@@ -248,15 +236,14 @@ export default function Onboarding() {
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ type: 'spring', delay: 0.1 }}
-                className="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-[0_8px_24px_rgba(95,115,95,0.2)]"
-                style={{ background: 'linear-gradient(135deg, #7d8f7d 0%, #5f735f 100%)' }}
+                className="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-lg btn-primary-gradient dark:btn-glow-primary"
               >
-                <Brain className="w-7 h-7 text-cream-50" />
+                <Brain className="w-7 h-7 text-secondary-foreground" />
               </motion.div>
-              <h2 className="font-display text-3xl font-light text-sage-900 mb-2">
+              <h2 className="font-display text-3xl font-light text-foreground mb-2 dark:text-glow">
                 O que te traz ao ETHRA?
               </h2>
-              <p className="font-body text-sage-600">
+              <p className="font-body text-muted-foreground">
                 Nos conte seus objetivos para personalizar sua experiência
               </p>
             </div>
@@ -275,15 +262,14 @@ export default function Onboarding() {
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ type: 'spring', delay: 0.1 }}
-                className="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-[0_8px_24px_rgba(95,115,95,0.2)]"
-                style={{ background: 'linear-gradient(135deg, #a3b0a3 0%, #7d8f7d 100%)' }}
+                className="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-lg guide-avatar dark:card-glow"
               >
-                <Compass className="w-7 h-7 text-cream-50" />
+                <Compass className="w-7 h-7 text-secondary dark:icon-glow-secondary" />
               </motion.div>
-              <h2 className="font-display text-3xl font-light text-sage-900 mb-2">
+              <h2 className="font-display text-3xl font-light text-foreground mb-2 dark:text-glow">
                 Qual sua experiência?
               </h2>
-              <p className="font-body text-sage-600">
+              <p className="font-body text-muted-foreground">
                 Isso nos ajuda a recomendar práticas ideais para você
               </p>
             </div>
@@ -302,15 +288,14 @@ export default function Onboarding() {
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ type: 'spring', delay: 0.1 }}
-                className="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-[0_8px_24px_rgba(95,115,95,0.2)]"
-                style={{ background: 'linear-gradient(135deg, #5f735f 0%, #4a5b4a 100%)' }}
+                className="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-lg btn-primary-gradient dark:btn-glow-primary"
               >
-                <Moon className="w-7 h-7 text-cream-50" />
+                <Moon className="w-7 h-7 text-secondary-foreground" />
               </motion.div>
-              <h2 className="font-display text-3xl font-light text-sage-900 mb-2">
+              <h2 className="font-display text-3xl font-light text-foreground mb-2 dark:text-glow">
                 Melhor momento para praticar?
               </h2>
-              <p className="font-body text-sage-600">
+              <p className="font-body text-muted-foreground">
                 Vamos te lembrar no horário ideal
               </p>
             </div>
@@ -329,15 +314,14 @@ export default function Onboarding() {
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ type: 'spring', delay: 0.1 }}
-                className="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-[0_8px_24px_rgba(95,115,95,0.2)]"
-                style={{ background: 'linear-gradient(135deg, #7d8f7d 0%, #5f735f 100%)' }}
+                className="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-lg btn-primary-gradient dark:btn-glow-primary"
               >
-                <Wind className="w-7 h-7 text-cream-50" />
+                <Wind className="w-7 h-7 text-secondary-foreground" />
               </motion.div>
-              <h2 className="font-display text-3xl font-light text-sage-900 mb-2">
+              <h2 className="font-display text-3xl font-light text-foreground mb-2 dark:text-glow">
                 Experimente agora!
               </h2>
-              <p className="font-body text-sage-600">
+              <p className="font-body text-muted-foreground">
                 Uma breve sessão de respiração para relaxar
               </p>
             </div>
@@ -360,17 +344,12 @@ export default function Onboarding() {
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ type: 'spring', stiffness: 200 }}
-                className="w-24 h-24 rounded-2xl flex items-center justify-center mb-4 shadow-[0_12px_40px_rgba(95,115,95,0.3)]"
-                style={{
-                  background: breathingCompleted
-                    ? 'linear-gradient(135deg, #5f735f 0%, #4a5b4a 100%)'
-                    : 'linear-gradient(135deg, #7d8f7d 0%, #5f735f 100%)',
-                }}
+                className="w-24 h-24 rounded-2xl flex items-center justify-center mb-4 shadow-xl btn-primary-gradient dark:btn-glow-primary"
               >
                 {breathingCompleted ? (
-                  <Check className="w-12 h-12 text-cream-50" />
+                  <Check className="w-12 h-12 text-secondary-foreground" />
                 ) : (
-                  <Leaf className="w-12 h-12 text-cream-50" />
+                  <Leaf className="w-12 h-12 text-secondary-foreground" />
                 )}
               </motion.div>
 
@@ -378,7 +357,7 @@ export default function Onboarding() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="font-display text-4xl font-light text-sage-900 mb-2"
+                className="font-display text-4xl font-light text-foreground mb-2 dark:text-glow"
               >
                 {breathingCompleted ? 'Incrível! 🌿' : 'Tudo pronto!'}
               </motion.h2>
@@ -388,7 +367,7 @@ export default function Onboarding() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                className="font-body text-sage-600 text-sm mb-4 max-w-xs leading-relaxed"
+                className="font-body text-muted-foreground text-sm mb-4 max-w-xs leading-relaxed"
               >
                 {getPersonalizedMessage(preferences.goals, preferences.experienceLevel)}
               </motion.p>
@@ -398,25 +377,20 @@ export default function Onboarding() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 }}
-                className="w-full max-w-xs rounded-3xl p-5 mb-4 relative overflow-hidden"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(125, 143, 125, 0.08) 0%, rgba(95, 115, 95, 0.12) 100%)',
-                  border: '1px solid rgba(95, 115, 95, 0.15)',
-                }}
+                className="w-full max-w-xs onboarding-card mb-4"
               >
-                <h3 className="font-display text-base font-medium text-sage-900 mb-3">Seu Perfil</h3>
+                <h3 className="font-display text-base font-medium text-foreground mb-3">Seu Perfil</h3>
                 <div className="flex flex-wrap gap-2 mb-3">
                   {preferences.goals.map((goal) => (
                     <span
                       key={goal}
-                      className="px-3 py-1.5 rounded-full text-xs font-body font-medium text-cream-50 shadow-sm"
-                      style={{ background: 'linear-gradient(135deg, #7d8f7d 0%, #5f735f 100%)' }}
+                      className="px-3 py-1.5 rounded-full text-xs font-body font-medium btn-primary-gradient text-secondary-foreground shadow-sm"
                     >
                       {GOAL_LABELS[goal]}
                     </span>
                   ))}
                 </div>
-                <div className="flex items-center justify-between text-xs font-body text-sage-600">
+                <div className="flex items-center justify-between text-xs font-body text-muted-foreground">
                   <span>Nível: {preferences.experienceLevel ? EXPERIENCE_LABELS[preferences.experienceLevel] : '-'}</span>
                 </div>
               </motion.div>
@@ -428,7 +402,7 @@ export default function Onboarding() {
                 transition={{ delay: 0.5 }}
                 className="w-full max-w-xs mb-4"
               >
-                <h3 className="font-display text-base font-medium text-sage-900 mb-3 text-left">
+                <h3 className="font-display text-base font-medium text-foreground mb-3 text-left">
                   Recomendamos para você:
                 </h3>
                 <div className="space-y-3">
@@ -438,17 +412,14 @@ export default function Onboarding() {
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.6 + index * 0.1 }}
-                      className="flex items-center gap-3 p-4 bg-cream-50/50 rounded-2xl border border-sage-200/30 shadow-sm"
+                      className="flex items-center gap-3 p-4 bg-card/50 rounded-2xl border border-border/30 shadow-sm dark:card-elevated-dark"
                     >
-                      <div
-                        className="w-11 h-11 rounded-xl flex items-center justify-center text-cream-50 shadow-sm"
-                        style={{ backgroundColor: rec.color }}
-                      >
+                      <div className="w-11 h-11 rounded-xl flex items-center justify-center text-secondary-foreground shadow-sm btn-primary-gradient">
                         {rec.icon}
                       </div>
                       <div className="flex-1 text-left">
-                        <p className="font-body text-sm font-medium text-sage-900">{rec.title}</p>
-                        <p className="font-body text-xs text-sage-600 mt-0.5">{rec.description}</p>
+                        <p className="font-body text-sm font-medium text-foreground">{rec.title}</p>
+                        <p className="font-body text-xs text-muted-foreground mt-0.5">{rec.description}</p>
                       </div>
                     </motion.div>
                   ))}
@@ -465,17 +436,14 @@ export default function Onboarding() {
                 <Button
                   onClick={handleSkipToAuth}
                   size="lg"
-                  className="h-14 text-lg font-body font-medium rounded-2xl shadow-[0_8px_24px_rgba(95,115,95,0.25)]"
-                  style={{
-                    background: 'linear-gradient(135deg, #7d8f7d 0%, #5f735f 100%)',
-                  }}
+                  className="h-14 text-lg font-body font-medium rounded-2xl btn-primary-gradient dark:btn-glow-primary"
                 >
                   Criar conta
                 </Button>
                 <Button
                   variant="outline"
                   onClick={handleComplete}
-                  className="h-12 rounded-2xl border-sage-300/50 hover:bg-sage-50/50 font-body text-sage-700"
+                  className="h-12 rounded-2xl border-border/50 hover:bg-muted font-body text-foreground"
                 >
                   Explorar primeiro
                 </Button>
@@ -490,7 +458,7 @@ export default function Onboarding() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-cream-50 via-sage-50/30 to-earth-50/20 flex flex-col overflow-hidden relative">
+    <div className="min-h-screen bg-background flex flex-col overflow-hidden relative">
       {/* Noise texture overlay */}
       <div
         className="fixed inset-0 pointer-events-none opacity-[0.03] mix-blend-overlay"
@@ -502,9 +470,9 @@ export default function Onboarding() {
       {/* Animated organic background decoration */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <motion.div
-          className="absolute -top-40 -right-40 w-96 h-96 rounded-full"
+          className="absolute -top-40 -right-40 w-96 h-96 rounded-full opacity-60 dark:opacity-40"
           style={{
-            background: 'radial-gradient(circle, rgba(125, 143, 125, 0.12) 0%, transparent 70%)'
+            background: 'radial-gradient(circle, hsl(var(--secondary) / 0.12) 0%, transparent 70%)'
           }}
           animate={{
             scale: [1, 1.1, 1],
@@ -513,9 +481,9 @@ export default function Onboarding() {
           transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
         />
         <motion.div
-          className="absolute -bottom-40 -left-40 w-80 h-80 rounded-full"
+          className="absolute -bottom-40 -left-40 w-80 h-80 rounded-full opacity-50 dark:opacity-30"
           style={{
-            background: 'radial-gradient(circle, rgba(168, 139, 108, 0.1) 0%, transparent 70%)'
+            background: 'radial-gradient(circle, hsl(var(--primary) / 0.1) 0%, transparent 70%)'
           }}
           animate={{
             scale: [1, 1.15, 1],
@@ -524,9 +492,9 @@ export default function Onboarding() {
           transition={{ duration: 12, repeat: Infinity, delay: 2, ease: 'easeInOut' }}
         />
         <motion.div
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full"
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full opacity-40 dark:opacity-20"
           style={{
-            background: 'radial-gradient(circle, rgba(95, 115, 95, 0.08) 0%, transparent 60%)'
+            background: 'radial-gradient(circle, hsl(var(--secondary) / 0.08) 0%, transparent 60%)'
           }}
           animate={{
             scale: [1, 1.2, 1],
@@ -537,14 +505,14 @@ export default function Onboarding() {
       </div>
 
       {/* Header with progress */}
-      <div className="sticky top-0 z-10 px-4 py-4 safe-top bg-cream-50/80 backdrop-blur-md border-b border-sage-200/20">
+      <div className="sticky top-0 z-10 px-4 py-4 safe-top header-blur">
         <div className="flex items-center justify-between mb-4">
           {currentStep > 0 && currentStep < 5 ? (
             <Button
               variant="ghost"
               size="icon"
               onClick={handlePrev}
-              className="rounded-full hover:bg-sage-100/50 text-sage-700"
+              className="rounded-full hover:bg-muted text-foreground"
             >
               <ArrowLeft className="w-5 h-5" />
             </Button>
@@ -562,7 +530,7 @@ export default function Onboarding() {
                 completeOnboarding();
                 navigate('/');
               }}
-              className="text-sage-500 text-sm font-body hover:bg-sage-100/50"
+              className="text-muted-foreground text-sm font-body hover:bg-muted"
             >
               Pular
             </Button>
@@ -598,12 +566,7 @@ export default function Onboarding() {
               onClick={handleNext}
               disabled={!canProceed()}
               size="lg"
-              className="w-full h-14 text-lg font-body font-medium rounded-2xl gap-2 shadow-[0_8px_24px_rgba(95,115,95,0.25)]"
-              style={{
-                background: canProceed()
-                  ? 'linear-gradient(135deg, #7d8f7d 0%, #5f735f 100%)'
-                  : undefined,
-              }}
+              className="w-full h-14 text-lg font-body font-medium rounded-2xl gap-2 btn-primary-gradient dark:btn-glow-primary disabled:opacity-50"
             >
               {currentStep === 0 ? 'Começar jornada' : 'Continuar'}
               <ArrowRight className="w-5 h-5" />

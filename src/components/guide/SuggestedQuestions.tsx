@@ -24,7 +24,7 @@ export function SuggestedQuestions({
       animate={{ opacity: 1 }}
       transition={{ delay: 0.3 }}
     >
-      <div className="flex items-center justify-center gap-2 text-xs font-body text-sage-600">
+      <div className="flex items-center justify-center gap-2 text-xs font-body text-muted-foreground">
         <Leaf className="w-3 h-3" />
         <span>Sugestões para começar</span>
       </div>
@@ -41,10 +41,10 @@ export function SuggestedQuestions({
               ease: 'easeOut',
             }}
             onClick={() => onSelect(question)}
-            className="flex items-start gap-3 px-4 py-3 text-left text-sm rounded-2xl bg-cream-50/80 backdrop-blur-sm hover:bg-cream-50 border border-sage-200/50 hover:border-sage-300/70 transition-all duration-200 group shadow-[0_2px_12px_rgba(95,115,95,0.05)] hover:shadow-[0_4px_16px_rgba(95,115,95,0.1)]"
+            className="flex items-start gap-3 px-4 py-3 text-left text-sm rounded-2xl suggestion-btn group"
           >
-            <MessageCircle className="w-4 h-4 text-sage-600 flex-shrink-0 mt-0.5 group-hover:scale-110 transition-transform duration-200" />
-            <span className="text-sage-700 font-body group-hover:text-sage-900 transition-colors duration-200 leading-relaxed">
+            <MessageCircle className="w-4 h-4 text-secondary flex-shrink-0 mt-0.5 group-hover:scale-110 transition-transform duration-200 dark:icon-glow-secondary" />
+            <span className="text-foreground font-body group-hover:text-foreground transition-colors duration-200 leading-relaxed">
               {question}
             </span>
           </motion.button>

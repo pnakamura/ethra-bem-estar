@@ -94,21 +94,14 @@ export const MessageBubble = forwardRef<HTMLDivElement, MessageBubbleProps>(
           className={cn(
             'rounded-2xl px-4 py-3 text-sm leading-relaxed font-body backdrop-blur-sm',
             isUser
-              ? 'rounded-br-md shadow-[0_4px_16px_rgba(95,115,95,0.15)] text-cream-50'
-              : 'bg-cream-50/90 text-sage-900 rounded-bl-md shadow-[0_2px_12px_rgba(95,115,95,0.08)] border border-sage-200/30',
-            isEmpathic && !isUser && 'ring-1 ring-sage-400/30'
+              ? 'rounded-br-md user-bubble'
+              : 'guide-bubble text-foreground rounded-bl-md',
+            isEmpathic && !isUser && 'ring-1 ring-primary/30 dark:ring-primary/20'
           )}
-          style={
-            isUser
-              ? {
-                  background: 'linear-gradient(135deg, #7d8f7d 0%, #5f735f 100%)',
-                }
-              : undefined
-          }
         >
           {showGuideHeader && (
             <div className="flex items-center gap-1.5 mb-1">
-              <span className="text-xs font-medium text-sage-600 font-body">
+              <span className="text-xs font-medium text-muted-foreground font-body">
                 {guideName}
               </span>
               {showMemoryIndicator && (
@@ -117,7 +110,7 @@ export const MessageBubble = forwardRef<HTMLDivElement, MessageBubbleProps>(
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.3, type: 'spring' }}
                   title="Seu guia lembrou de algo que você disse antes"
-                  className="text-sage-500"
+                  className="text-primary dark:icon-glow"
                 >
                   <Sparkles className="w-3 h-3" />
                 </motion.div>
@@ -129,8 +122,7 @@ export const MessageBubble = forwardRef<HTMLDivElement, MessageBubbleProps>(
           {/* Streaming indicator */}
           {isStreaming && !isUser && (
             <motion.span
-              className="inline-block w-1.5 h-4 ml-0.5 rounded-sm"
-              style={{ background: 'rgba(95, 115, 95, 0.5)' }}
+              className="inline-block w-1.5 h-4 ml-0.5 rounded-sm bg-secondary/50"
               animate={{ opacity: [1, 0, 1] }}
               transition={{ duration: 0.8, repeat: Infinity }}
             />
@@ -144,8 +136,8 @@ export const MessageBubble = forwardRef<HTMLDivElement, MessageBubbleProps>(
               className={cn(
                 'text-xs font-body cursor-default select-none transition-opacity duration-200 hover:opacity-100',
                 isUser
-                  ? 'text-sage-500 opacity-70 text-right'
-                  : 'text-sage-500 opacity-70 text-left'
+                  ? 'text-muted-foreground opacity-70 text-right'
+                  : 'text-muted-foreground opacity-70 text-left'
               )}
             >
               {relativeTime}
@@ -153,7 +145,7 @@ export const MessageBubble = forwardRef<HTMLDivElement, MessageBubbleProps>(
           </TooltipTrigger>
           <TooltipContent
             side={isUser ? 'left' : 'right'}
-            className="bg-sage-900 border-sage-700 text-cream-50 font-body text-xs"
+            className="bg-popover border-border text-popover-foreground font-body text-xs"
           >
             {fullDateTime}
           </TooltipContent>

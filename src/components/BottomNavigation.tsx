@@ -40,22 +40,22 @@ export function BottomNavigation() {
   }, []);
 
   return (
-    <motion.nav 
+    <motion.nav
       ref={navRef}
       initial={{ y: 100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      transition={{ delay: 0.3, type: 'spring', stiffness: 200, damping: 25 }}
+      transition={{ delay: 0.3, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       className="fixed bottom-0 left-0 right-0 z-50 safe-bottom"
     >
-      {/* Glass background with shadow */}
-      <div className="absolute inset-0 glass shadow-[0_-4px_24px_hsl(var(--foreground)/0.06)]" />
-      
-      {/* Nav content - larger touch targets */}
-      <div className="relative flex items-center justify-around px-1 py-3">
+      {/* Elegant glass background */}
+      <div className="absolute inset-0 bg-card/90 backdrop-blur-xl border-t border-border/40 shadow-[0_-8px_32px_hsl(var(--foreground)/0.04)]" />
+
+      {/* Nav content */}
+      <div className="relative flex items-center justify-around px-2 py-3">
         {navItems.map((item, index) => {
           const isActive = location.pathname === item.path;
           const Icon = item.icon;
-          
+
           return (
             <NavLink
               key={item.path}
@@ -67,44 +67,35 @@ export function BottomNavigation() {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 + index * 0.05 }}
-                whileTap={{ scale: 0.9 }}
+                transition={{ delay: 0.4 + index * 0.05, duration: 0.5 }}
+                whileTap={{ scale: 0.95 }}
                 className={cn(
-                  'nav-item min-w-[4rem] min-h-[58px] px-2',
-                  isActive && 'nav-item-active'
+                  'flex flex-col items-center gap-1 min-w-[4rem] min-h-[56px] px-3 py-2 rounded-xl transition-all duration-300',
+                  isActive ? 'bg-primary/8' : 'hover:bg-muted/50'
                 )}
               >
-                {/* Active glow - Enhanced neon */}
-                {isActive && (
-                  <motion.div
-                    layoutId="nav-glow"
-                    className="absolute inset-0 bg-primary/15 rounded-2xl dark:bg-primary/25 dark:glow-neon-teal"
-                    transition={{ type: 'spring', bounce: 0.15, duration: 0.5 }}
-                  />
-                )}
-                
-                {/* Active indicator line - Neon glow */}
+                {/* Active indicator line */}
                 {isActive && (
                   <motion.div
                     layoutId="nav-indicator"
-                    className="absolute -top-1 left-1/2 -translate-x-1/2 w-8 h-1 rounded-full bg-primary dark:animate-glow-pulse dark:shadow-[0_0_12px_hsl(168_80%_55%/0.8)]"
-                    transition={{ type: 'spring', bounce: 0.15, duration: 0.5 }}
+                    className="absolute -top-0.5 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-primary"
+                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                   />
                 )}
-                
+
                 <Icon
                   className={cn(
-                    'w-7 h-7 transition-all duration-200 relative z-10',
-                    isActive 
-                      ? 'text-primary dark:icon-neon' 
+                    'w-6 h-6 transition-all duration-300',
+                    isActive
+                      ? 'text-primary'
                       : 'text-muted-foreground'
                   )}
-                  strokeWidth={isActive ? 2.5 : 1.75}
+                  strokeWidth={isActive ? 2.25 : 1.75}
                 />
                 <span
                   className={cn(
-                    'text-sm font-semibold transition-colors relative z-10 mt-0.5',
-                    isActive ? 'text-primary dark:text-glow dark:animate-text-glow' : 'text-muted-foreground'
+                    'text-xs font-medium transition-colors duration-300',
+                    isActive ? 'text-primary' : 'text-muted-foreground'
                   )}
                 >
                   {item.label}

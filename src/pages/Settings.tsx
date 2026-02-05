@@ -21,274 +21,309 @@ export default function Settings() {
     setMounted(true);
   }, []);
 
-  const themeOptions: { value: ThemeOption; label: string; icon: React.ElementType }[] = [
-    { value: 'light', label: 'Claro', icon: Sun },
-    { value: 'dark', label: 'Escuro', icon: Moon },
-    { value: 'system', label: 'Sistema', icon: Monitor },
+  const themeOptions: { value: ThemeOption; label: string; icon: React.ElementType; description: string }[] = [
+    { value: 'light', label: 'Claro', icon: Sun, description: 'Tema claro elegante' },
+    { value: 'dark', label: 'Escuro', icon: Moon, description: 'Tema escuro sofisticado' },
+    { value: 'system', label: 'Sistema', icon: Monitor, description: 'Segue seu dispositivo' },
   ];
 
-  const fontScaleOptions: { value: FontScale; label: string; icon: React.ElementType }[] = [
-    { value: 'normal', label: 'Normal', icon: Type },
-    { value: 'large', label: 'Grande', icon: ZoomIn },
-    { value: 'xlarge', label: 'Extra Grande', icon: Maximize2 },
+  const fontScaleOptions: { value: FontScale; label: string; size: string }[] = [
+    { value: 'normal', label: 'Normal', size: '100%' },
+    { value: 'large', label: 'Grande', size: '112%' },
+    { value: 'xlarge', label: 'Extra', size: '125%' },
   ];
 
   const currentTheme = (theme as ThemeOption) || 'system';
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.08 }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } }
+  };
+
   return (
     <div className="min-h-[100dvh] flex flex-col pb-28 bg-background">
+      {/* Subtle Background Gradient */}
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full bg-primary/3 blur-3xl" />
+        <div className="absolute bottom-32 left-0 w-[400px] h-[400px] rounded-full bg-secondary/3 blur-3xl" />
+      </div>
+
       {/* Header */}
       <motion.header
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="pt-8 px-6 pb-6"
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        className="relative pt-12 px-6 pb-8"
       >
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate(-1)}
-            className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors dark:border-glow"
+            className="w-11 h-11 rounded-xl bg-card border border-border/50 flex items-center justify-center hover:bg-muted/50 hover:border-primary/20 transition-all duration-300"
           >
             <ArrowLeft className="w-5 h-5 text-foreground" />
           </button>
-          <h1 className="text-2xl font-bold text-foreground dark:text-glow">Configurações</h1>
+          <div>
+            <h1 className="font-display text-2xl font-medium text-foreground">Configurações</h1>
+            <p className="text-sm text-muted-foreground mt-0.5">Personalize sua experiência</p>
+          </div>
         </div>
       </motion.header>
 
       {/* Main Content */}
-      <main className="flex-1 px-6 space-y-6">
-        {/* Appearance Section */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-        >
-          <div className="flex items-center gap-2 mb-3 px-1">
-            <Palette className="w-4 h-4 text-primary dark:icon-glow" />
-            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider dark:text-glow">
-              Aparência
-            </h2>
-          </div>
-          
-          <div className="card-elevated p-4 space-y-4 dark:border-glow dark:card-glow">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-foreground">Tema</span>
-              {mounted && (
-                <span className="text-xs text-muted-foreground capitalize">
-                  {resolvedTheme === 'dark' ? 'Escuro' : 'Claro'}
-                </span>
-              )}
+      <motion.main
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="relative flex-1 px-6 space-y-8"
+      >
+        {/* Theme Section */}
+        <motion.section variants={itemVariants}>
+          <div className="flex items-center gap-2.5 mb-4 px-1">
+            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Palette className="w-4 h-4 text-primary" />
             </div>
-            
-            <div className="grid grid-cols-3 gap-2">
+            <h2 className="text-base font-medium text-foreground">Tema</h2>
+          </div>
+
+          <div className="bg-card rounded-2xl border border-border/50 p-5 shadow-sm">
+            <div className="grid grid-cols-3 gap-3">
               {themeOptions.map((option) => {
                 const Icon = option.icon;
                 const isSelected = currentTheme === option.value;
-                
+
                 return (
                   <button
                     key={option.value}
                     onClick={() => setTheme(option.value)}
                     className={cn(
-                      "flex flex-col items-center gap-2 p-3 rounded-xl transition-all duration-200",
-                      isSelected 
-                        ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 dark:shadow-primary/40 dark:btn-glow-primary" 
-                        : "bg-muted hover:bg-muted/80 text-muted-foreground dark:hover:border-glow"
+                      "relative flex flex-col items-center gap-3 p-4 rounded-xl transition-all duration-300",
+                      isSelected
+                        ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
+                        : "bg-muted/50 hover:bg-muted text-foreground border border-transparent hover:border-primary/10"
                     )}
                   >
-                    <Icon className={cn("w-5 h-5", isSelected && "dark:icon-glow")} />
-                    <span className="text-xs font-medium">{option.label}</span>
+                    <div className={cn(
+                      "w-10 h-10 rounded-xl flex items-center justify-center transition-colors",
+                      isSelected ? "bg-primary-foreground/20" : "bg-background"
+                    )}>
+                      <Icon className="w-5 h-5" />
+                    </div>
+                    <span className="text-sm font-medium">{option.label}</span>
+                    {isSelected && (
+                      <motion.div
+                        layoutId="theme-indicator"
+                        className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary-foreground"
+                      />
+                    )}
                   </button>
                 );
               })}
             </div>
+
+            {mounted && (
+              <div className="mt-4 pt-4 border-t border-border/50">
+                <p className="text-sm text-muted-foreground text-center">
+                  Tema atual: <span className="text-foreground font-medium">{resolvedTheme === 'dark' ? 'Escuro' : 'Claro'}</span>
+                </p>
+              </div>
+            )}
           </div>
         </motion.section>
 
         {/* Accessibility Section */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
-        >
-          <div className="flex items-center gap-2 mb-3 px-1">
-            <Eye className="w-4 h-4 text-primary dark:icon-glow" />
-            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider dark:text-glow">
-              Acessibilidade
-            </h2>
-          </div>
-          
-          <div className="card-elevated p-4 space-y-4 dark:border-glow dark:card-glow">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-foreground">Tamanho do Texto</span>
-              {accessibilityMounted && (
-                <span className="text-xs text-muted-foreground">
-                  {fontScale === 'normal' ? '115%' : fontScale === 'large' ? '130%' : '145%'}
-                </span>
-              )}
+        <motion.section variants={itemVariants}>
+          <div className="flex items-center gap-2.5 mb-4 px-1">
+            <div className="w-8 h-8 rounded-lg bg-secondary/10 flex items-center justify-center">
+              <Eye className="w-4 h-4 text-secondary" />
             </div>
-            
-            <div className="grid grid-cols-3 gap-2">
-              {fontScaleOptions.map((option) => {
-                const Icon = option.icon;
-                const isSelected = fontScale === option.value;
-                
-                return (
-                  <button
-                    key={option.value}
-                    onClick={() => setFontScale(option.value)}
-                    className={cn(
-                      "flex flex-col items-center gap-2 p-3 rounded-xl transition-all duration-200",
-                      isSelected 
-                        ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 dark:shadow-primary/40 dark:btn-glow-primary" 
-                        : "bg-muted hover:bg-muted/80 text-muted-foreground dark:hover:border-glow"
-                    )}
-                  >
-                    <Icon className={cn("w-5 h-5", isSelected && "dark:icon-glow")} />
-                    <span className="text-xs font-medium">{option.label}</span>
-                  </button>
-                );
-              })}
+            <h2 className="text-base font-medium text-foreground">Acessibilidade</h2>
+          </div>
+
+          <div className="bg-card rounded-2xl border border-border/50 p-5 shadow-sm space-y-5">
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-sm font-medium text-foreground">Tamanho do Texto</span>
+                {accessibilityMounted && (
+                  <span className="text-xs text-primary font-medium px-2 py-1 rounded-full bg-primary/10">
+                    {fontScale === 'normal' ? '100%' : fontScale === 'large' ? '112%' : '125%'}
+                  </span>
+                )}
+              </div>
+
+              <div className="flex gap-2">
+                {fontScaleOptions.map((option) => {
+                  const isSelected = fontScale === option.value;
+
+                  return (
+                    <button
+                      key={option.value}
+                      onClick={() => setFontScale(option.value)}
+                      className={cn(
+                        "flex-1 py-3 rounded-xl transition-all duration-300 text-sm font-medium",
+                        isSelected
+                          ? "bg-primary text-primary-foreground shadow-md shadow-primary/15"
+                          : "bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      {option.label}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             {/* Preview */}
-            <div className="mt-4 p-3 rounded-xl bg-muted/50 border border-border/50">
-              <p className="text-xs text-muted-foreground mb-1">Pré-visualização:</p>
+            <div className="p-4 rounded-xl bg-muted/30 border border-border/30">
+              <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wider">Pré-visualização</p>
               <p className="text-sm text-foreground leading-relaxed">
-                Este é um exemplo de como o texto aparecerá no aplicativo. Ajuste o tamanho para melhor conforto visual.
+                Este é um exemplo de como o texto aparecerá. Ajuste para melhor conforto.
               </p>
             </div>
           </div>
         </motion.section>
 
         {/* App Installation Section */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          <div className="flex items-center gap-2 mb-3 px-1">
-            <Smartphone className="w-4 h-4 text-primary dark:icon-glow" />
-            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider dark:text-glow">
-              Aplicativo
-            </h2>
+        <motion.section variants={itemVariants}>
+          <div className="flex items-center gap-2.5 mb-4 px-1">
+            <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center">
+              <Smartphone className="w-4 h-4 text-accent" />
+            </div>
+            <h2 className="text-base font-medium text-foreground">Aplicativo</h2>
           </div>
-          
-          <div className="card-elevated p-4 dark:border-glow dark:card-glow">
+
+          <div className="bg-card rounded-2xl border border-border/50 overflow-hidden shadow-sm">
             {isInstalled ? (
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                  <Check className="w-4 h-4 text-green-600 dark:text-green-400" />
+              <div className="flex items-center gap-4 p-5">
+                <div className="w-12 h-12 rounded-xl bg-green-500/10 flex items-center justify-center">
+                  <Check className="w-5 h-5 text-green-600 dark:text-green-400" />
                 </div>
                 <div>
-                  <span className="text-sm font-medium text-foreground block">Aplicativo Instalado</span>
+                  <span className="text-sm font-medium text-foreground block">Instalado</span>
                   <span className="text-xs text-muted-foreground">
                     ETHRA está na sua tela inicial
                   </span>
                 </div>
               </div>
             ) : isIOS ? (
-              <div className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center">
-                    <Download className="w-4 h-4 text-muted-foreground" />
+              <div className="p-5 space-y-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center">
+                    <Download className="w-5 h-5 text-muted-foreground" />
                   </div>
-                  <span className="text-sm font-medium text-foreground">Instalar no iPhone/iPad</span>
+                  <span className="text-sm font-medium text-foreground">Instalar no iOS</span>
                 </div>
-                <ol className="text-xs text-muted-foreground space-y-1 pl-12">
-                  <li>1. Toque em ⬆️ (Compartilhar)</li>
-                  <li>2. Toque em "Adicionar à Tela de Início"</li>
+                <ol className="text-sm text-muted-foreground space-y-2 pl-16">
+                  <li className="flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-full bg-muted flex items-center justify-center text-xs font-medium">1</span>
+                    Toque em Compartilhar
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-full bg-muted flex items-center justify-center text-xs font-medium">2</span>
+                    "Adicionar à Tela de Início"
+                  </li>
                 </ol>
               </div>
             ) : (
               <button
                 onClick={promptInstall}
                 disabled={!isInstallable}
-                className="w-full flex items-center justify-between hover:bg-muted/30 transition-colors rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full flex items-center justify-between p-5 hover:bg-muted/30 transition-all duration-300 disabled:opacity-50"
               >
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <Download className="w-4 h-4 text-primary" />
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <Download className="w-5 h-5 text-primary" />
                   </div>
                   <div className="text-left">
                     <span className="text-sm font-medium text-foreground block">Instalar Aplicativo</span>
                     <span className="text-xs text-muted-foreground">
-                      {isInstallable ? 'Acesse direto da sua tela inicial' : 'Disponível via navegador compatível'}
+                      {isInstallable ? 'Acesso rápido pela tela inicial' : 'Use um navegador compatível'}
                     </span>
                   </div>
                 </div>
-                <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                <ChevronRight className="w-5 h-5 text-muted-foreground" />
               </button>
             )}
           </div>
         </motion.section>
 
         {/* Privacy & Security Section */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.35 }}
-        >
-          <div className="flex items-center gap-2 mb-3 px-1">
-            <Lock className="w-4 h-4 text-primary dark:icon-glow" />
-            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider dark:text-glow">
-              Privacidade
-            </h2>
+        <motion.section variants={itemVariants}>
+          <div className="flex items-center gap-2.5 mb-4 px-1">
+            <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
+              <Lock className="w-4 h-4 text-muted-foreground" />
+            </div>
+            <h2 className="text-base font-medium text-foreground">Privacidade</h2>
           </div>
-          
-          <div className="card-elevated divide-y divide-border/50 overflow-hidden dark:border-glow dark:card-glow">
-            <button 
+
+          <div className="bg-card rounded-2xl border border-border/50 divide-y divide-border/30 overflow-hidden shadow-sm">
+            <button
               onClick={() => navigate('/privacy')}
-              className="w-full flex items-center justify-between p-4 hover:bg-muted/30 transition-colors"
+              className="w-full flex items-center justify-between p-5 hover:bg-muted/30 transition-all duration-300"
             >
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center">
                   <Shield className="w-4 h-4 text-muted-foreground" />
                 </div>
                 <span className="text-sm font-medium text-foreground">
                   Política de Privacidade
                 </span>
               </div>
-              <ChevronRight className="w-4 h-4 text-muted-foreground" />
+              <ChevronRight className="w-5 h-5 text-muted-foreground" />
             </button>
-            
-            <button 
+
+            <button
               onClick={() => navigate('/privacy#liability')}
-              className="w-full flex items-center justify-between p-4 hover:bg-muted/30 transition-colors"
+              className="w-full flex items-center justify-between p-5 hover:bg-muted/30 transition-all duration-300"
             >
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center">
                   <Info className="w-4 h-4 text-muted-foreground" />
                 </div>
                 <span className="text-sm font-medium text-foreground">
                   Termos de Uso
                 </span>
               </div>
-              <ChevronRight className="w-4 h-4 text-muted-foreground" />
+              <ChevronRight className="w-5 h-5 text-muted-foreground" />
             </button>
           </div>
         </motion.section>
 
         {/* About Section */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.45 }}
-        >
-          <div className="flex items-center gap-2 mb-3 px-1">
-            <Info className="w-4 h-4 text-primary dark:icon-glow" />
-            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider dark:text-glow">
-              Sobre
-            </h2>
+        <motion.section variants={itemVariants}>
+          <div className="flex items-center gap-2.5 mb-4 px-1">
+            <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
+              <Info className="w-4 h-4 text-muted-foreground" />
+            </div>
+            <h2 className="text-base font-medium text-foreground">Sobre</h2>
           </div>
-          
-          <div className="card-elevated p-4 dark:border-glow dark:card-glow">
+
+          <div className="bg-card rounded-2xl border border-border/50 p-5 shadow-sm">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-foreground">Versão</span>
-              <span className="text-sm text-muted-foreground dark:text-glow">1.0.0</span>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <span className="font-display text-primary font-medium text-sm">E</span>
+                </div>
+                <div>
+                  <span className="text-sm font-medium text-foreground block">ETHRA</span>
+                  <span className="text-xs text-muted-foreground">Bem-estar & Meditação</span>
+                </div>
+              </div>
+              <span className="text-sm text-muted-foreground font-medium px-3 py-1.5 rounded-full bg-muted/50">v1.0.0</span>
             </div>
           </div>
         </motion.section>
-      </main>
+
+        {/* Bottom spacing */}
+        <div className="h-4" />
+      </motion.main>
 
       <BottomNavigation />
     </div>

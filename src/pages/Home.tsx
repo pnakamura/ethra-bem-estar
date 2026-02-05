@@ -6,9 +6,7 @@ import {
   Wind,
   BookOpen,
   BarChart3,
-  Heart,
   Plus,
-  Sparkles,
   Headphones,
   Utensils,
   Compass,
@@ -81,7 +79,7 @@ export default function Home() {
     const timeStr = minutes > 0 ? `${minutes}min ${seconds}s` : `${seconds}s`;
 
     toast.success(`${technique} concluída!`, {
-      description: `Você praticou por ${timeStr}. Continue assim! 🌿`,
+      description: `Você praticou por ${timeStr}. Continue assim!`,
       duration: 5000,
     });
 
@@ -106,58 +104,46 @@ export default function Home() {
   const handleJourneys = () => navigate('/journeys');
   const handleAnimationStudio = () => navigate('/animation-studio');
 
-  return (
-    <div className="min-h-[100dvh] flex flex-col pb-32 bg-gradient-to-br from-cream-50 via-sage-50/30 to-earth-50/20 relative overflow-hidden">
-      {/* Noise texture overlay */}
-      <div
-        className="fixed inset-0 pointer-events-none opacity-[0.03] mix-blend-overlay z-0"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
-        }}
-      />
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.06 }
+    }
+  };
 
-      {/* Decorative organic background elements */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } }
+  };
+
+  return (
+    <div className="min-h-[100dvh] flex flex-col pb-32 bg-background relative overflow-hidden">
+      {/* Subtle Background Gradients */}
+      <div className="fixed inset-0 pointer-events-none z-0">
         <motion.div
-          className="absolute -top-32 -right-32 w-96 h-96 rounded-full"
-          style={{
-            background: 'radial-gradient(circle, rgba(125, 143, 125, 0.12) 0%, transparent 70%)'
-          }}
-          animate={{
-            scale: [1, 1.1, 1],
-            opacity: [0.4, 0.6, 0.4]
-          }}
-          transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
+          className="absolute -top-40 -right-40 w-[500px] h-[500px] rounded-full bg-primary/4 blur-3xl"
+          animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.5, 0.3] }}
+          transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
         />
         <motion.div
-          className="absolute top-1/3 -left-32 w-80 h-80 rounded-full"
-          style={{
-            background: 'radial-gradient(circle, rgba(168, 139, 108, 0.1) 0%, transparent 70%)'
-          }}
-          animate={{
-            scale: [1, 1.15, 1],
-            opacity: [0.3, 0.5, 0.3]
-          }}
-          transition={{ duration: 12, repeat: Infinity, delay: 2, ease: 'easeInOut' }}
+          className="absolute top-1/3 -left-40 w-[400px] h-[400px] rounded-full bg-secondary/4 blur-3xl"
+          animate={{ scale: [1, 1.15, 1], opacity: [0.25, 0.4, 0.25] }}
+          transition={{ duration: 15, repeat: Infinity, delay: 2, ease: 'easeInOut' }}
         />
         <motion.div
-          className="absolute bottom-1/4 right-0 w-64 h-64 rounded-full"
-          style={{
-            background: 'radial-gradient(circle, rgba(95, 115, 95, 0.08) 0%, transparent 60%)'
-          }}
-          animate={{
-            scale: [1, 1.2, 1],
-            rotate: [0, 45, 0]
-          }}
-          transition={{ duration: 15, repeat: Infinity, delay: 4, ease: 'easeInOut' }}
+          className="absolute bottom-40 right-0 w-[300px] h-[300px] rounded-full bg-accent/3 blur-3xl"
+          animate={{ scale: [1, 1.2, 1] }}
+          transition={{ duration: 18, repeat: Infinity, delay: 4, ease: 'easeInOut' }}
         />
       </div>
 
-      {/* Header - improved for mobile */}
+      {/* Header */}
       <motion.header
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="relative pt-6 px-5 pb-4 z-10"
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        className="relative pt-10 px-6 pb-6 z-10"
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -165,27 +151,24 @@ export default function Home() {
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
-              className="w-14 h-14 rounded-2xl flex items-center justify-center border border-sage-300/30 shadow-[0_8px_24px_rgba(95,115,95,0.15)]"
-              style={{
-                background: 'linear-gradient(135deg, rgba(125, 143, 125, 0.15) 0%, rgba(95, 115, 95, 0.1) 100%)'
-              }}
+              className="w-14 h-14 rounded-2xl flex items-center justify-center bg-primary/10 border border-primary/20"
             >
-              <Leaf className="w-7 h-7 text-sage-600" />
+              <Leaf className="w-7 h-7 text-primary" />
             </motion.div>
             <div>
               <motion.p
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.1 }}
-                className="text-xl font-display font-medium text-sage-900"
+                className="font-display text-xl font-medium text-foreground"
               >
-                {greeting}{firstName ? `, ${firstName}` : ''}!
+                {greeting}{firstName ? `, ${firstName}` : ''}
               </motion.p>
               <motion.p
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.15 }}
-                className="text-sm font-body text-sage-600"
+                className="text-sm text-muted-foreground"
               >
                 {formattedDate}
               </motion.p>
@@ -202,9 +185,9 @@ export default function Home() {
                 variant="outline"
                 size="sm"
                 onClick={() => navigate('/auth')}
-                className="gap-2 h-11 px-4 text-sm font-body font-medium border-sage-300/50 hover:bg-sage-50/50 text-sage-700 rounded-2xl"
+                className="gap-2 h-11 px-4 text-sm font-medium rounded-xl"
               >
-                <LogIn className="w-5 h-5" />
+                <LogIn className="w-4 h-4" />
                 Entrar
               </Button>
             ) : (
@@ -214,9 +197,9 @@ export default function Home() {
                     variant="ghost"
                     size="icon"
                     onClick={() => navigate('/admin')}
-                    className="w-11 h-11 rounded-2xl bg-sage-50/50 border border-sage-200/50 shadow-sm hover:bg-sage-100/50"
+                    className="w-11 h-11 rounded-xl bg-muted/50 hover:bg-muted"
                   >
-                    <Settings className="w-5 h-5 text-sage-700" />
+                    <Settings className="w-5 h-5 text-muted-foreground" />
                   </Button>
                 )}
                 <Button
@@ -226,7 +209,7 @@ export default function Home() {
                     await signOut();
                     navigate('/');
                   }}
-                  className="gap-2 h-11 px-4 text-sm font-body font-medium text-earth-700 border-earth-300/50 hover:bg-earth-50/50 rounded-2xl"
+                  className="gap-2 h-11 px-4 text-sm font-medium rounded-xl"
                 >
                   <LogOut className="w-4 h-4" />
                   Sair
@@ -238,32 +221,37 @@ export default function Home() {
       </motion.header>
 
       {/* Main Content */}
-      <main className="flex-1 px-5 space-y-5 relative z-10">
+      <motion.main
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="flex-1 px-6 space-y-6 relative z-10"
+      >
         {/* Active Journey Banner */}
         {activeJourney && (
-          <ActiveJourneyBanner
-            journeyTitle={activeJourney.journey.title}
-            journeyIcon={activeJourney.journey.icon}
-            currentDay={activeJourney.current_day}
-            totalDays={activeJourney.journey.duration_days}
-            streak={activeJourney.streak_count}
-            themeColor={activeJourney.journey.theme_color}
-            onClick={handleJourneys}
-          />
+          <motion.div variants={itemVariants}>
+            <ActiveJourneyBanner
+              journeyTitle={activeJourney.journey.title}
+              journeyIcon={activeJourney.journey.icon}
+              currentDay={activeJourney.current_day}
+              totalDays={activeJourney.journey.duration_days}
+              streak={activeJourney.streak_count}
+              themeColor={activeJourney.journey.theme_color}
+              onClick={handleJourneys}
+            />
+          </motion.div>
         )}
 
         {/* Garden Widget - Gamification */}
-        <GardenWidget />
+        <motion.div variants={itemVariants}>
+          <GardenWidget />
+        </motion.div>
 
-        {/* Quick Actions Grid - 2x3 with Journeys included */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
-        >
-          <div className="flex items-center gap-2 mb-3">
-            <h2 className="text-sm font-body font-semibold text-sage-600 flex items-center gap-2 uppercase tracking-wide">
-              <span className="w-1.5 h-1.5 rounded-full bg-sage-500" />
+        {/* Quick Actions Grid */}
+        <motion.section variants={itemVariants}>
+          <div className="flex items-center gap-2 mb-4">
+            <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary" />
               Ações rápidas
             </h2>
             <ContextualHelp helpKey="quick-actions" size="sm" variant="subtle" />
@@ -336,28 +324,28 @@ export default function Home() {
               />
             )}
           </div>
-        </motion.div>
+        </motion.section>
 
         {/* Daily Guidance Card */}
-        <DailyGuidanceCard
-          onGuideClick={() => navigate('/guide')}
-        />
+        <motion.div variants={itemVariants}>
+          <DailyGuidanceCard onGuideClick={() => navigate('/guide')} />
+        </motion.div>
 
-        {/* Floating Action Button - repositioned for thumb zone */}
-        <motion.button
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.5, type: 'spring' }}
-          whileTap={{ scale: 0.9 }}
-          onClick={handleMoodCheck}
-          className="fixed bottom-28 right-5 w-14 h-14 rounded-2xl shadow-[0_8px_24px_rgba(95,115,95,0.25)] flex items-center justify-center z-40 active:shadow-lg"
-          style={{
-            background: 'linear-gradient(135deg, #7d8f7d 0%, #5f735f 100%)'
-          }}
-        >
-          <Plus className="w-6 h-6 text-cream-50" />
-        </motion.button>
-      </main>
+        {/* Bottom spacing */}
+        <div className="h-4" />
+      </motion.main>
+
+      {/* Floating Action Button */}
+      <motion.button
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ delay: 0.6, type: 'spring' }}
+        whileTap={{ scale: 0.95 }}
+        onClick={handleMoodCheck}
+        className="fixed bottom-28 right-6 w-14 h-14 rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/20 flex items-center justify-center z-40 hover:shadow-xl hover:shadow-primary/25 transition-shadow duration-300"
+      >
+        <Plus className="w-6 h-6" />
+      </motion.button>
 
       <BottomNavigation />
 

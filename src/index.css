@@ -423,7 +423,7 @@
   }
 
   .nav-item-active {
-    @apply bg-primary/8;
+     @apply bg-primary/10;
   }
 
   .nav-glow {

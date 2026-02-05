@@ -1,101 +1,72 @@
 
+# Plano: Corrigir Layout Truncado do GardenWidget em Mobile
 
-# Plano: Popular Banco de Dados com Export ETHRA
+## Problema Identificado
 
-## ✅ CONCLUÍDO
+O widget de gamificação (GardenWidget) exibe elementos truncados e sobrepostos em telas mobile devido ao layout de 3 colunas que não se adapta a telas estreitas (< 375px).
 
-## Resumo
-
-Este arquivo SQL contém dados de produção do ETHRA com conteúdo rico e detalhado para substituir os dados de seed genéricos inseridos anteriormente.
-
----
-
-## Dados Incluídos no Arquivo
-
-| Tabela | Registros | Descrição |
-|--------|-----------|-----------|
-| `categorias_refeicao` | 6 | Categorias de refeição com horários (UUIDs de produção) |
-| `meditation_categories` | 4 | Relaxamento, Foco, Sono, Natureza |
-| `planos` | 6 | Planos completos com links Mercado Pago |
-| `feature_access_levels` | 8 | Features premium/free |
-| `plan_feature_access` | 9 | Mapeamento plano → acesso |
-| `breathing_techniques` | 7 | Técnicas com áudio e explicações detalhadas |
-| `spiritual_guides` | 6 | Guias com system prompts completos (Mestre Thich, Aurora, Dr. Mente, Deepak, Dr. Amit, Dr. Gabor) |
-| `journeys` | 8 | Jornadas diversas (21 Dias, Estoica, MBSR, etc) |
-| `meditation_tracks` | 14 | Meditações com URLs de áudio |
-| `journey_days` | 21 | Conteúdo completo do "Desafio 21 Dias" |
+**Elementos afetados:**
+- "0 dias" sobreposto com "Nv. 1"
+- Nome do estágio truncado ("S...")
+- Barra de progresso comprimida
+- "Max: 0" sobreposto
 
 ---
 
-## Destaques do Conteúdo
+## Solução Proposta
 
-### Guias Espirituais (System Prompts Profissionais)
-- **Mestre Thich**: Abordagem Budista, mindfulness
-- **Aurora**: Chakras, astrologia, cristais
-- **Dr. Mente**: Neurociência aplicada
-- **Deepak**: Consciência integral
-- **Dr. Amit**: Física quântica e consciência
-- **Dr. Gabor**: Trauma e cura compassiva
+Reestruturar o layout do GardenWidget para ser responsivo, empilhando elementos verticalmente em telas pequenas.
 
-### Técnicas de Respiração (com áudio)
-- 4-7-8 para ansiedade
-- Quadrada para estresse
-- Energizante para cansaço
-- Suspiro fisiológico para pânico
-- Wim Hof (premium)
-- Narina alternada (premium)
-- Coerência cardíaca
-
-### Jornada "Desafio 21 Dias"
-Todos os 21 dias com:
-- Ensinamentos diários
-- Prompts de reflexão
-- Desafios práticos
-- Referências a meditações e respirações
-
----
-
-## Observação Importante
-
-Os URLs de áudio/imagem apontam para o projeto original:
-```
-https://jjpajouvaovffcfjjqkf.supabase.co/storage/v1/object/public/...
+### Estrutura Atual (Problemática)
+```text
+┌─────────────────────────────────────┐
+│ [Planta] [Stats------] [MiniStats] │  ← 3 colunas horizontais
+└─────────────────────────────────────┘
 ```
 
-Após a migração dos arquivos de mídia, será necessário atualizar esses URLs.
+### Nova Estrutura (Mobile-First)
+```text
+┌─────────────────────────────────────┐
+│ [Planta]  [Streak + Nível]         │  ← Linha 1: Info principal
+│ [Stage name + message-------------]│  ← Linha 2: Descrição full-width
+│ [Progress bar--------------------] │  ← Linha 3: Progresso full-width
+│ [Max streak] [Points]              │  ← Linha 4: Stats secundários
+└─────────────────────────────────────┘
+```
 
 ---
 
-## Ações a Executar
+## Alterações Técnicas
 
-Após aprovação, executarei o SQL em etapas para popular o banco:
+### 1. Reestruturar GardenWidget.tsx
 
-1. Categorias de refeição e meditação
-2. Planos e features de acesso
-3. Técnicas de respiração
-4. Guias espirituais
-5. Jornadas
-6. Faixas de meditação
-7. Dias da jornada "21 Dias"
+**Mudanças principais:**
+- Converter layout de 3 colunas para layout em linhas empilhadas
+- Mover estatísticas secundárias (Nv., pts, Max) para uma linha inferior
+- Garantir que textos longos tenham espaço adequado
+- Usar `flex-wrap` para permitir quebra em telas pequenas
 
-Todos os INSERTs usam `ON CONFLICT DO UPDATE` para re-execução segura.
+### 2. Corrigir Erro de Build (Bônus)
+
+Os erros de TypeScript em `Home.tsx` e `AnimationStudio.tsx` são causados por `ease: [0.16, 1, 0.3, 1]` (cubic bezier como array) que não é compatível com o tipo `Variants` do Framer Motion.
+
+**Solução:** Usar `ease: "easeOut"` ou definir como `as const` para type assertion.
 
 ---
 
-## ✅ Execução Realizada em 2026-02-05
+## Arquivos a Modificar
 
-Todos os dados do arquivo `ethra-data-export.sql` foram inseridos com sucesso:
+| Arquivo | Alteração |
+|---------|-----------|
+| `src/components/dashboard/GardenWidget.tsx` | Reestruturar layout para mobile-first |
+| `src/pages/Home.tsx` | Corrigir tipo de `itemVariants.ease` |
+| `src/pages/AnimationStudio.tsx` | Corrigir tipo de `ease` nos variants |
 
-| Tabela | Status |
-|--------|--------|
-| `categorias_refeicao` | ✅ Inserido |
-| `meditation_categories` | ✅ Inserido |
-| `planos` | ✅ Inserido |
-| `feature_access_levels` | ✅ Inserido |
-| `plan_feature_access` | ✅ Inserido |
-| `breathing_techniques` | ✅ Inserido |
-| `spiritual_guides` | ✅ Inserido |
-| `journeys` | ✅ Inserido |
-| `meditation_tracks` | ✅ Inserido |
-| `journey_days` (21 dias) | ✅ Inserido |
+---
 
+## Resultado Esperado
+
+- Widget de gamificação legível em todas as telas mobile (320px+)
+- Sem truncamento ou sobreposição de texto
+- Build sem erros TypeScript
+- Mantém visual original em telas maiores

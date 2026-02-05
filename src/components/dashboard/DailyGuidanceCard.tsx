@@ -65,7 +65,7 @@ export function DailyGuidanceCard({ onGuideClick }: DailyGuidanceCardProps) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.3, type: 'spring', stiffness: 200, damping: 20 }}
-      className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-secondary/10 border border-primary/20 p-5"
+      className="daily-guidance-card relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-secondary/10 border border-primary/20 dark:border-primary/30 p-5"
     >
       {/* Decorative background */}
       <div className="absolute -right-6 -top-6 w-28 h-28 bg-primary/10 rounded-full blur-2xl" />

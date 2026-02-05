@@ -1,5 +1,4 @@
 import { motion } from 'framer-motion';
-import { ArrowLeft, Moon, Sun, Monitor, Lock, Info, ChevronRight, Palette, Shield, Smartphone, Download, Check, Eye, Type, ZoomIn, Maximize2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from 'next-themes';
 import { BottomNavigation } from '@/components/BottomNavigation';
@@ -7,6 +6,21 @@ import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
 import { useAccessibility, FontScale } from '@/hooks/useAccessibility';
+import {
+  ArrowLeftIcon,
+  MoonLightIcon,
+  SunIcon,
+  DesktopIcon,
+  LockIcon,
+  InfoIcon,
+  ChevronRightIcon,
+  PaletteIcon,
+  ShieldIcon,
+  SmartphoneIcon,
+  DownloadIcon,
+  CheckIcon,
+  EyeIcon,
+} from '@/components/ui/icons';
 
 type ThemeOption = 'light' | 'dark' | 'system';
 
@@ -22,9 +36,9 @@ export default function Settings() {
   }, []);
 
   const themeOptions: { value: ThemeOption; label: string; icon: React.ElementType; description: string }[] = [
-    { value: 'light', label: 'Claro', icon: Sun, description: 'Tema claro elegante' },
-    { value: 'dark', label: 'Escuro', icon: Moon, description: 'Tema escuro sofisticado' },
-    { value: 'system', label: 'Sistema', icon: Monitor, description: 'Segue seu dispositivo' },
+    { value: 'light', label: 'Claro', icon: SunIcon, description: 'Tema claro elegante' },
+    { value: 'dark', label: 'Escuro', icon: MoonLightIcon, description: 'Tema escuro sofisticado' },
+    { value: 'system', label: 'Sistema', icon: DesktopIcon, description: 'Segue seu dispositivo' },
   ];
 
   const fontScaleOptions: { value: FontScale; label: string; size: string }[] = [
@@ -68,7 +82,7 @@ export default function Settings() {
             onClick={() => navigate(-1)}
             className="w-11 h-11 rounded-xl bg-card border border-border/50 flex items-center justify-center hover:bg-muted/50 hover:border-primary/20 transition-all duration-300"
           >
-            <ArrowLeft className="w-5 h-5 text-foreground" />
+            <ArrowLeftIcon size={20} className="text-foreground" />
           </button>
           <div>
             <h1 className="font-display text-2xl font-medium text-foreground">Configurações</h1>
@@ -88,7 +102,7 @@ export default function Settings() {
         <motion.section variants={itemVariants}>
           <div className="flex items-center gap-2.5 mb-4 px-1">
             <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Palette className="w-4 h-4 text-primary" />
+              <PaletteIcon size={16} className="text-primary" />
             </div>
             <h2 className="text-base font-medium text-foreground">Tema</h2>
           </div>
@@ -114,7 +128,7 @@ export default function Settings() {
                       "w-10 h-10 rounded-xl flex items-center justify-center transition-colors",
                       isSelected ? "bg-primary-foreground/20" : "bg-background"
                     )}>
-                      <Icon className="w-5 h-5" />
+                      <Icon size={20} />
                     </div>
                     <span className="text-sm font-medium">{option.label}</span>
                     {isSelected && (
@@ -142,7 +156,7 @@ export default function Settings() {
         <motion.section variants={itemVariants}>
           <div className="flex items-center gap-2.5 mb-4 px-1">
             <div className="w-8 h-8 rounded-lg bg-secondary/10 flex items-center justify-center">
-              <Eye className="w-4 h-4 text-secondary" />
+              <EyeIcon size={16} className="text-secondary" />
             </div>
             <h2 className="text-base font-medium text-foreground">Acessibilidade</h2>
           </div>
@@ -194,7 +208,7 @@ export default function Settings() {
         <motion.section variants={itemVariants}>
           <div className="flex items-center gap-2.5 mb-4 px-1">
             <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center">
-              <Smartphone className="w-4 h-4 text-accent" />
+              <SmartphoneIcon size={16} className="text-accent" />
             </div>
             <h2 className="text-base font-medium text-foreground">Aplicativo</h2>
           </div>
@@ -203,7 +217,7 @@ export default function Settings() {
             {isInstalled ? (
               <div className="flex items-center gap-4 p-5">
                 <div className="w-12 h-12 rounded-xl bg-green-500/10 flex items-center justify-center">
-                  <Check className="w-5 h-5 text-green-600 dark:text-green-400" />
+                  <CheckIcon size={20} className="text-green-600 dark:text-green-400" />
                 </div>
                 <div>
                   <span className="text-sm font-medium text-foreground block">Instalado</span>
@@ -216,7 +230,7 @@ export default function Settings() {
               <div className="p-5 space-y-4">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center">
-                    <Download className="w-5 h-5 text-muted-foreground" />
+                    <DownloadIcon size={20} className="text-muted-foreground" />
                   </div>
                   <span className="text-sm font-medium text-foreground">Instalar no iOS</span>
                 </div>
@@ -239,7 +253,7 @@ export default function Settings() {
               >
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <Download className="w-5 h-5 text-primary" />
+                    <DownloadIcon size={20} className="text-primary" />
                   </div>
                   <div className="text-left">
                     <span className="text-sm font-medium text-foreground block">Instalar Aplicativo</span>
@@ -248,7 +262,7 @@ export default function Settings() {
                     </span>
                   </div>
                 </div>
-                <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                <ChevronRightIcon size={20} className="text-muted-foreground" />
               </button>
             )}
           </div>
@@ -258,7 +272,7 @@ export default function Settings() {
         <motion.section variants={itemVariants}>
           <div className="flex items-center gap-2.5 mb-4 px-1">
             <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
-              <Lock className="w-4 h-4 text-muted-foreground" />
+              <LockIcon size={16} className="text-muted-foreground" />
             </div>
             <h2 className="text-base font-medium text-foreground">Privacidade</h2>
           </div>
@@ -270,13 +284,13 @@ export default function Settings() {
             >
               <div className="flex items-center gap-4">
                 <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center">
-                  <Shield className="w-4 h-4 text-muted-foreground" />
+                  <ShieldIcon size={16} className="text-muted-foreground" />
                 </div>
                 <span className="text-sm font-medium text-foreground">
                   Política de Privacidade
                 </span>
               </div>
-              <ChevronRight className="w-5 h-5 text-muted-foreground" />
+              <ChevronRightIcon size={20} className="text-muted-foreground" />
             </button>
 
             <button
@@ -285,13 +299,13 @@ export default function Settings() {
             >
               <div className="flex items-center gap-4">
                 <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center">
-                  <Info className="w-4 h-4 text-muted-foreground" />
+                  <InfoIcon size={16} className="text-muted-foreground" />
                 </div>
                 <span className="text-sm font-medium text-foreground">
                   Termos de Uso
                 </span>
               </div>
-              <ChevronRight className="w-5 h-5 text-muted-foreground" />
+              <ChevronRightIcon size={20} className="text-muted-foreground" />
             </button>
           </div>
         </motion.section>
@@ -300,7 +314,7 @@ export default function Settings() {
         <motion.section variants={itemVariants}>
           <div className="flex items-center gap-2.5 mb-4 px-1">
             <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
-              <Info className="w-4 h-4 text-muted-foreground" />
+              <InfoIcon size={16} className="text-muted-foreground" />
             </div>
             <h2 className="text-base font-medium text-foreground">Sobre</h2>
           </div>

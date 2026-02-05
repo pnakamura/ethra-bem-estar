@@ -1,15 +1,21 @@
 import { useRef, useLayoutEffect } from 'react';
-import { Home, BookOpen, User, Heart, MessageCircle } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import {
+  HomeIcon,
+  BookOpenIcon,
+  UserIcon,
+  HeartIcon,
+  ChatIcon,
+} from '@/components/ui/icons';
 
 const navItems = [
-  { path: '/', label: 'Início', icon: Home },
-  { path: '/guide', label: 'Guia', icon: MessageCircle },
-  { path: '/favorites', label: 'Favoritos', icon: Heart },
-  { path: '/journal', label: 'Diário', icon: BookOpen },
-  { path: '/profile', label: 'Perfil', icon: User },
+  { path: '/', label: 'Início', icon: HomeIcon },
+  { path: '/guide', label: 'Guia', icon: ChatIcon },
+  { path: '/favorites', label: 'Favoritos', icon: HeartIcon },
+  { path: '/journal', label: 'Diário', icon: BookOpenIcon },
+  { path: '/profile', label: 'Perfil', icon: UserIcon },
 ];
 
 export function BottomNavigation() {
@@ -84,13 +90,14 @@ export function BottomNavigation() {
                 )}
 
                 <Icon
+                  size={24}
+                  weight={isActive ? 'regular' : 'light'}
                   className={cn(
-                    'w-6 h-6 transition-all duration-300',
+                    'transition-all duration-300',
                     isActive
                       ? 'text-primary'
                       : 'text-muted-foreground'
                   )}
-                  strokeWidth={isActive ? 2.25 : 1.75}
                 />
                 <span
                   className={cn(

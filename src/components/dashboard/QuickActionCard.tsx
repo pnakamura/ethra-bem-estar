@@ -1,9 +1,10 @@
 import { motion } from 'framer-motion';
-import { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import React from 'react';
+import type { IconProps } from '@phosphor-icons/react';
 
 interface QuickActionCardProps {
-  icon: LucideIcon;
+  icon: React.ForwardRefExoticComponent<IconProps & React.RefAttributes<SVGSVGElement>>;
   emoji?: string;
   label: string;
   description?: string;
@@ -112,7 +113,7 @@ export function QuickActionCard({
         {emoji ? (
           <span className="text-2xl">{emoji}</span>
         ) : (
-          <Icon className={cn('w-6 h-6', colors.text)} strokeWidth={1.75} />
+          <Icon size={24} className={colors.text} />
         )}
       </div>
 

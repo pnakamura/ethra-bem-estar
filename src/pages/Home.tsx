@@ -2,20 +2,20 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Smile,
-  Wind,
-  BookOpen,
-  BarChart3,
-  Plus,
-  Headphones,
-  Utensils,
-  Compass,
-  LogIn,
-  LogOut,
-  Settings,
-  Leaf,
-  Wand2,
-} from 'lucide-react';
+  SmileyIcon,
+  WindIcon,
+  BookOpenIcon,
+  ChartIcon,
+  PlusIcon,
+  HeadphonesIcon,
+  UtensilsIcon,
+  CompassIcon,
+  SignInIcon,
+  SignOutIcon,
+  SettingsIcon,
+  LeafIcon,
+  MagicWandIcon,
+} from '@/components/ui/icons';
 import { Button } from '@/components/ui/button';
 import { BottomNavigation } from '@/components/BottomNavigation';
 import { BreathPacer } from '@/components/BreathPacer';
@@ -153,7 +153,7 @@ export default function Home() {
               transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
               className="w-14 h-14 rounded-2xl flex items-center justify-center bg-primary/10 border border-primary/20"
             >
-              <Leaf className="w-7 h-7 text-primary" />
+              <LeafIcon size={28} className="text-primary" />
             </motion.div>
             <div>
               <motion.p
@@ -187,7 +187,7 @@ export default function Home() {
                 onClick={() => navigate('/auth')}
                 className="gap-2 h-11 px-4 text-sm font-medium rounded-xl"
               >
-                <LogIn className="w-4 h-4" />
+                <SignInIcon size={16} />
                 Entrar
               </Button>
             ) : (
@@ -199,7 +199,7 @@ export default function Home() {
                     onClick={() => navigate('/admin')}
                     className="w-11 h-11 rounded-xl bg-muted/50 hover:bg-muted"
                   >
-                    <Settings className="w-5 h-5 text-muted-foreground" />
+                    <SettingsIcon size={20} className="text-muted-foreground" />
                   </Button>
                 )}
                 <Button
@@ -211,7 +211,7 @@ export default function Home() {
                   }}
                   className="gap-2 h-11 px-4 text-sm font-medium rounded-xl"
                 >
-                  <LogOut className="w-4 h-4" />
+                  <SignOutIcon size={16} />
                   Sair
                 </Button>
               </div>
@@ -259,7 +259,7 @@ export default function Home() {
           <div className="grid grid-cols-3 gap-3">
             <QuickActionCard
               emoji="😊"
-              icon={Smile}
+              icon={SmileyIcon}
               label="Emoções"
               color="joy"
               onClick={handleMoodCheck}
@@ -267,7 +267,7 @@ export default function Home() {
             />
             <QuickActionCard
               emoji="🧘"
-              icon={Wind}
+              icon={WindIcon}
               label="Respirar"
               color="calm"
               onClick={handleBreathing}
@@ -275,7 +275,7 @@ export default function Home() {
             />
             <QuickActionCard
               emoji="🎧"
-              icon={Headphones}
+              icon={HeadphonesIcon}
               label="Meditar"
               color="meditate"
               onClick={handleMeditation}
@@ -283,7 +283,7 @@ export default function Home() {
             />
             <QuickActionCard
               emoji="🧭"
-              icon={Compass}
+              icon={CompassIcon}
               label="Jornadas"
               color="journey"
               onClick={handleJourneys}
@@ -291,7 +291,7 @@ export default function Home() {
             />
             <QuickActionCard
               emoji="📔"
-              icon={BookOpen}
+              icon={BookOpenIcon}
               label="Diário"
               color="trust"
               onClick={handleJournal}
@@ -299,7 +299,7 @@ export default function Home() {
             />
             <QuickActionCard
               emoji="🍽️"
-              icon={Utensils}
+              icon={UtensilsIcon}
               label="Nutrição"
               color="nutrition"
               onClick={handleNutrition}
@@ -307,7 +307,7 @@ export default function Home() {
             />
             <QuickActionCard
               emoji="📊"
-              icon={BarChart3}
+              icon={ChartIcon}
               label="Insights"
               color="secondary"
               onClick={handleInsights}
@@ -316,7 +316,7 @@ export default function Home() {
             {usuario?.tipo_usuario === 'socio' && (
               <QuickActionCard
                 emoji="✨"
-                icon={Wand2}
+                icon={MagicWandIcon}
                 label="Studio"
                 color="studio"
                 onClick={handleAnimationStudio}
@@ -344,7 +344,7 @@ export default function Home() {
         onClick={handleMoodCheck}
         className="fixed bottom-28 right-6 w-14 h-14 rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/20 flex items-center justify-center z-40 hover:shadow-xl hover:shadow-primary/25 transition-shadow duration-300"
       >
-        <Plus className="w-6 h-6" />
+        <PlusIcon size={24} />
       </motion.button>
 
       <BottomNavigation />

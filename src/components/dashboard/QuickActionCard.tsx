@@ -109,6 +109,20 @@ export function QuickActionCard({
     return null;
   };
 
+  // Map color to icon glow class
+  const iconGlowClass = {
+    primary: 'dark:icon-glow',
+    secondary: 'dark:icon-glow-secondary',
+    accent: 'dark:icon-glow',
+    joy: 'dark:icon-glow-joy',
+    trust: 'dark:icon-glow-trust',
+    calm: 'dark:icon-glow-calm',
+    meditate: 'dark:icon-glow-meditate',
+    nutrition: 'dark:icon-glow-nutrition',
+    journey: 'dark:icon-glow-surprise',
+    studio: 'dark:icon-glow-studio',
+  }[color];
+
   return (
     <motion.button
       initial={{ opacity: 0, y: 20 }}
@@ -118,6 +132,7 @@ export function QuickActionCard({
       whileTap={{ scale: 0.97 }}
       onClick={onClick}
       className={cn(
+        'quick-action-card',
         'relative flex flex-col items-center justify-center p-4 sm:p-5 rounded-xl',
         'border bg-card shadow-sm',
         'transition-all duration-300',
@@ -130,7 +145,8 @@ export function QuickActionCard({
       {/* Icon/Illustration Container */}
       <div className={cn(
         'w-14 h-14 sm:w-16 sm:h-16 rounded-xl flex items-center justify-center mb-2',
-        Illustration ? 'bg-transparent' : colors.iconBg
+        Illustration ? 'bg-transparent' : colors.iconBg,
+        iconGlowClass
       )}>
         {renderContent()}
       </div>

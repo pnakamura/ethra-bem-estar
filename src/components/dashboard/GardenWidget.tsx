@@ -66,7 +66,7 @@ export function GardenWidget({ isLoading: externalLoading }: GardenWidgetProps) 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.15, type: 'spring', stiffness: 200, damping: 20 }}
-      className="relative rounded-2xl bg-card border border-border/50 overflow-hidden shadow-lg"
+      className="garden-widget relative rounded-2xl bg-card border border-border/50 dark:border-border/60 overflow-hidden shadow-lg"
     >
       {/* Dynamic Background */}
       <GardenBackground 

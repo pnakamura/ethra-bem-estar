@@ -252,8 +252,8 @@ export default function Home() {
         {/* Quick Actions Grid */}
         <motion.section variants={itemVariants}>
           <div className="flex items-center gap-2 mb-4">
-            <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+            <h2 className="section-title text-sm font-medium text-muted-foreground dark:text-foreground/80 uppercase tracking-wider flex items-center gap-2">
+              <span className="section-indicator w-1.5 h-1.5 rounded-full bg-primary" />
               Ações rápidas
             </h2>
             <ContextualHelp helpKey="quick-actions" size="sm" variant="subtle" />

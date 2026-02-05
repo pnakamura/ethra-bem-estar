@@ -3,8 +3,15 @@ import { cn } from '@/lib/utils';
 import React from 'react';
 import type { IconProps } from '@phosphor-icons/react';
 
+interface IllustrationProps {
+  size?: number;
+  className?: string;
+  strokeWidth?: number;
+}
+
 interface QuickActionCardProps {
-  icon: React.ForwardRefExoticComponent<IconProps & React.RefAttributes<SVGSVGElement>>;
+  icon?: React.ForwardRefExoticComponent<IconProps & React.RefAttributes<SVGSVGElement>>;
+  illustration?: React.FC<IllustrationProps>;
   emoji?: string;
   label: string;
   description?: string;
@@ -78,6 +85,7 @@ const colorClasses = {
 
 export function QuickActionCard({
   icon: Icon,
+  illustration: Illustration,
   emoji,
   label,
   description,
@@ -86,6 +94,19 @@ export function QuickActionCard({
   delay = 0,
 }: QuickActionCardProps) {
   const colors = colorClasses[color];
+
+  const renderContent = () => {
+    if (Illustration) {
+      return <Illustration size={32} className={colors.text} strokeWidth={1.2} />;
+    }
+    if (emoji) {
+      return <span className="text-2xl">{emoji}</span>;
+    }
+    if (Icon) {
+      return <Icon size={24} className={colors.text} />;
+    }
+    return null;
+  };
 
   return (
     <motion.button
@@ -105,16 +126,12 @@ export function QuickActionCard({
         colors.border
       )}
     >
-      {/* Icon Container */}
+      {/* Icon/Illustration Container */}
       <div className={cn(
-        'w-12 h-12 rounded-xl flex items-center justify-center mb-2.5',
-        colors.iconBg
+        'w-14 h-14 rounded-xl flex items-center justify-center mb-2',
+        Illustration ? 'bg-transparent' : colors.iconBg
       )}>
-        {emoji ? (
-          <span className="text-2xl">{emoji}</span>
-        ) : (
-          <Icon size={24} className={colors.text} />
-        )}
+        {renderContent()}
       </div>
 
       {/* Label */}

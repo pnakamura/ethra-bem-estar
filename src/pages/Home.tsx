@@ -2,20 +2,22 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  SmileyIcon,
-  WindIcon,
-  BookOpenIcon,
-  ChartIcon,
   PlusIcon,
-  HeadphonesIcon,
-  UtensilsIcon,
-  CompassIcon,
   SignInIcon,
   SignOutIcon,
   SettingsIcon,
   LeafIcon,
-  MagicWandIcon,
 } from '@/components/ui/icons';
+import {
+  EmotionsIllustration,
+  BreatheIllustration,
+  MeditateIllustration,
+  JourneyIllustration,
+  JournalIllustration,
+  NutritionIllustration,
+  InsightsIllustration,
+  StudioIllustration,
+} from '@/components/ui/illustrations';
 import { Button } from '@/components/ui/button';
 import { BottomNavigation } from '@/components/BottomNavigation';
 import { BreathPacer } from '@/components/BreathPacer';
@@ -258,56 +260,49 @@ export default function Home() {
           </div>
           <div className="grid grid-cols-3 gap-3">
             <QuickActionCard
-              emoji="😊"
-              icon={SmileyIcon}
+              illustration={EmotionsIllustration}
               label="Emoções"
               color="joy"
               onClick={handleMoodCheck}
               delay={0.1}
             />
             <QuickActionCard
-              emoji="🧘"
-              icon={WindIcon}
+              illustration={BreatheIllustration}
               label="Respirar"
               color="calm"
               onClick={handleBreathing}
               delay={0.15}
             />
             <QuickActionCard
-              emoji="🎧"
-              icon={HeadphonesIcon}
+              illustration={MeditateIllustration}
               label="Meditar"
               color="meditate"
               onClick={handleMeditation}
               delay={0.2}
             />
             <QuickActionCard
-              emoji="🧭"
-              icon={CompassIcon}
+              illustration={JourneyIllustration}
               label="Jornadas"
               color="journey"
               onClick={handleJourneys}
               delay={0.25}
             />
             <QuickActionCard
-              emoji="📔"
-              icon={BookOpenIcon}
+              illustration={JournalIllustration}
               label="Diário"
               color="trust"
               onClick={handleJournal}
               delay={0.3}
             />
             <QuickActionCard
-              emoji="🍽️"
-              icon={UtensilsIcon}
+              illustration={NutritionIllustration}
               label="Nutrição"
               color="nutrition"
               onClick={handleNutrition}
               delay={0.35}
             />
             <QuickActionCard
-              emoji="📊"
-              icon={ChartIcon}
+              illustration={InsightsIllustration}
               label="Insights"
               color="secondary"
               onClick={handleInsights}
@@ -315,8 +310,7 @@ export default function Home() {
             />
             {usuario?.tipo_usuario === 'socio' && (
               <QuickActionCard
-                emoji="✨"
-                icon={MagicWandIcon}
+                illustration={StudioIllustration}
                 label="Studio"
                 color="studio"
                 onClick={handleAnimationStudio}

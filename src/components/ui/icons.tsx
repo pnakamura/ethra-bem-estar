@@ -48,6 +48,7 @@ import {
   CaretDown,
   CaretUp,
   ArrowRight,
+  Clock,
 } from '@phosphor-icons/react';
 import React from 'react';
 
@@ -143,6 +144,7 @@ export const UtensilsIcon = createIcon(ForkKnife);
 // STATUS ICONS
 // ═══════════════════════════════════════════════════════════════
 export const LoadingIcon = createIcon(CircleNotch);
+export const ClockIcon = createIcon(Clock);
 
 // ═══════════════════════════════════════════════════════════════
 // RE-EXPORT PHOSPHOR TYPES

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { BreathVisualizationEngine } from '@/components/breath-engine';
@@ -6,32 +6,29 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Slider } from '@/components/ui/slider';
+import { BottomNavigation } from '@/components/BottomNavigation';
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from '@/components/ui/sheet';
+  ArrowLeftIcon,
+  PlayIcon,
+  SparkleIcon,
+  SettingsIcon,
+  ClockIcon,
+} from '@/components/ui/icons';
 import {
-  ArrowLeft,
-  Play,
-  Sparkles,
   Droplets,
   Snowflake,
   Globe,
   Zap,
   Cloud,
-  Settings2,
-  Clock,
-  Repeat,
-  ChevronRight,
-  Info,
   Circle,
   Waves,
   Target,
   RotateCw,
   Square,
+  Sparkles,
+  Repeat,
+  ChevronRight,
+  Info,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -50,6 +47,7 @@ interface BreathPreset {
   cycles: number;
   recommendedMode: VisualMode;
   color: string;
+  lightColor: string;
 }
 
 // Visual modes data
@@ -65,6 +63,7 @@ const visualModes: {
     holdEmpty: string;
   };
   gradient: string;
+  lightGradient: string;
   iconBg: string;
 }[] = [
   {
@@ -79,6 +78,7 @@ const visualModes: {
       holdEmpty: 'Bolinha percorre a base para esquerda',
     },
     gradient: 'from-amber-500/20 via-orange-500/10 to-yellow-500/20',
+    lightGradient: 'from-amber-100 via-orange-50 to-yellow-100',
     iconBg: 'bg-gradient-to-br from-amber-400 to-orange-500',
   },
   {
@@ -93,6 +93,7 @@ const visualModes: {
       holdEmpty: 'Empilhados embaixo, em repouso',
     },
     gradient: 'from-slate-500/20 via-gray-500/10 to-zinc-500/20',
+    lightGradient: 'from-slate-100 via-gray-50 to-zinc-100',
     iconBg: 'bg-gradient-to-br from-slate-400 to-gray-600',
   },
   {
@@ -107,6 +108,7 @@ const visualModes: {
       holdEmpty: 'Leves ondulações em repouso',
     },
     gradient: 'from-blue-500/20 via-cyan-500/10 to-teal-500/20',
+    lightGradient: 'from-blue-100 via-cyan-50 to-teal-100',
     iconBg: 'bg-gradient-to-br from-blue-400 to-cyan-500',
   },
   {
@@ -121,6 +123,7 @@ const visualModes: {
       holdEmpty: 'Respiração sutil contraídos',
     },
     gradient: 'from-pink-500/20 via-rose-500/10 to-red-500/20',
+    lightGradient: 'from-pink-100 via-rose-50 to-red-100',
     iconBg: 'bg-gradient-to-br from-pink-400 to-rose-500',
   },
   {
@@ -135,6 +138,7 @@ const visualModes: {
       holdEmpty: 'Rotação suave em repouso',
     },
     gradient: 'from-purple-500/20 via-violet-500/10 to-indigo-500/20',
+    lightGradient: 'from-purple-100 via-violet-50 to-indigo-100',
     iconBg: 'bg-gradient-to-br from-purple-400 to-violet-500',
   },
   {
@@ -149,6 +153,7 @@ const visualModes: {
       holdEmpty: 'Assentadas no chão, brilho fraco',
     },
     gradient: 'from-amber-500/20 via-yellow-500/10 to-orange-500/20',
+    lightGradient: 'from-amber-100 via-yellow-50 to-orange-100',
     iconBg: 'bg-gradient-to-br from-amber-500 to-yellow-500',
   },
   {
@@ -163,6 +168,7 @@ const visualModes: {
       holdEmpty: 'Água cristalina, sem movimento',
     },
     gradient: 'from-cyan-500/20 via-blue-500/10 to-indigo-500/20',
+    lightGradient: 'from-cyan-100 via-blue-50 to-indigo-100',
     iconBg: 'bg-gradient-to-br from-cyan-500 to-blue-500',
   },
   {
@@ -177,6 +183,7 @@ const visualModes: {
       holdEmpty: 'Cristal perfeito, imóvel',
     },
     gradient: 'from-violet-500/20 via-purple-500/10 to-fuchsia-500/20',
+    lightGradient: 'from-violet-100 via-purple-50 to-fuchsia-100',
     iconBg: 'bg-gradient-to-br from-violet-500 to-purple-500',
   },
   {
@@ -191,6 +198,7 @@ const visualModes: {
       holdEmpty: 'Esfera lisa e escura',
     },
     gradient: 'from-teal-500/20 via-emerald-500/10 to-green-500/20',
+    lightGradient: 'from-teal-100 via-emerald-50 to-green-100',
     iconBg: 'bg-gradient-to-br from-teal-500 to-emerald-500',
   },
   {
@@ -205,6 +213,7 @@ const visualModes: {
       holdEmpty: 'Ponto fraco pulsa no centro',
     },
     gradient: 'from-lime-500/20 via-green-500/10 to-emerald-500/20',
+    lightGradient: 'from-lime-100 via-green-50 to-emerald-100',
     iconBg: 'bg-gradient-to-br from-lime-500 to-green-500',
   },
   {
@@ -219,6 +228,7 @@ const visualModes: {
       holdEmpty: 'Escuridão quase total',
     },
     gradient: 'from-orange-500/20 via-red-500/10 to-rose-500/20',
+    lightGradient: 'from-orange-100 via-red-50 to-rose-100',
     iconBg: 'bg-gradient-to-br from-orange-500 to-red-500',
   },
 ];
@@ -236,6 +246,7 @@ const breathPresets: BreathPreset[] = [
     cycles: 4,
     recommendedMode: 'boxPath',
     color: 'from-amber-500 to-orange-600',
+    lightColor: 'from-amber-400 to-orange-500',
   },
   {
     id: '478',
@@ -248,6 +259,7 @@ const breathPresets: BreathPreset[] = [
     cycles: 4,
     recommendedMode: 'atmosphere',
     color: 'from-blue-500 to-indigo-600',
+    lightColor: 'from-blue-400 to-indigo-500',
   },
   {
     id: 'coherence',
@@ -260,6 +272,7 @@ const breathPresets: BreathPreset[] = [
     cycles: 10,
     recommendedMode: 'bio',
     color: 'from-emerald-500 to-teal-600',
+    lightColor: 'from-emerald-400 to-teal-500',
   },
   {
     id: 'energizing',
@@ -272,6 +285,7 @@ const breathPresets: BreathPreset[] = [
     cycles: 6,
     recommendedMode: 'starDust',
     color: 'from-amber-500 to-orange-600',
+    lightColor: 'from-amber-400 to-orange-500',
   },
   {
     id: 'calm',
@@ -284,6 +298,7 @@ const breathPresets: BreathPreset[] = [
     cycles: 5,
     recommendedMode: 'fluid',
     color: 'from-cyan-500 to-blue-600',
+    lightColor: 'from-cyan-400 to-blue-500',
   },
   {
     id: 'sleep',
@@ -296,6 +311,7 @@ const breathPresets: BreathPreset[] = [
     cycles: 3,
     recommendedMode: 'atmosphere',
     color: 'from-indigo-500 to-purple-600',
+    lightColor: 'from-indigo-400 to-purple-500',
   },
 ];
 
@@ -346,114 +362,125 @@ export default function AnimationStudio() {
   const totalCycleTime = customConfig.inhale + customConfig.holdFull + customConfig.exhale + customConfig.holdEmpty;
   const totalSessionTime = totalCycleTime * customConfig.cycles;
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.06 }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } }
+  };
+
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white overflow-x-hidden">
-      {/* Ambient background */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+    <div className="min-h-[100dvh] flex flex-col pb-32 bg-background relative overflow-hidden">
+      {/* Subtle Background Gradients */}
+      <div className="fixed inset-0 pointer-events-none z-0">
         <motion.div
-          className="absolute top-1/4 -left-1/4 w-[600px] h-[600px] rounded-full"
-          style={{
-            background: 'radial-gradient(circle, rgba(78, 205, 196, 0.08) 0%, transparent 70%)',
-          }}
-          animate={{
-            scale: [1, 1.2, 1],
-            x: [0, 50, 0],
-          }}
-          transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}
+          className="absolute -top-40 -right-40 w-[500px] h-[500px] rounded-full bg-violet-500/5 dark:bg-violet-500/10 blur-3xl"
+          animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.5, 0.3] }}
+          transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
         />
         <motion.div
-          className="absolute bottom-1/4 -right-1/4 w-[500px] h-[500px] rounded-full"
-          style={{
-            background: 'radial-gradient(circle, rgba(139, 92, 246, 0.06) 0%, transparent 70%)',
-          }}
-          animate={{
-            scale: [1, 1.3, 1],
-            y: [0, -30, 0],
-          }}
-          transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut', delay: 5 }}
+          className="absolute top-1/3 -left-40 w-[400px] h-[400px] rounded-full bg-primary/5 dark:bg-primary/10 blur-3xl"
+          animate={{ scale: [1, 1.15, 1], opacity: [0.25, 0.4, 0.25] }}
+          transition={{ duration: 15, repeat: Infinity, delay: 2, ease: 'easeInOut' }}
         />
       </div>
 
       {/* Header */}
-      <header className="relative z-10 flex items-center justify-between p-4 border-b border-white/5">
+      <motion.header
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        className="relative pt-12 px-6 pb-6 z-10"
+      >
         <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
+          <button
             onClick={() => navigate('/')}
-            className="text-white/70 hover:text-white hover:bg-white/10 rounded-full"
+            className="w-11 h-11 rounded-xl bg-card border border-border/50 flex items-center justify-center hover:bg-muted/50 hover:border-primary/20 transition-all duration-300"
           >
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
+            <ArrowLeftIcon size={22} className="text-foreground" />
+          </button>
           <div>
-            <h1 className="text-xl font-semibold tracking-tight">Animation Studio</h1>
-            <p className="text-sm text-white/50">Motor de Visualização de Respiração</p>
+            <h1 className="font-display text-2xl font-medium text-foreground">Animation Studio</h1>
+            <p className="text-sm text-muted-foreground mt-0.5">Visualizações de Respiração</p>
           </div>
         </div>
-      </header>
+      </motion.header>
 
-      <main className="relative z-10 container max-w-5xl mx-auto px-4 py-8 space-y-10">
+      <motion.main
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="flex-1 px-6 space-y-8 relative z-10"
+      >
         {/* Hero Section */}
-        <section className="text-center space-y-6">
+        <motion.section variants={itemVariants} className="text-center space-y-4">
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.5 }}
           >
-            <div className="w-24 h-24 mx-auto rounded-3xl bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center shadow-[0_0_80px_rgba(78,205,196,0.3)] mb-6">
-              <Sparkles className="w-12 h-12 text-white" />
+            <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-500/20 mb-4">
+              <SparkleIcon size={36} className="text-white" weight="regular" />
             </div>
-            <h2 className="text-3xl md:text-4xl font-bold mb-3">
-              Experiências Visuais de Respiração
+            <h2 className="font-display text-2xl md:text-3xl font-medium text-foreground mb-2">
+              Experiências Visuais
             </h2>
-            <p className="text-white/60 max-w-xl mx-auto text-lg">
+            <p className="text-muted-foreground max-w-md mx-auto text-sm">
               11 modos visuais abstratos baseados em física e metáforas naturais.
-              Cada modo reage de forma única às 4 fases do ciclo respiratório.
             </p>
           </motion.div>
-        </section>
+        </motion.section>
 
         {/* Visual Modes Selector */}
-        <section className="space-y-4">
+        <motion.section variants={itemVariants} className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-white/90">Escolha o Modo Visual</h3>
+            <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+              Modo Visual
+            </h3>
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setShowModeDetails(!showModeDetails)}
-              className="text-white/50 hover:text-white gap-2"
+              className="text-muted-foreground hover:text-foreground gap-1.5 text-xs"
             >
-              <Info className="w-4 h-4" />
-              {showModeDetails ? 'Esconder detalhes' : 'Ver detalhes'}
+              <Info className="w-3.5 h-3.5" />
+              {showModeDetails ? 'Menos' : 'Detalhes'}
             </Button>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {visualModes.map((mode, index) => (
               <motion.div
                 key={mode.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
+                transition={{ delay: index * 0.03 }}
               >
                 <Card
                   className={cn(
-                    'relative cursor-pointer transition-all duration-300 border-0 overflow-hidden group',
-                    `bg-gradient-to-br ${mode.gradient}`,
+                    'relative cursor-pointer transition-all duration-300 overflow-hidden group',
+                    'border bg-card hover:shadow-md',
                     selectedMode === mode.id
-                      ? 'ring-2 ring-white/50 scale-[1.02]'
-                      : 'hover:scale-[1.02] ring-1 ring-white/10'
+                      ? 'ring-2 ring-primary border-primary/30 shadow-md'
+                      : 'border-border/50 hover:border-primary/20'
                   )}
                   onClick={() => setSelectedMode(mode.id)}
                 >
-                  <CardContent className="p-4">
+                  <CardContent className="p-3 sm:p-4">
                     <div className="flex items-start gap-3">
-                      <div className={cn('p-2.5 rounded-xl', mode.iconBg)}>
-                        <mode.icon className="w-5 h-5 text-white" />
+                      <div className={cn('p-2 rounded-xl shrink-0', mode.iconBg)}>
+                        <mode.icon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-semibold text-white truncate">{mode.name}</h4>
-                        <p className="text-xs text-white/60 line-clamp-1">{mode.description}</p>
+                        <h4 className="font-medium text-foreground text-sm truncate">{mode.name}</h4>
+                        <p className="text-xs text-muted-foreground line-clamp-1">{mode.description}</p>
                       </div>
                     </div>
 
@@ -467,18 +494,18 @@ export default function AnimationStudio() {
                           transition={{ duration: 0.2 }}
                           className="overflow-hidden"
                         >
-                          <div className="mt-4 pt-3 border-t border-white/10 space-y-2">
+                          <div className="mt-3 pt-3 border-t border-border/50 space-y-1.5">
                             {Object.entries(mode.phases).map(([phase, desc]) => (
                               <div key={phase} className="flex gap-2 text-xs">
                                 <Badge
                                   variant="outline"
-                                  className="shrink-0 border-white/20 text-white/70 text-[10px] px-1.5"
+                                  className="shrink-0 border-border text-muted-foreground text-[10px] px-1.5"
                                 >
                                   {phase === 'inhale' ? 'Inspire' :
                                    phase === 'holdFull' ? 'Segure' :
                                    phase === 'exhale' ? 'Expire' : 'Pause'}
                                 </Badge>
-                                <span className="text-white/50 line-clamp-1">{desc}</span>
+                                <span className="text-muted-foreground line-clamp-1">{desc}</span>
                               </div>
                             ))}
                           </div>
@@ -486,23 +513,18 @@ export default function AnimationStudio() {
                       )}
                     </AnimatePresence>
                   </CardContent>
-
-                  {/* Selection indicator */}
-                  {selectedMode === mode.id && (
-                    <motion.div
-                      layoutId="mode-indicator"
-                      className="absolute inset-0 border-2 border-white/30 rounded-xl pointer-events-none"
-                    />
-                  )}
                 </Card>
               </motion.div>
             ))}
           </div>
-        </section>
+        </motion.section>
 
         {/* Breath Presets */}
-        <section className="space-y-4">
-          <h3 className="text-lg font-semibold text-white/90">Padrões de Respiração</h3>
+        <motion.section variants={itemVariants} className="space-y-4">
+          <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-secondary" />
+            Padrões de Respiração
+          </h3>
 
           <div className="grid gap-3">
             {breathPresets.map((preset, index) => (
@@ -513,71 +535,72 @@ export default function AnimationStudio() {
                 transition={{ delay: index * 0.05 }}
               >
                 <Card
-                  className="bg-white/5 border-white/10 hover:bg-white/[0.07] transition-all cursor-pointer group"
+                  className="bg-card border-border/50 hover:border-primary/20 hover:shadow-md transition-all cursor-pointer group"
                   onClick={() => handleStartWithPreset(preset)}
                 >
                   <CardContent className="p-4 flex items-center gap-4">
-                    <div className={cn('w-12 h-12 rounded-xl bg-gradient-to-br flex items-center justify-center shrink-0', preset.color)}>
-                      <Play className="w-5 h-5 text-white" />
+                    <div className={cn('w-12 h-12 rounded-xl bg-gradient-to-br flex items-center justify-center shrink-0 shadow-sm', preset.lightColor)}>
+                      <PlayIcon size={20} className="text-white" weight="fill" />
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h4 className="font-semibold text-white">{preset.name}</h4>
-                        <Badge variant="outline" className="border-white/20 text-white/60 text-[10px]">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <h4 className="font-medium text-foreground">{preset.name}</h4>
+                        <Badge variant="outline" className="border-border text-muted-foreground text-[10px]">
                           {preset.inhale}-{preset.holdFull}-{preset.exhale}-{preset.holdEmpty}
                         </Badge>
                       </div>
-                      <p className="text-sm text-white/50 line-clamp-1">{preset.description}</p>
+                      <p className="text-sm text-muted-foreground line-clamp-1">{preset.description}</p>
                     </div>
 
-                    <div className="flex items-center gap-4 text-white/40">
+                    <div className="hidden sm:flex items-center gap-4 text-muted-foreground">
                       <div className="flex items-center gap-1.5 text-xs">
-                        <Clock className="w-3.5 h-3.5" />
+                        <ClockIcon size={14} />
                         <span>{(preset.inhale + preset.holdFull + preset.exhale + preset.holdEmpty) * preset.cycles}s</span>
                       </div>
                       <div className="flex items-center gap-1.5 text-xs">
                         <Repeat className="w-3.5 h-3.5" />
                         <span>{preset.cycles}x</span>
                       </div>
-                      <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                      <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform text-muted-foreground" />
                     </div>
                   </CardContent>
                 </Card>
               </motion.div>
             ))}
           </div>
-        </section>
+        </motion.section>
 
         {/* Custom Configuration */}
-        <section className="space-y-4">
+        <motion.section variants={itemVariants} className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-white/90">Configuração Personalizada</h3>
-            <div className="flex items-center gap-3 text-sm text-white/50">
-              <span className="flex items-center gap-1.5">
-                <Clock className="w-4 h-4" />
-                {Math.floor(totalSessionTime / 60)}:{(totalSessionTime % 60).toString().padStart(2, '0')} total
-              </span>
+            <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-accent" />
+              Personalizado
+            </h3>
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <ClockIcon size={14} />
+              {Math.floor(totalSessionTime / 60)}:{(totalSessionTime % 60).toString().padStart(2, '0')} total
             </div>
           </div>
 
-          <Card className="bg-white/5 border-white/10">
-            <CardContent className="p-6 space-y-6">
+          <Card className="bg-card border-border/50">
+            <CardContent className="p-5 space-y-5">
               {/* Timing sliders */}
-              <div className="grid md:grid-cols-2 gap-6">
+              <div className="grid sm:grid-cols-2 gap-5">
                 {[
                   { key: 'inhale', label: 'Inspirar', color: 'bg-teal-500' },
                   { key: 'holdFull', label: 'Segurar (cheio)', color: 'bg-blue-500' },
                   { key: 'exhale', label: 'Expirar', color: 'bg-orange-500' },
                   { key: 'holdEmpty', label: 'Segurar (vazio)', color: 'bg-purple-500' },
                 ].map(({ key, label, color }) => (
-                  <div key={key} className="space-y-3">
+                  <div key={key} className="space-y-2">
                     <div className="flex justify-between items-center">
                       <div className="flex items-center gap-2">
                         <div className={cn('w-2 h-2 rounded-full', color)} />
-                        <span className="text-sm text-white/70">{label}</span>
+                        <span className="text-sm text-foreground">{label}</span>
                       </div>
-                      <Badge variant="secondary" className="bg-white/10 text-white">
+                      <Badge variant="secondary" className="bg-muted text-foreground text-xs">
                         {customConfig[key as keyof typeof customConfig]}s
                       </Badge>
                     </div>
@@ -587,17 +610,17 @@ export default function AnimationStudio() {
                       min={0}
                       max={10}
                       step={1}
-                      className="[&_[role=slider]]:bg-white [&_[role=slider]]:border-0"
+                      className="[&_[role=slider]]:bg-primary [&_[role=slider]]:border-0"
                     />
                   </div>
                 ))}
               </div>
 
               {/* Cycles */}
-              <div className="pt-4 border-t border-white/10">
-                <div className="flex justify-between items-center mb-3">
-                  <span className="text-sm text-white/70">Número de Ciclos</span>
-                  <Badge variant="secondary" className="bg-white/10 text-white">
+              <div className="pt-4 border-t border-border/50">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm text-foreground">Número de Ciclos</span>
+                  <Badge variant="secondary" className="bg-muted text-foreground text-xs">
                     {customConfig.cycles} ciclos
                   </Badge>
                 </div>
@@ -607,14 +630,14 @@ export default function AnimationStudio() {
                   min={1}
                   max={15}
                   step={1}
-                  className="[&_[role=slider]]:bg-white [&_[role=slider]]:border-0"
+                  className="[&_[role=slider]]:bg-primary [&_[role=slider]]:border-0"
                 />
               </div>
 
               {/* Timeline preview */}
-              <div className="pt-4 border-t border-white/10">
-                <p className="text-xs text-white/50 mb-2">Visualização do ciclo</p>
-                <div className="flex h-3 rounded-full overflow-hidden">
+              <div className="pt-4 border-t border-border/50">
+                <p className="text-xs text-muted-foreground mb-2">Visualização do ciclo</p>
+                <div className="flex h-2.5 rounded-full overflow-hidden bg-muted">
                   <div
                     className="bg-teal-500 transition-all"
                     style={{ width: `${(customConfig.inhale / totalCycleTime) * 100}%` }}
@@ -638,32 +661,34 @@ export default function AnimationStudio() {
               <Button
                 size="lg"
                 onClick={handleStartCustom}
-                className="w-full rounded-xl h-14 text-lg font-semibold bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-400 hover:to-cyan-400 border-0"
+                className="w-full rounded-xl h-12 text-base font-medium bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20"
               >
-                <Play className="w-5 h-5 mr-2" />
+                <PlayIcon size={20} className="mr-2" weight="fill" />
                 Iniciar com {modeDetails?.name}
               </Button>
             </CardContent>
           </Card>
-        </section>
+        </motion.section>
 
         {/* Info Section */}
-        <section className="pt-6 border-t border-white/10">
-          <div className="grid md:grid-cols-4 gap-4">
+        <motion.section variants={itemVariants} className="pt-4 pb-6">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
-              { label: '4 Fases', desc: 'State Machine completa' },
-              { label: '11 Modos', desc: 'Visualizações únicas' },
-              { label: 'Tempo Real', desc: 'Canvas 60fps' },
-              { label: 'Personalizável', desc: 'Tempos e cores' },
+              { label: '4 Fases', desc: 'State Machine' },
+              { label: '11 Modos', desc: 'Visualizações' },
+              { label: '60 FPS', desc: 'Canvas HD' },
+              { label: 'Custom', desc: 'Personalizável' },
             ].map((item) => (
-              <div key={item.label} className="text-center p-4 rounded-xl bg-white/5">
-                <div className="text-xl font-bold text-teal-400">{item.label}</div>
-                <div className="text-xs text-white/50">{item.desc}</div>
+              <div key={item.label} className="text-center p-3 rounded-xl bg-card border border-border/50">
+                <div className="text-lg font-display font-medium text-primary">{item.label}</div>
+                <div className="text-xs text-muted-foreground">{item.desc}</div>
               </div>
             ))}
           </div>
-        </section>
-      </main>
+        </motion.section>
+      </motion.main>
+
+      <BottomNavigation />
 
       {/* Fullscreen Engine */}
       <AnimatePresence>

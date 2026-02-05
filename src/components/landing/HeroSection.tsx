@@ -10,40 +10,38 @@ export const HeroSection: React.FC = () => {
   return (
     <section
       id="hero"
-      className="relative min-h-screen flex items-center justify-center pt-20 pb-16 px-5 overflow-hidden"
+      className="relative min-h-screen flex items-center justify-center pt-24 pb-20 px-6 overflow-hidden bg-gradient-to-b from-background to-muted/30"
     >
-      {/* Background decorations */}
+      {/* Elegant Background Elements */}
       <div className="absolute inset-0 pointer-events-none">
+        {/* Subtle gradient orbs */}
         <motion.div
-          className="absolute top-20 right-10 w-64 h-64 rounded-full bg-landing-lavender/40 blur-3xl"
-          animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
-          transition={{ duration: 8, repeat: Infinity }}
+          className="absolute top-32 right-20 w-96 h-96 rounded-full bg-primary/5 blur-3xl"
+          animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.4, 0.3] }}
+          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
         />
         <motion.div
-          className="absolute bottom-20 left-10 w-48 h-48 rounded-full bg-landing-sage/30 blur-3xl"
-          animate={{ scale: [1.2, 1, 1.2], opacity: [0.4, 0.3, 0.4] }}
-          transition={{ duration: 10, repeat: Infinity }}
+          className="absolute bottom-32 left-20 w-72 h-72 rounded-full bg-secondary/5 blur-3xl"
+          animate={{ scale: [1.1, 1, 1.1], opacity: [0.25, 0.35, 0.25] }}
+          transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
         />
-        <motion.div
-          className="absolute top-1/3 left-1/4 w-32 h-32 rounded-full bg-landing-serene/20 blur-2xl"
-          animate={{ y: [0, -20, 0] }}
-          transition={{ duration: 6, repeat: Infinity }}
-        />
+        {/* Subtle gold accent */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-gradient-radial from-primary/3 to-transparent" />
       </div>
 
-      <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
+      <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
         {/* Text Content */}
         <motion.div
-          initial={{ opacity: 0, x: -50 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.8 }}
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
           className="text-center lg:text-left"
         >
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-landing-lavender/50 text-landing-text/80 text-sm font-medium mb-6"
+            transition={{ delay: 0.3, duration: 0.8 }}
+            className="inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-primary/8 text-primary text-sm font-medium mb-8 border border-primary/10"
           >
             <Sparkles className="w-4 h-4" />
             <span>Seu refúgio de paz interior</span>
@@ -52,11 +50,11 @@ export const HeroSection: React.FC = () => {
           <motion.h1
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="text-4xl md:text-5xl lg:text-6xl font-bold text-landing-text leading-tight mb-6"
+            transition={{ delay: 0.4, duration: 0.8 }}
+            className="font-display text-4xl md:text-5xl lg:text-6xl font-medium text-foreground leading-[1.1] mb-8 tracking-tight"
           >
             Transforme sua{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-landing-sage to-landing-serene">
+            <span className="text-primary">
               ansiedade
             </span>{' '}
             em serenidade
@@ -65,8 +63,8 @@ export const HeroSection: React.FC = () => {
           <motion.p
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="text-lg md:text-xl text-landing-text/70 mb-8 max-w-lg mx-auto lg:mx-0"
+            transition={{ delay: 0.5, duration: 0.8 }}
+            className="text-lg md:text-xl text-muted-foreground mb-10 max-w-lg mx-auto lg:mx-0 leading-relaxed"
           >
             Jornadas guiadas de meditação e respiração para quem busca equilíbrio real em um mundo caótico.
           </motion.p>
@@ -74,13 +72,13 @@ export const HeroSection: React.FC = () => {
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
+            transition={{ delay: 0.6, duration: 0.8 }}
             className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start"
           >
             <Button
               onClick={() => navigate('/auth?trial=true')}
               size="lg"
-              className="bg-gradient-to-r from-landing-sage to-landing-serene text-white font-semibold px-8 py-6 rounded-full text-lg shadow-lg hover:shadow-xl transition-all hover:scale-105"
+              className="bg-primary text-primary-foreground font-medium px-8 py-6 rounded-xl text-base shadow-lg shadow-primary/15 hover:shadow-xl hover:shadow-primary/20 transition-all duration-500"
             >
               Experimente 7 Dias Grátis
             </Button>
@@ -88,7 +86,7 @@ export const HeroSection: React.FC = () => {
               variant="outline"
               size="lg"
               onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
-              className="border-landing-sage/50 text-landing-text font-medium px-6 py-6 rounded-full hover:bg-landing-lavender/30"
+              className="border-border/60 text-foreground font-medium px-6 py-6 rounded-xl hover:bg-muted/50 hover:border-primary/20 transition-all duration-500"
             >
               <Play className="w-5 h-5 mr-2" />
               Ver como funciona
@@ -98,50 +96,50 @@ export const HeroSection: React.FC = () => {
 
         {/* App Mockup */}
         <motion.div
-          initial={{ opacity: 0, x: 50 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.8, delay: 0.3 }}
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
           className="relative flex justify-center"
         >
           <div className="relative">
-            {/* Phone mockup */}
+            {/* Phone mockup - Elegant design */}
             <motion.div
-              className="relative w-64 md:w-72 h-[520px] md:h-[580px] rounded-[3rem] bg-gradient-to-br from-landing-lavender to-landing-serene/30 p-2 shadow-2xl"
-              animate={{ y: [0, -10, 0] }}
-              transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+              className="relative w-64 md:w-72 h-[520px] md:h-[580px] rounded-[3rem] bg-card border border-border/50 p-2 shadow-xl"
+              animate={{ y: [0, -8, 0] }}
+              transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
             >
-              <div className="w-full h-full rounded-[2.5rem] bg-landing-bg overflow-hidden flex flex-col">
+              <div className="w-full h-full rounded-[2.5rem] bg-background overflow-hidden flex flex-col">
                 {/* App header */}
-                <div className="p-4 bg-gradient-to-r from-landing-sage/20 to-landing-serene/20">
+                <div className="p-4 bg-muted/30 border-b border-border/30">
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-landing-sage to-landing-serene flex items-center justify-center">
-                      <Sparkles className="w-4 h-4 text-white" />
+                    <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+                      <Sparkles className="w-4 h-4 text-primary-foreground" />
                     </div>
-                    <span className="font-bold text-landing-text">ETHRA</span>
+                    <span className="font-display font-medium text-foreground">ETHRA</span>
                   </div>
                 </div>
-                
+
                 {/* Content preview */}
                 <div className="flex-1 p-4 space-y-4">
                   <div className="text-center py-4">
-                    <p className="text-sm text-landing-text/60 mb-2">Sua Jornada</p>
-                    <h3 className="text-lg font-bold text-landing-text">Controle da Ansiedade</h3>
-                    <p className="text-xs text-landing-text/50 mt-1">Dia 3 de 21</p>
+                    <p className="text-sm text-muted-foreground mb-2">Sua Jornada</p>
+                    <h3 className="text-lg font-display font-medium text-foreground">Controle da Ansiedade</h3>
+                    <p className="text-xs text-muted-foreground mt-1">Dia 3 de 21</p>
                   </div>
-                  
+
                   {/* Progress circle */}
                   <div className="flex justify-center">
                     <motion.div
-                      className="w-32 h-32 rounded-full bg-gradient-to-br from-landing-sage/20 to-landing-serene/20 flex items-center justify-center"
-                      animate={{ scale: [1, 1.05, 1] }}
-                      transition={{ duration: 3, repeat: Infinity }}
+                      className="w-32 h-32 rounded-full bg-primary/10 flex items-center justify-center"
+                      animate={{ scale: [1, 1.03, 1] }}
+                      transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
                     >
-                      <div className="w-24 h-24 rounded-full bg-gradient-to-br from-landing-sage to-landing-serene flex items-center justify-center">
-                        <span className="text-white text-2xl font-bold">14%</span>
+                      <div className="w-24 h-24 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
+                        <span className="text-primary-foreground text-2xl font-display font-medium">14%</span>
                       </div>
                     </motion.div>
                   </div>
-                  
+
                   {/* Practice cards */}
                   <div className="space-y-2 mt-4">
                     {['Respiração 4-7-8', 'Meditação Guiada', 'Reflexão do Dia'].map((item, i) => (
@@ -149,11 +147,11 @@ export const HeroSection: React.FC = () => {
                         key={item}
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.8 + i * 0.1 }}
-                        className="p-3 rounded-xl bg-landing-lavender/30 flex items-center gap-3"
+                        transition={{ delay: 1 + i * 0.15, duration: 0.6 }}
+                        className="p-3 rounded-xl bg-muted/50 border border-border/30 flex items-center gap-3"
                       >
-                        <div className="w-8 h-8 rounded-lg bg-landing-sage/30" />
-                        <span className="text-sm font-medium text-landing-text">{item}</span>
+                        <div className="w-8 h-8 rounded-lg bg-primary/10" />
+                        <span className="text-sm font-medium text-foreground">{item}</span>
                       </motion.div>
                     ))}
                   </div>
@@ -161,20 +159,20 @@ export const HeroSection: React.FC = () => {
               </div>
             </motion.div>
 
-            {/* Floating elements */}
+            {/* Floating elements - Elegant cards */}
             <motion.div
-              className="absolute -right-8 top-20 px-4 py-2 rounded-xl bg-white shadow-lg"
-              animate={{ y: [0, -5, 0] }}
-              transition={{ duration: 3, repeat: Infinity, delay: 0.5 }}
+              className="absolute -right-6 top-24 px-4 py-2.5 rounded-xl bg-card border border-border/50 shadow-lg"
+              animate={{ y: [0, -4, 0] }}
+              transition={{ duration: 4, repeat: Infinity, delay: 0.5, ease: 'easeInOut' }}
             >
-              <p className="text-sm font-medium text-landing-text">🧘 4.9 ★</p>
+              <p className="text-sm font-medium text-foreground">4.9 ★</p>
             </motion.div>
             <motion.div
-              className="absolute -left-8 bottom-32 px-4 py-2 rounded-xl bg-white shadow-lg"
-              animate={{ y: [0, 5, 0] }}
-              transition={{ duration: 3.5, repeat: Infinity, delay: 1 }}
+              className="absolute -left-6 bottom-36 px-4 py-2.5 rounded-xl bg-card border border-border/50 shadow-lg"
+              animate={{ y: [0, 4, 0] }}
+              transition={{ duration: 4.5, repeat: Infinity, delay: 1, ease: 'easeInOut' }}
             >
-              <p className="text-sm font-medium text-landing-text">✨ +5.000 usuários</p>
+              <p className="text-sm font-medium text-foreground">+5.000 usuários</p>
             </motion.div>
           </div>
         </motion.div>

@@ -1,61 +1,173 @@
-# Plano: Harmonizar Dark Mode e Melhorar Contraste/Glow
 
-## ✅ CONCLUÍDO
+# Plano: Aumentar Destaque Visual no Dark Mode
 
----
+## Problema Identificado
 
-## Resumo das Alterações Realizadas
+Analisando a screenshot, os elementos no dark mode carecem de definição visual:
 
-### Fase 1: CSS Classes Adicionadas (`index.css`)
-
-Novas classes utilitárias para dark mode:
-- `.guide-bubble` - Bolhas de mensagem com glow sutil
-- `.user-bubble` - Bolha do usuário com gradiente
-- `.guide-card` / `.guide-card-selected` - Cards de seleção de guia
-- `.header-blur` / `.input-area-blur` - Áreas com blur adaptativo
-- `.guide-avatar` + estados (`-thinking`, `-speaking`, `-empathic`) - Avatar com glow
-- `.typing-dot` - Pontos do indicador de digitação
-- `.suggestion-btn` - Botões de sugestão
-- `.onboarding-card` - Cards do onboarding
-- `.btn-primary-gradient` - Botão com gradiente e glow
-
-### Fase 2: Componentes Refatorados
-
-| Componente | Cores Hardcoded Removidas | Classes Semânticas Aplicadas |
-|------------|---------------------------|------------------------------|
-| `MessageBubble.tsx` | `cream-50`, `sage-*`, inline styles | `guide-bubble`, `user-bubble`, `text-foreground` |
-| `GuideCard.tsx` | `cream-50/80`, `sage-*` | `guide-card`, `guide-card-selected`, `text-foreground` |
-| `GuideAvatar.tsx` | Inline gradient styles | `guide-avatar`, estados dinâmicos |
-| `TypingIndicator.tsx` | `rgba(95, 115, 95, *)` | `guide-bubble`, `typing-dot`, `text-muted-foreground` |
-| `SuggestedQuestions.tsx` | `cream-50/80`, `sage-*` | `suggestion-btn`, `text-foreground` |
-
-### Fase 3: Páginas Refatoradas
-
-| Página | Alterações |
-|--------|------------|
-| `GuideChat.tsx` | Background `bg-background`, header `header-blur`, input `input-area-blur`, botões `btn-primary-gradient` |
-| `GuideSelect.tsx` | Mesmo padrão de GuideChat, orbs com CSS variables |
-| `Onboarding.tsx` | Background semântico, `onboarding-card`, botões e badges com classes utilitárias |
+| Elemento | Problema Atual |
+|----------|----------------|
+| QuickActionCard | Bordas quase invisíveis (opacity 0.15-0.3) |
+| BottomNavigation | Sem contraste com o fundo |
+| Cabeçalhos de seção | Texto muito apagado |
+| Ícones/ilustrações | Sem glow ou destaque |
+| GardenWidget | Borda sutil demais |
+| DailyGuidanceCard | Falta definição no contorno |
 
 ---
 
-## Resultado Visual
+## Solução Proposta
 
-### Light Mode
-- Mantém estética original com tons cream/sage
-- Contraste adequado para legibilidade
-- Bordas visíveis mas sutis
+### Fase 1: Aprimorar CSS Dark Mode (`index.css`)
 
-### Dark Mode
-- Background rich black (`--background: 30 8% 7%`)
-- Textos ivory com glow sutil (`dark:text-glow`)
-- Bordas com halo gold em hover (`dark:border-glow`)
-- Cards com elevação sofisticada (`dark:card-elevated-dark`)
-- Botões primários com glow (`dark:btn-glow-primary`)
-- Orbs de fundo com opacidade reduzida (`dark:opacity-40`)
+**Novas classes com maior destaque:**
 
-### Princípios Mantidos
-- ✅ Estética luxuosa - Glows sutis, não neon
-- ✅ Harmonia de cores - Acentos em champagne gold
-- ✅ Legibilidade - Contraste adequado (4.5:1+)
-- ✅ Consistência - Mesmo padrão em todas as páginas
+```css
+/* Cards com bordas mais visíveis e glow */
+.dark .quick-action-card {
+  border-color: hsl(var(--border) / 0.5);
+  box-shadow: 
+    0 4px 20px hsl(0 0% 0% / 0.4),
+    inset 0 1px 0 hsl(var(--primary) / 0.08);
+}
+
+.dark .quick-action-card:hover {
+  border-color: hsl(var(--primary) / 0.4);
+  box-shadow: 
+    0 8px 32px hsl(0 0% 0% / 0.5),
+    0 0 25px hsl(var(--primary) / 0.12);
+}
+
+/* Navegação inferior com destaque */
+.dark .bottom-nav {
+  border-color: hsl(var(--border) / 0.5);
+  box-shadow: 0 -4px 24px hsl(0 0% 0% / 0.4);
+}
+
+/* Texto de seção com mais contraste */
+.dark .section-title {
+  color: hsl(var(--muted-foreground));
+  text-shadow: 0 0 20px hsl(var(--primary) / 0.2);
+}
+
+/* Ícones com glow colorido */
+.dark .icon-glow-colored {
+  filter: drop-shadow(0 0 10px currentColor);
+}
+```
+
+### Fase 2: Aprimorar QuickActionCard
+
+**Mudanças:**
+- Aumentar opacidade das bordas de 0.15 para 0.4
+- Adicionar box-shadow no dark mode
+- Aplicar glow sutil nos ícones
+- Borda interna com accent gold
+
+### Fase 3: Aprimorar BottomNavigation
+
+**Mudanças:**
+- Borda superior mais visível
+- Box-shadow para elevação
+- Ícones ativos com glow
+- Background com mais opacidade
+
+### Fase 4: Aprimorar GardenWidget e DailyGuidanceCard
+
+**Mudanças:**
+- Bordas com mais definição
+- Glow sutil no hover
+- Inner shadow para profundidade
+
+### Fase 5: Aprimorar Textos e Headers
+
+**Mudanças:**
+- Cabeçalhos de seção com mais contraste
+- Text-shadow sutil em títulos importantes
+- Ponto indicador com glow
+
+---
+
+## Arquivos a Modificar
+
+| Arquivo | Alteração |
+|---------|-----------|
+| `src/index.css` | Novas classes de dark mode com mais contraste |
+| `src/components/dashboard/QuickActionCard.tsx` | Aplicar classes de destaque |
+| `src/components/BottomNavigation.tsx` | Aumentar definição visual |
+| `src/components/dashboard/GardenWidget.tsx` | Bordas e glow aprimorados |
+| `src/components/dashboard/DailyGuidanceCard.tsx` | Melhor contraste |
+| `src/pages/Home.tsx` | Classes de seção com destaque |
+
+---
+
+## Comparativo Visual
+
+```text
+ANTES (Atual)                     DEPOIS (Proposto)
+┌─────────────────────────┐      ┌─────────────────────────┐
+│ ┌─────┐ ┌─────┐ ┌─────┐ │      │ ┌═════┐ ┌═════┐ ┌═════┐ │
+│ │     │ │     │ │     │ │      │ │ ✧   │ │ ✧   │ │ ✧   │ │
+│ │  ○  │ │  ○  │ │  ○  │ │  →   │ │  ○  │ │  ○  │ │  ○  │ │
+│ │     │ │     │ │     │ │      │ │glow │ │glow │ │glow │ │
+│ └─────┘ └─────┘ └─────┘ │      │ └═════┘ └═════┘ └═════┘ │
+│                         │      │        ↑ shadow         │
+│ Bordas invisíveis       │      │ Bordas + glow visíveis  │
+│ Sem elevação            │      │ Elevação com sombra     │
+└─────────────────────────┘      └─────────────────────────┘
+
+Navegação:
+┌─────────────────────────┐      ┌═════════════════════════┐
+│ ○   ○   ○   ○   ○       │  →   │ ○   ○   ●   ○   ○       │
+│ quase invisível         │      │ ↑ glow + borda visível  │
+└─────────────────────────┘      └═════════════════════════┘
+```
+
+---
+
+## Seção Técnica
+
+### Valores de Opacidade Propostos
+
+| Elemento | Antes | Depois |
+|----------|-------|--------|
+| Card border | 0.15 | 0.4-0.5 |
+| Card border hover | 0.30 | 0.5-0.6 |
+| Nav border | 0.40 | 0.6 |
+| Icon shadow | none | 0.3-0.4 |
+| Section text | 0.55 | 0.7 |
+
+### Box-Shadow Aprimorado
+
+```css
+/* Card com elevação rica */
+box-shadow: 
+  0 4px 20px hsl(0 0% 0% / 0.4),      /* Sombra base */
+  0 0 0 1px hsl(var(--border) / 0.3), /* Borda interna */
+  inset 0 1px 0 hsl(var(--primary) / 0.06); /* Highlight top */
+
+/* Hover com glow gold */
+box-shadow: 
+  0 8px 32px hsl(0 0% 0% / 0.5),
+  0 0 30px hsl(var(--primary) / 0.1);
+```
+
+### Glow em Ícones Coloridos
+
+```css
+/* Aplicar em cada cor de ícone */
+.dark .icon-joy { filter: drop-shadow(0 0 8px hsl(var(--joy) / 0.5)); }
+.dark .icon-calm { filter: drop-shadow(0 0 8px hsl(var(--calm) / 0.5)); }
+/* etc... */
+```
+
+---
+
+## Resultado Esperado
+
+- Cards claramente delimitados contra o fundo escuro
+- Ícones com presença visual através de glow colorido
+- Navegação inferior com definição clara
+- Textos de seção legíveis e destacados
+- Estética luxuosa mantida (não neon, apenas refinado)
+- Harmonia geral preservada com acentos gold

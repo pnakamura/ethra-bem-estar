@@ -2,6 +2,8 @@
 
 # Plano: Popular Banco de Dados com Export ETHRA
 
+## ✅ CONCLUÍDO
+
 ## Resumo
 
 Este arquivo SQL contém dados de produção do ETHRA com conteúdo rico e detalhado para substituir os dados de seed genéricos inseridos anteriormente.
@@ -77,4 +79,23 @@ Após aprovação, executarei o SQL em etapas para popular o banco:
 7. Dias da jornada "21 Dias"
 
 Todos os INSERTs usam `ON CONFLICT DO UPDATE` para re-execução segura.
+
+---
+
+## ✅ Execução Realizada em 2026-02-05
+
+Todos os dados do arquivo `ethra-data-export.sql` foram inseridos com sucesso:
+
+| Tabela | Status |
+|--------|--------|
+| `categorias_refeicao` | ✅ Inserido |
+| `meditation_categories` | ✅ Inserido |
+| `planos` | ✅ Inserido |
+| `feature_access_levels` | ✅ Inserido |
+| `plan_feature_access` | ✅ Inserido |
+| `breathing_techniques` | ✅ Inserido |
+| `spiritual_guides` | ✅ Inserido |
+| `journeys` | ✅ Inserido |
+| `meditation_tracks` | ✅ Inserido |
+| `journey_days` (21 dias) | ✅ Inserido |
 

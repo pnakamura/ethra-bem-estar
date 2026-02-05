@@ -264,7 +264,7 @@ export default function GuideChat() {
 
   return (
     <TooltipProvider>
-      <div className="min-h-[100dvh] bg-gradient-to-br from-cream-50 via-sage-50/30 to-earth-50/20 flex flex-col">
+      <div className="min-h-[100dvh] bg-background flex flex-col">
       {/* Noise texture overlay */}
       <div
         className="fixed inset-0 opacity-[0.03] mix-blend-overlay pointer-events-none"
@@ -276,52 +276,49 @@ export default function GuideChat() {
       {/* Subtle animated background for emotional tone */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <motion.div
-          className="absolute -top-40 -right-40 w-96 h-96 rounded-full"
-          style={{ background: 'radial-gradient(circle, rgba(125, 143, 125, 0.08) 0%, transparent 70%)' }}
+          className="absolute -top-40 -right-40 w-96 h-96 rounded-full opacity-60 dark:opacity-40"
+          style={{ background: 'radial-gradient(circle, hsl(var(--secondary) / 0.12) 0%, transparent 70%)' }}
           animate={{ scale: [1, 1.1, 1] }}
           transition={{ duration: 10, repeat: Infinity }}
         />
         <motion.div
-          className="absolute -bottom-40 -left-40 w-80 h-80 rounded-full"
-          style={{ background: 'radial-gradient(circle, rgba(139, 115, 95, 0.06) 0%, transparent 70%)' }}
+          className="absolute -bottom-40 -left-40 w-80 h-80 rounded-full opacity-50 dark:opacity-30"
+          style={{ background: 'radial-gradient(circle, hsl(var(--primary) / 0.08) 0%, transparent 70%)' }}
           animate={{ scale: [1, 1.15, 1] }}
           transition={{ duration: 12, repeat: Infinity, delay: 2 }}
         />
       </div>
 
       {/* Header */}
-      <div className="sticky top-0 z-10 backdrop-blur-xl bg-cream-50/80 border-b border-sage-300/30">
+      <div className="sticky top-0 z-10 header-blur">
         <div className="flex items-center gap-3 px-4 py-3 safe-top">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => navigate('/')}
-            className="rounded-full hover:bg-sage-50/50 text-sage-700"
+            className="rounded-full hover:bg-muted text-foreground"
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
 
           {isLoading ? (
             <div className="flex-1 flex items-center gap-3">
-              <Skeleton className="w-10 h-10 rounded-full bg-sage-100/50" />
+              <Skeleton className="w-10 h-10 rounded-full bg-muted" />
               <div>
-                <Skeleton className="h-4 w-24 mb-1 bg-sage-100/50" />
-                <Skeleton className="h-3 w-16 bg-sage-100/50" />
+                <Skeleton className="h-4 w-24 mb-1 bg-muted" />
+                <Skeleton className="h-3 w-16 bg-muted" />
               </div>
             </div>
           ) : guide ? (
             <div className="flex-1 flex items-center gap-3">
               <motion.div
-                className="w-10 h-10 rounded-full flex items-center justify-center text-xl"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(125, 143, 125, 0.15) 0%, rgba(95, 115, 95, 0.1) 100%)',
-                }}
+                className="w-10 h-10 rounded-full flex items-center justify-center text-xl guide-avatar"
                 animate={phase !== 'idle' ? {
                   scale: [1, 1.05, 1],
                   boxShadow: [
-                    '0 0 0 rgba(95, 115, 95, 0)',
-                    '0 0 15px rgba(95, 115, 95, 0.2)',
-                    '0 0 0 rgba(95, 115, 95, 0)'
+                    '0 0 0 hsl(var(--secondary) / 0)',
+                    '0 0 15px hsl(var(--secondary) / 0.25)',
+                    '0 0 0 hsl(var(--secondary) / 0)'
                   ],
                 } : {}}
                 transition={{ duration: 2, repeat: phase !== 'idle' ? Infinity : 0 }}
@@ -329,13 +326,13 @@ export default function GuideChat() {
                 {guide.avatar_emoji}
               </motion.div>
               <div>
-                <h1 className="font-display font-medium text-sage-900">{guide.name}</h1>
+                <h1 className="font-display font-medium text-foreground dark:text-glow">{guide.name}</h1>
                 <motion.p
                   key={getStatusText()}
                   initial={{ opacity: 0, y: 5 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3 }}
-                  className="text-xs font-body text-sage-600"
+                  className="text-xs font-body text-muted-foreground"
                 >
                   {getStatusText()}
                 </motion.p>
@@ -348,7 +345,7 @@ export default function GuideChat() {
               variant="ghost"
               size="icon"
               onClick={handleNewConversation}
-              className="rounded-full hover:bg-sage-50/50 text-sage-700"
+              className="rounded-full hover:bg-muted text-foreground"
               title="Nova conversa"
             >
               <RefreshCw className="w-5 h-5" />
@@ -357,7 +354,7 @@ export default function GuideChat() {
               variant="ghost"
               size="icon"
               onClick={() => navigate('/guide/select')}
-              className="rounded-full hover:bg-sage-50/50 text-sage-700"
+              className="rounded-full hover:bg-muted text-foreground"
               title="Trocar guia"
             >
               <Users className="w-5 h-5" />
@@ -412,7 +409,7 @@ export default function GuideChat() {
       </div>
 
       {/* Input */}
-      <div className="fixed left-0 right-0 p-4 backdrop-blur-xl bg-cream-50/80 border-t border-sage-300/30" style={{ bottom: 'calc(var(--bottom-nav-height, 88px) + 12px)' }}>
+      <div className="fixed left-0 right-0 p-4 input-area-blur" style={{ bottom: 'calc(var(--bottom-nav-height, 88px) + 12px)' }}>
         <div className="max-w-2xl mx-auto flex gap-2">
           <Textarea
             ref={inputRef}
@@ -420,18 +417,14 @@ export default function GuideChat() {
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Digite sua mensagem..."
-            className="min-h-[48px] max-h-32 resize-none rounded-2xl bg-cream-50 border-sage-300/50 focus:border-sage-400 font-body text-sage-900 placeholder:text-sage-400"
+            className="min-h-[48px] max-h-32 resize-none rounded-2xl bg-card border-border/50 focus:border-primary/50 font-body text-foreground placeholder:text-muted-foreground dark:input-glow"
             disabled={isSending || isStreaming || !guideId}
           />
           <Button
             onClick={handleSend}
             disabled={!inputValue.trim() || isSending || isStreaming || !guideId}
             size="icon"
-            className="h-12 w-12 rounded-2xl flex-shrink-0 shadow-[0_4px_16px_rgba(95,115,95,0.2)]"
-            style={{
-              background: 'linear-gradient(135deg, #7d8f7d 0%, #5f735f 100%)',
-              color: '#f6f7f6',
-            }}
+            className="h-12 w-12 rounded-2xl flex-shrink-0 btn-primary-gradient dark:btn-glow-primary"
           >
             <Send className="w-5 h-5" />
           </Button>

@@ -31,8 +31,8 @@ export default function GuideSelect() {
   // Show loading state
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-cream-50 via-sage-50/30 to-earth-50/20 flex items-center justify-center">
-        <div className="animate-pulse font-body text-sage-600">Carregando...</div>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-pulse font-body text-muted-foreground">Carregando...</div>
       </div>
     );
   }
@@ -40,7 +40,7 @@ export default function GuideSelect() {
   // Show login required message if not authenticated
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-cream-50 via-sage-50/30 to-earth-50/20">
+      <div className="min-h-screen bg-background">
         {/* Noise texture overlay */}
         <div
           className="fixed inset-0 opacity-[0.03] mix-blend-overlay pointer-events-none"
@@ -51,9 +51,9 @@ export default function GuideSelect() {
 
         {/* Organic floating orbs */}
         <motion.div
-          className="fixed top-20 right-10 w-64 h-64 rounded-full pointer-events-none"
+          className="fixed top-20 right-10 w-64 h-64 rounded-full pointer-events-none opacity-60 dark:opacity-40"
           style={{
-            background: 'radial-gradient(circle, rgba(125, 143, 125, 0.12) 0%, transparent 70%)',
+            background: 'radial-gradient(circle, hsl(var(--secondary) / 0.12) 0%, transparent 70%)',
           }}
           animate={{
             scale: [1, 1.1, 1],
@@ -67,18 +67,18 @@ export default function GuideSelect() {
         />
 
         {/* Header */}
-        <div className="sticky top-0 z-10 backdrop-blur-xl bg-cream-50/80 border-b border-sage-300/30">
+        <div className="sticky top-0 z-10 header-blur">
           <div className="flex items-center gap-3 px-4 py-4 safe-top">
             <Button
               variant="ghost"
               size="icon"
               onClick={handleBack}
-              className="rounded-full hover:bg-sage-50/50 text-sage-700"
+              className="rounded-full hover:bg-muted text-foreground"
             >
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div className="flex-1">
-              <h1 className="text-lg font-display font-medium text-sage-900">Escolha seu Guia</h1>
+              <h1 className="text-lg font-display font-medium text-foreground dark:text-glow">Escolha seu Guia</h1>
             </div>
           </div>
         </div>
@@ -90,22 +90,18 @@ export default function GuideSelect() {
             animate={{ opacity: 1, y: 0 }}
             className="max-w-sm"
           >
-            <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-sage-100/80 to-earth-100/60 border border-sage-200/50 flex items-center justify-center shadow-[0_8px_24px_rgba(95,115,95,0.15)]">
-              <LogIn className="w-10 h-10 text-sage-600" />
+            <div className="w-20 h-20 mx-auto mb-6 rounded-2xl guide-avatar border border-border/50 flex items-center justify-center shadow-lg dark:card-glow">
+              <LogIn className="w-10 h-10 text-secondary" />
             </div>
-            <h2 className="text-xl font-display font-medium text-sage-900 mb-3">Login Necessário</h2>
-            <p className="font-body text-sage-600 mb-8 leading-relaxed">
+            <h2 className="text-xl font-display font-medium text-foreground mb-3 dark:text-glow">Login Necessário</h2>
+            <p className="font-body text-muted-foreground mb-8 leading-relaxed">
               Para escolher um guia espiritual e iniciar sua jornada de autoconhecimento,
               é necessário estar conectado à sua conta.
             </p>
             <div className="flex flex-col gap-3">
               <Button
                 onClick={() => navigate('/auth')}
-                className="w-full h-12 text-base font-body font-medium rounded-2xl gap-2 shadow-[0_8px_24px_rgba(95,115,95,0.25)]"
-                style={{
-                  background: 'linear-gradient(135deg, #7d8f7d 0%, #5f735f 100%)',
-                  color: '#f6f7f6',
-                }}
+                className="w-full h-12 text-base font-body font-medium rounded-2xl gap-2 btn-primary-gradient dark:btn-glow-primary"
               >
                 <LogIn className="w-5 h-5" />
                 Fazer Login
@@ -113,7 +109,7 @@ export default function GuideSelect() {
               <Button
                 variant="outline"
                 onClick={handleBack}
-                className="w-full h-12 text-base font-body rounded-2xl border-sage-300/50 hover:bg-sage-50/50 text-sage-700"
+                className="w-full h-12 text-base font-body rounded-2xl border-border/50 hover:bg-muted text-foreground"
               >
                 Voltar para Início
               </Button>
@@ -125,7 +121,7 @@ export default function GuideSelect() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-cream-50 via-sage-50/30 to-earth-50/20">
+    <div className="min-h-screen bg-background">
       {/* Noise texture overlay */}
       <div
         className="fixed inset-0 opacity-[0.03] mix-blend-overlay pointer-events-none"
@@ -136,9 +132,9 @@ export default function GuideSelect() {
 
       {/* Organic floating orbs */}
       <motion.div
-        className="fixed top-20 right-10 w-72 h-72 rounded-full pointer-events-none"
+        className="fixed top-20 right-10 w-72 h-72 rounded-full pointer-events-none opacity-60 dark:opacity-40"
         style={{
-          background: 'radial-gradient(circle, rgba(125, 143, 125, 0.12) 0%, transparent 70%)',
+          background: 'radial-gradient(circle, hsl(var(--secondary) / 0.12) 0%, transparent 70%)',
         }}
         animate={{
           scale: [1, 1.1, 1],
@@ -151,9 +147,9 @@ export default function GuideSelect() {
         }}
       />
       <motion.div
-        className="fixed bottom-32 left-8 w-56 h-56 rounded-full pointer-events-none"
+        className="fixed bottom-32 left-8 w-56 h-56 rounded-full pointer-events-none opacity-50 dark:opacity-30"
         style={{
-          background: 'radial-gradient(circle, rgba(139, 115, 95, 0.1) 0%, transparent 70%)',
+          background: 'radial-gradient(circle, hsl(var(--primary) / 0.1) 0%, transparent 70%)',
         }}
         animate={{
           scale: [1, 1.15, 1],
@@ -168,19 +164,19 @@ export default function GuideSelect() {
       />
 
       {/* Header */}
-      <div className="sticky top-0 z-10 backdrop-blur-xl bg-cream-50/80 border-b border-sage-300/30">
+      <div className="sticky top-0 z-10 header-blur">
         <div className="flex items-center gap-3 px-4 py-4 safe-top">
           <Button
             variant="ghost"
             size="icon"
             onClick={handleBack}
-            className="rounded-full hover:bg-sage-50/50 text-sage-700"
+            className="rounded-full hover:bg-muted text-foreground"
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div className="flex-1">
-            <h1 className="text-lg font-display font-medium text-sage-900">Escolha seu Guia</h1>
-            <p className="text-xs font-body text-sage-600">Selecione a abordagem que mais ressoa com você</p>
+            <h1 className="text-lg font-display font-medium text-foreground dark:text-glow">Escolha seu Guia</h1>
+            <p className="text-xs font-body text-muted-foreground">Selecione a abordagem que mais ressoa com você</p>
           </div>
         </div>
       </div>
@@ -194,10 +190,7 @@ export default function GuideSelect() {
           className="text-center mb-8"
         >
           <motion.div
-            className="w-16 h-16 mx-auto mb-4 rounded-2xl border border-sage-300/30 flex items-center justify-center shadow-[0_8px_24px_rgba(95,115,95,0.15)]"
-            style={{
-              background: 'linear-gradient(135deg, rgba(125, 143, 125, 0.15) 0%, rgba(95, 115, 95, 0.1) 100%)',
-            }}
+            className="w-16 h-16 mx-auto mb-4 rounded-2xl border border-border/30 flex items-center justify-center shadow-lg guide-avatar dark:card-glow"
             animate={{
               scale: [1, 1.05, 1],
             }}
@@ -207,10 +200,10 @@ export default function GuideSelect() {
               ease: 'easeInOut',
             }}
           >
-            <Leaf className="w-8 h-8 text-sage-600" />
+            <Leaf className="w-8 h-8 text-secondary dark:icon-glow-secondary" />
           </motion.div>
-          <h2 className="text-xl font-display font-medium text-sage-900 mb-2">Seu Guia Interior</h2>
-          <p className="text-sm font-body text-sage-600 max-w-sm mx-auto leading-relaxed">
+          <h2 className="text-xl font-display font-medium text-foreground mb-2 dark:text-glow">Seu Guia Interior</h2>
+          <p className="text-sm font-body text-muted-foreground max-w-sm mx-auto leading-relaxed">
             Cada guia possui uma perspectiva única. Escolha aquele cuja sabedoria
             ressoa com sua jornada de autoconhecimento.
           </p>
@@ -220,7 +213,7 @@ export default function GuideSelect() {
         {isLoading ? (
           <div className="grid gap-4">
             {[1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-40 rounded-2xl bg-sage-100/50" />
+              <Skeleton key={i} className="h-40 rounded-2xl bg-muted" />
             ))}
           </div>
         ) : (
@@ -257,16 +250,12 @@ export default function GuideSelect() {
             initial={{ y: 100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 100, opacity: 0 }}
-            className="fixed bottom-0 left-0 right-0 p-4 pb-20 backdrop-blur-xl bg-cream-50/80 border-t border-sage-300/30 z-40"
+            className="fixed bottom-0 left-0 right-0 p-4 pb-20 input-area-blur z-40"
           >
             <Button
               onClick={handleContinue}
               disabled={setPreferredGuide.isPending}
-              className="w-full h-14 text-base font-body font-medium rounded-2xl gap-2 shadow-[0_8px_24px_rgba(95,115,95,0.25)]"
-              style={{
-                background: 'linear-gradient(135deg, #7d8f7d 0%, #5f735f 100%)',
-                color: '#f6f7f6',
-              }}
+              className="w-full h-14 text-base font-body font-medium rounded-2xl gap-2 btn-primary-gradient dark:btn-glow-primary"
             >
               {setPreferredGuide.isPending ? (
                 'Salvando...'

@@ -1,4 +1,4 @@
-import { motion, type Transition, type TargetAndTransition } from 'framer-motion';
+import { motion, type TargetAndTransition } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 export type AvatarState = 'idle' | 'thinking' | 'speaking' | 'empathic';
@@ -14,13 +14,6 @@ const sizeClasses = {
   sm: 'w-9 h-9 text-lg',
   md: 'w-10 h-10 text-xl',
   lg: 'w-12 h-12 text-2xl',
-};
-
-const glowStyles = {
-  idle: '',
-  thinking: 'shadow-[0_0_20px_rgba(95,115,95,0.3)]',
-  speaking: 'shadow-[0_0_15px_rgba(95,115,95,0.25)]',
-  empathic: 'shadow-[0_0_25px_rgba(139,115,95,0.4)]',
 };
 
 export function GuideAvatar({
@@ -62,17 +55,28 @@ export function GuideAvatar({
     }
   };
 
+  const getStateClass = () => {
+    switch (state) {
+      case 'thinking':
+        return 'dark:guide-avatar-thinking';
+      case 'speaking':
+        return 'dark:guide-avatar-speaking';
+      case 'empathic':
+        return 'dark:guide-avatar-empathic';
+      default:
+        return '';
+    }
+  };
+
   return (
     <motion.div
       className={cn(
         'flex-shrink-0 rounded-full flex items-center justify-center transition-shadow duration-300',
+        'guide-avatar',
         sizeClasses[size],
-        glowStyles[state],
+        getStateClass(),
         className
       )}
-      style={{
-        background: 'linear-gradient(135deg, rgba(125, 143, 125, 0.15) 0%, rgba(95, 115, 95, 0.1) 100%)',
-      }}
       animate={getAnimation()}
     >
       <motion.span

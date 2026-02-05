@@ -82,15 +82,16 @@ export function GardenWidget({ isLoading: externalLoading }: GardenWidgetProps) 
 
       {/* Content */}
       <div className="relative z-10 p-4">
-        <div className="flex items-center gap-4">
+        {/* Row 1: Plant + Streak + Level */}
+        <div className="flex items-center gap-3 mb-3">
           {/* Plant Container */}
           <motion.button
             onClick={handlePlantTap}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className={cn(
-              'relative w-20 h-20 rounded-2xl flex items-center justify-center shrink-0',
-              'bg-gradient-to-br shadow-xl transition-all duration-300',
+              'relative w-16 h-16 rounded-xl flex items-center justify-center shrink-0',
+              'bg-gradient-to-br shadow-lg transition-all duration-300',
               currentStage.bgClass
             )}
           >
@@ -102,16 +103,16 @@ export function GardenWidget({ isLoading: externalLoading }: GardenWidgetProps) 
               }}
               transition={{ duration: 3, repeat: Infinity }}
               className={cn(
-                'absolute inset-0 rounded-2xl blur-xl',
+                'absolute inset-0 rounded-xl blur-xl',
                 currentStage.bgClass
               )}
             />
             
             {/* Plant emoji */}
             <motion.span
-              className="text-5xl relative z-10 filter drop-shadow-lg"
+              className="text-4xl relative z-10 filter drop-shadow-lg"
               animate={{ 
-                y: [0, -4, 0],
+                y: [0, -3, 0],
                 rotate: [-2, 2, -2],
               }}
               transition={{ 
@@ -130,7 +131,7 @@ export function GardenWidget({ isLoading: externalLoading }: GardenWidgetProps) 
                 transition={{ duration: 10, repeat: Infinity, ease: 'linear' }}
                 className="absolute inset-0 flex items-center justify-center"
               >
-                <Sparkles className="w-4 h-4 text-yellow-400 absolute -top-1 -right-1" />
+                <Sparkles className="w-3 h-3 text-yellow-400 absolute -top-1 -right-1" />
               </motion.div>
             )}
 
@@ -138,57 +139,64 @@ export function GardenWidget({ isLoading: externalLoading }: GardenWidgetProps) 
             <GardenCreatures creatures={unlockedCreatures} />
           </motion.button>
 
-          {/* Stats */}
+          {/* Main Stats */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
+            <div className="flex items-center gap-2 mb-0.5">
               <Flame className={cn(
                 'w-5 h-5 shrink-0',
                 currentStreak > 0 ? 'text-secondary' : 'text-muted-foreground'
               )} />
-              <span className="text-2xl font-bold text-foreground">
+              <span className="text-xl font-bold text-foreground">
                 {currentStreak} {currentStreak === 1 ? 'dia' : 'dias'}
               </span>
             </div>
-            <p className="text-sm text-muted-foreground truncate mb-2">
-              {currentStage.name} • {currentStage.message}
+            <p className="text-xs text-muted-foreground">
+              {currentStage.name}
             </p>
-
-            {/* Progress to next stage */}
-            {nextStage && (
-              <div className="space-y-1">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground">
-                    Próximo: {nextStage.plant} {nextStage.name}
-                  </span>
-                  <span className="font-medium text-primary">
-                    {nextStage.minStreak - currentStreak} dias
-                  </span>
-                </div>
-                <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${progressToNextStage}%` }}
-                    transition={{ delay: 0.3, duration: 0.8, ease: 'easeOut' }}
-                    className="h-full bg-gradient-to-r from-primary to-secondary rounded-full"
-                  />
-                </div>
-              </div>
-            )}
           </div>
 
-          {/* Mini Stats - stacked vertically */}
-          <div className="flex flex-col gap-1 items-end shrink-0">
-            <div className="flex items-center gap-1.5 text-sm text-muted-foreground bg-background/50 px-2 py-1 rounded-lg">
-              <Award className="w-4 h-4" />
-              <span>Nv. {level}</span>
+          {/* Level Badge */}
+          <div className="flex items-center gap-1.5 text-sm text-muted-foreground bg-background/60 px-2.5 py-1.5 rounded-lg shrink-0">
+            <Award className="w-4 h-4" />
+            <span className="font-medium">Nv. {level}</span>
+          </div>
+        </div>
+
+        {/* Row 2: Stage message */}
+        <p className="text-sm text-muted-foreground mb-3 line-clamp-1">
+          {currentStage.message}
+        </p>
+
+        {/* Row 3: Progress to next stage */}
+        {nextStage && (
+          <div className="space-y-1.5 mb-3">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">
+                Próximo: {nextStage.plant} {nextStage.name}
+              </span>
+              <span className="font-medium text-primary">
+                {nextStage.minStreak - currentStreak} dias
+              </span>
             </div>
-            <div className="flex items-center gap-1.5 text-sm text-muted-foreground bg-background/50 px-2 py-1 rounded-lg">
-              <TrendingUp className="w-4 h-4" />
-              <span>{totalPoints} pts</span>
+            <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${progressToNextStage}%` }}
+                transition={{ delay: 0.3, duration: 0.8, ease: 'easeOut' }}
+                className="h-full bg-gradient-to-r from-primary to-secondary rounded-full"
+              />
             </div>
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <span>Max: {bestStreak}🔥</span>
-            </div>
+          </div>
+        )}
+
+        {/* Row 4: Secondary stats */}
+        <div className="flex items-center justify-between pt-2 border-t border-border/30">
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <TrendingUp className="w-3.5 h-3.5" />
+            <span>{totalPoints} pontos</span>
+          </div>
+          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+            <span>Recorde: {bestStreak}🔥</span>
           </div>
         </div>
 

@@ -9,39 +9,40 @@
     /* ═══════════════════════════════════════════════════════════════
        ETHRA - Serene Luxury Design System
        Aesthetic: Minimalist, Elegant, Luxurious
+       Light Mode: High contrast for readability
        ═══════════════════════════════════════════════════════════════ */
 
-    /* Core Palette - Warm Ivory & Charcoal */
-    --background: 40 20% 98%;
-    --foreground: 30 5% 12%;
+    /* Core Palette - Warm Ivory & Charcoal with better contrast */
+    --background: 40 20% 97%;
+    --foreground: 30 8% 10%;
 
-    --card: 40 15% 99%;
-    --card-foreground: 30 5% 12%;
+    --card: 40 20% 100%;
+    --card-foreground: 30 8% 10%;
 
-    --popover: 40 15% 99%;
-    --popover-foreground: 30 5% 12%;
+    --popover: 40 20% 100%;
+    --popover-foreground: 30 8% 10%;
 
-    /* Primary - Champagne Gold (Luxury Accent) */
-    --primary: 36 45% 56%;
-    --primary-foreground: 40 20% 98%;
+    /* Primary - Champagne Gold (Luxury Accent) - Slightly darker for contrast */
+    --primary: 36 50% 48%;
+    --primary-foreground: 40 20% 99%;
 
-    /* Secondary - Sage Green (Wellness) */
-    --secondary: 90 15% 55%;
-    --secondary-foreground: 40 20% 98%;
+    /* Secondary - Sage Green (Wellness) - Darker for readability */
+    --secondary: 90 20% 45%;
+    --secondary-foreground: 40 20% 99%;
 
     /* Accent - Deep Teal (Sophistication) */
-    --accent: 175 35% 35%;
-    --accent-foreground: 40 20% 98%;
+    --accent: 175 40% 32%;
+    --accent-foreground: 40 20% 99%;
 
-    --muted: 40 10% 94%;
-    --muted-foreground: 30 5% 45%;
+    --muted: 40 12% 93%;
+    --muted-foreground: 30 8% 38%;
 
-    --destructive: 0 60% 50%;
+    --destructive: 0 65% 48%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 40 10% 90%;
-    --input: 40 10% 90%;
-    --ring: 36 45% 56%;
+    --border: 40 12% 82%;
+    --input: 40 12% 85%;
+    --ring: 36 50% 48%;
 
     --radius: 0.75rem;
 
@@ -52,31 +53,31 @@
     --landing-serene: 175 35% 35%;
     --landing-text: 30 5% 15%;
 
-    /* Emotion Palette - Muted & Sophisticated */
-    --calm: 175 30% 45%;
-    --calm-light: 175 20% 95%;
-    --energy: 36 50% 55%;
-    --energy-light: 36 40% 95%;
-    --grounding: 30 15% 40%;
-    --grounding-light: 30 15% 94%;
-    --panic: 320 25% 50%;
-    --panic-light: 320 20% 95%;
-    --meditate: 250 25% 50%;
-    --meditate-light: 250 20% 95%;
-    --nutrition: 28 45% 50%;
-    --nutrition-light: 28 35% 95%;
-    --water: 200 40% 50%;
-    --water-light: 200 30% 95%;
+    /* Emotion Palette - Vibrant & Visible */
+    --calm: 175 35% 40%;
+    --calm-light: 175 25% 94%;
+    --energy: 36 55% 50%;
+    --energy-light: 36 45% 94%;
+    --grounding: 30 20% 35%;
+    --grounding-light: 30 18% 93%;
+    --panic: 320 30% 45%;
+    --panic-light: 320 25% 94%;
+    --meditate: 250 30% 45%;
+    --meditate-light: 250 25% 94%;
+    --nutrition: 28 50% 45%;
+    --nutrition-light: 28 40% 94%;
+    --water: 200 45% 45%;
+    --water-light: 200 35% 94%;
 
-    /* Plutchik Colors - Refined */
-    --joy: 45 60% 55%;
-    --trust: 90 25% 50%;
-    --fear: 175 25% 40%;
-    --surprise: 200 35% 55%;
-    --sadness: 220 30% 50%;
-    --disgust: 280 25% 50%;
-    --anger: 10 50% 50%;
-    --anticipation: 30 50% 55%;
+    /* Plutchik Colors - Visible & Balanced */
+    --joy: 45 65% 48%;
+    --trust: 90 30% 42%;
+    --fear: 175 30% 35%;
+    --surprise: 200 40% 48%;
+    --sadness: 220 35% 45%;
+    --disgust: 280 30% 45%;
+    --anger: 10 55% 45%;
+    --anticipation: 30 55% 48%;
 
     /* Onboarding - Elegant Gold Theme */
     --onboarding-primary: 36 45% 56%;
@@ -95,29 +96,29 @@
     --gradient-glow: radial-gradient(ellipse at center, hsl(36 45% 56% / 0.08) 0%, transparent 70%);
     --gradient-radial: radial-gradient(circle at center, var(--tw-gradient-from) 0%, var(--tw-gradient-to) 100%);
 
-    /* Shadows - Soft & Luxurious */
-    --shadow-xs: 0 1px 2px hsl(30 10% 20% / 0.03);
-    --shadow-sm: 0 2px 8px hsl(30 10% 20% / 0.04);
-    --shadow-md: 0 4px 20px hsl(30 10% 20% / 0.05);
-    --shadow-lg: 0 8px 40px hsl(30 10% 20% / 0.06);
-    --shadow-xl: 0 20px 60px hsl(30 10% 20% / 0.08);
-    --shadow-glow: 0 0 50px hsl(36 45% 56% / 0.12);
-    --shadow-glow-strong: 0 0 80px hsl(36 45% 56% / 0.18);
+    /* Shadows - Soft & Visible for better definition */
+    --shadow-xs: 0 1px 2px hsl(30 15% 20% / 0.06);
+    --shadow-sm: 0 2px 8px hsl(30 15% 20% / 0.08);
+    --shadow-md: 0 4px 20px hsl(30 15% 20% / 0.1);
+    --shadow-lg: 0 8px 40px hsl(30 15% 20% / 0.12);
+    --shadow-xl: 0 20px 60px hsl(30 15% 20% / 0.15);
+    --shadow-glow: 0 0 50px hsl(36 50% 48% / 0.15);
+    --shadow-glow-strong: 0 0 80px hsl(36 50% 48% / 0.22);
 
-    /* Glass Effects - Elegant */
-    --glass-bg: hsl(40 20% 99% / 0.85);
-    --glass-border: hsl(40 15% 92% / 0.6);
+    /* Glass Effects - Elegant with visible borders */
+    --glass-bg: hsl(40 20% 100% / 0.9);
+    --glass-border: hsl(40 15% 75% / 0.5);
     --glass-blur: 20px;
 
-    /* Sidebar */
-    --sidebar-background: 40 15% 98%;
-    --sidebar-foreground: 30 5% 25%;
-    --sidebar-primary: 36 45% 56%;
-    --sidebar-primary-foreground: 40 20% 98%;
-    --sidebar-accent: 40 10% 95%;
-    --sidebar-accent-foreground: 30 5% 15%;
-    --sidebar-border: 40 10% 92%;
-    --sidebar-ring: 36 45% 56%;
+    /* Sidebar - Better contrast */
+    --sidebar-background: 40 18% 97%;
+    --sidebar-foreground: 30 8% 18%;
+    --sidebar-primary: 36 50% 48%;
+    --sidebar-primary-foreground: 40 20% 99%;
+    --sidebar-accent: 40 12% 93%;
+    --sidebar-accent-foreground: 30 8% 12%;
+    --sidebar-border: 40 12% 85%;
+    --sidebar-ring: 36 50% 48%;
   }
 
   .dark {
@@ -533,6 +534,58 @@
   @keyframes skeleton-loading {
     0% { background-position: 200% 0; }
     100% { background-position: -200% 0; }
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
+     LIGHT MODE ENHANCEMENTS - Better Contrast & Definition
+     ═══════════════════════════════════════════════════════════════ */
+
+  /* Card with subtle shadow in light mode */
+  :root .card-elevated,
+  :root .glass-card,
+  :root .glass-card-premium {
+    border-color: hsl(40 15% 80% / 0.6);
+  }
+
+  /* Better text contrast in light mode */
+  :root .text-muted-foreground,
+  :root p {
+    color: hsl(30 8% 38%);
+  }
+
+  /* Buttons with better visibility */
+  :root .btn-glow-primary {
+    box-shadow: 0 2px 12px hsl(36 50% 48% / 0.2);
+  }
+
+  /* Input fields with visible borders */
+  :root input,
+  :root textarea,
+  :root select {
+    border-color: hsl(40 12% 82%);
+  }
+
+  :root input:focus,
+  :root textarea:focus,
+  :root select:focus {
+    border-color: hsl(36 50% 48%);
+    box-shadow: 0 0 0 3px hsl(36 50% 48% / 0.12);
+  }
+
+  /* Navigation items */
+  :root .nav-item-active {
+    background: hsl(36 50% 48% / 0.12);
+    border: 1px solid hsl(36 50% 48% / 0.2);
+  }
+
+  /* Emotion cards with better definition */
+  :root .emotion-card {
+    border-color: hsl(40 15% 85%);
+  }
+
+  :root .emotion-card:hover {
+    border-color: hsl(36 50% 48% / 0.4);
+    box-shadow: 0 4px 16px hsl(30 15% 20% / 0.1);
   }
 
   /* ═══════════════════════════════════════════════════════════════

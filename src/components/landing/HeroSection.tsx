@@ -43,7 +43,7 @@ export const HeroSection: React.FC = () => {
             transition={{ delay: 0.3, duration: 0.8 }}
             className="inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-primary/8 text-primary text-sm font-medium mb-8 border border-primary/10"
           >
-            <SparkleIcon size={16} />
+            <SparkleIcon size={18} />
             <span>Seu refúgio de paz interior</span>
           </motion.div>
 
@@ -88,7 +88,7 @@ export const HeroSection: React.FC = () => {
               onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
               className="border-border/60 text-foreground font-medium px-6 py-6 rounded-xl hover:bg-muted/50 hover:border-primary/20 transition-all duration-500"
             >
-              <PlayIcon size={20} className="mr-2" />
+              <PlayIcon size={22} className="mr-2" />
               Ver como funciona
             </Button>
           </motion.div>
@@ -113,7 +113,7 @@ export const HeroSection: React.FC = () => {
                 <div className="p-4 bg-muted/30 border-b border-border/30">
                   <div className="flex items-center gap-2">
                     <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-                      <SparkleIcon size={16} className="text-primary-foreground" />
+                      <SparkleIcon size={18} className="text-primary-foreground" />
                     </div>
                     <span className="font-display font-medium text-foreground">ETHRA</span>
                   </div>

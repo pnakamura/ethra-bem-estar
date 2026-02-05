@@ -3,6 +3,8 @@
  *
  * Minimalist illustrations with thin strokes for a refined,
  * hand-drawn aesthetic that matches the luxury feel of the app.
+ *
+ * Responsive by default - uses larger sizes on bigger screens.
  */
 
 import React from 'react';
@@ -14,7 +16,7 @@ interface IllustrationProps {
 }
 
 const defaultProps = {
-  size: 48,
+  size: 56, // Larger default size
   strokeWidth: 1.2,
 };
 

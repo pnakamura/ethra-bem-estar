@@ -155,7 +155,7 @@ export default function Home() {
               transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
               className="w-14 h-14 rounded-2xl flex items-center justify-center bg-primary/10 border border-primary/20"
             >
-              <LeafIcon size={28} className="text-primary" />
+              <LeafIcon size={32} className="text-primary" />
             </motion.div>
             <div>
               <motion.p
@@ -189,7 +189,7 @@ export default function Home() {
                 onClick={() => navigate('/auth')}
                 className="gap-2 h-11 px-4 text-sm font-medium rounded-xl"
               >
-                <SignInIcon size={16} />
+                <SignInIcon size={18} />
                 Entrar
               </Button>
             ) : (
@@ -201,7 +201,7 @@ export default function Home() {
                     onClick={() => navigate('/admin')}
                     className="w-11 h-11 rounded-xl bg-muted/50 hover:bg-muted"
                   >
-                    <SettingsIcon size={20} className="text-muted-foreground" />
+                    <SettingsIcon size={22} className="text-muted-foreground" />
                   </Button>
                 )}
                 <Button
@@ -213,7 +213,7 @@ export default function Home() {
                   }}
                   className="gap-2 h-11 px-4 text-sm font-medium rounded-xl"
                 >
-                  <SignOutIcon size={16} />
+                  <SignOutIcon size={18} />
                   Sair
                 </Button>
               </div>
@@ -338,7 +338,7 @@ export default function Home() {
         onClick={handleMoodCheck}
         className="fixed bottom-28 right-6 w-14 h-14 rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/20 flex items-center justify-center z-40 hover:shadow-xl hover:shadow-primary/25 transition-shadow duration-300"
       >
-        <PlusIcon size={24} />
+        <PlusIcon size={26} />
       </motion.button>
 
       <BottomNavigation />

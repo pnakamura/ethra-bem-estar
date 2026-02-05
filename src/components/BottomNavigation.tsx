@@ -90,7 +90,7 @@ export function BottomNavigation() {
                 )}
 
                 <Icon
-                  size={24}
+                  size={26}
                   weight={isActive ? 'regular' : 'light'}
                   className={cn(
                     'transition-all duration-300',

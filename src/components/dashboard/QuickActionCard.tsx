@@ -97,13 +97,14 @@ export function QuickActionCard({
 
   const renderContent = () => {
     if (Illustration) {
-      return <Illustration size={32} className={colors.text} strokeWidth={1.2} />;
+      // Responsive size: 40px on mobile, 48px on larger screens
+      return <Illustration size={48} className={colors.text} strokeWidth={1.1} />;
     }
     if (emoji) {
-      return <span className="text-2xl">{emoji}</span>;
+      return <span className="text-2xl sm:text-3xl">{emoji}</span>;
     }
     if (Icon) {
-      return <Icon size={24} className={colors.text} />;
+      return <Icon size={28} className={colors.text} />;
     }
     return null;
   };
@@ -117,18 +118,18 @@ export function QuickActionCard({
       whileTap={{ scale: 0.97 }}
       onClick={onClick}
       className={cn(
-        'relative flex flex-col items-center justify-center p-4 rounded-xl',
+        'relative flex flex-col items-center justify-center p-4 sm:p-5 rounded-xl',
         'border bg-card shadow-sm',
         'transition-all duration-300',
         'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50',
-        'min-h-[100px] w-full',
+        'min-h-[110px] sm:min-h-[120px] w-full',
         'hover:shadow-md',
         colors.border
       )}
     >
       {/* Icon/Illustration Container */}
       <div className={cn(
-        'w-14 h-14 rounded-xl flex items-center justify-center mb-2',
+        'w-14 h-14 sm:w-16 sm:h-16 rounded-xl flex items-center justify-center mb-2',
         Illustration ? 'bg-transparent' : colors.iconBg
       )}>
         {renderContent()}

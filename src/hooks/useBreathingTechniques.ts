@@ -17,6 +17,8 @@ export function useBreathingTechniques() {
       if (error) throw error;
       return data as BreathingTechnique[];
     },
+    staleTime: 10 * 60 * 1000, // 10 minutes - static content
+    gcTime: 30 * 60 * 1000, // 30 minutes
   });
 }
 

@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 export interface JournalEntry {
   id: string;
@@ -43,6 +44,8 @@ export function useJournalEntries() {
       return data as unknown as JournalEntry[];
     },
     enabled: !!user,
+    staleTime: 1 * 60 * 1000, // 1 minute - user content changes often
+    gcTime: 5 * 60 * 1000,
   });
 }
 
@@ -95,7 +98,7 @@ export function useCreateJournalEntry() {
       toast.success('Entrada do diário salva!');
     },
     onError: (error) => {
-      console.error('Error creating journal entry:', error);
+      logger.error('Error creating journal entry:', error);
       toast.error('Erro ao salvar entrada do diário');
     },
   });
@@ -126,7 +129,7 @@ export function useUpdateJournalEntry() {
       toast.success('Entrada atualizada!');
     },
     onError: (error) => {
-      console.error('Error updating journal entry:', error);
+      logger.error('Error updating journal entry:', error);
       toast.error('Erro ao atualizar entrada');
     },
   });
@@ -149,7 +152,7 @@ export function useDeleteJournalEntry() {
       toast.success('Entrada removida');
     },
     onError: (error) => {
-      console.error('Error deleting journal entry:', error);
+      logger.error('Error deleting journal entry:', error);
       toast.error('Erro ao remover entrada');
     },
   });

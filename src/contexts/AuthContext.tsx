@@ -2,6 +2,7 @@ import * as React from 'react';
 import { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
 
 export interface Usuario {
   id: string;
@@ -122,7 +123,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await supabase.auth.signOut();
     } catch (error) {
       // Ignore errors - session is already invalid or expired
-      console.log('Sign out completed (session may have been expired)');
+      logger.debug('Sign out completed (session may have been expired)');
     }
   };
 

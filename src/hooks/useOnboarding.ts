@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { logger } from '@/lib/logger';
 
 const STORAGE_KEYS = {
   COMPLETE: 'ethra_onboarding_complete',
@@ -66,7 +67,7 @@ export function useOnboarding(): UseOnboardingReturn {
         preferredTime,
       });
     } catch (error) {
-      console.error('Error loading onboarding state:', error);
+      logger.error('Error loading onboarding state:', error);
     } finally {
       setIsLoading(false);
     }

@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 interface GamificationStats {
   id: string;
@@ -35,7 +36,7 @@ export function useGamificationStats() {
         .maybeSingle();
 
       if (error) {
-        console.error('Error fetching gamification stats:', error);
+        logger.error('Error fetching gamification stats:', error);
         toast.error('Erro ao carregar estatísticas de gamificação');
         throw error;
       }
@@ -44,6 +45,7 @@ export function useGamificationStats() {
     },
     enabled: !!user?.id,
     staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
   });
 }
 
@@ -60,7 +62,7 @@ export function useRefreshGamificationStats() {
         .rpc('refresh_user_gamification', { p_user_id: user.id });
 
       if (error) {
-        console.error('Error refreshing gamification:', error);
+        logger.error('Error refreshing gamification:', error);
         toast.error('Erro ao atualizar estatísticas');
         throw error;
       }

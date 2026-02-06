@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 import type { BreathingTechnique } from '@/types/admin';
 
 export type FavoriteType = 'breathing' | 'meditation' | 'journey';
@@ -25,6 +26,8 @@ export function useFavoriteBreathings() {
       return data || [];
     },
     enabled: !!user,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
   });
 }
 
@@ -75,6 +78,8 @@ export function useFavoriteMeditations() {
       return data || [];
     },
     enabled: !!user,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 }
 
@@ -258,7 +263,7 @@ export function useToggleFavorite() {
       });
     },
     onError: (error) => {
-      console.error('Erro ao atualizar favorito:', error);
+      logger.error('Erro ao atualizar favorito:', error);
       toast.error('Erro ao atualizar favorito');
     },
   });

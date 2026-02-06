@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -62,20 +62,21 @@ export default function Home() {
 
   const firstName = usuario?.nome_completo?.split(' ')[0];
 
-  // Get current date in Portuguese
-  const today = new Date();
-  const dateString = today.toLocaleDateString('pt-BR', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long'
-  });
-  const formattedDate = dateString.charAt(0).toUpperCase() + dateString.slice(1);
+  // Memoized date calculations
+  const { formattedDate, greeting } = useMemo(() => {
+    const today = new Date();
+    const dateString = today.toLocaleDateString('pt-BR', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long'
+    });
+    const formatted = dateString.charAt(0).toUpperCase() + dateString.slice(1);
+    const hour = today.getHours();
+    const greet = hour < 12 ? 'Bom dia' : hour < 18 ? 'Boa tarde' : 'Boa noite';
+    return { formattedDate: formatted, greeting: greet };
+  }, []);
 
-  // Greeting based on time
-  const hour = today.getHours();
-  const greeting = hour < 12 ? 'Bom dia' : hour < 18 ? 'Boa tarde' : 'Boa noite';
-
-  const handleSessionComplete = (technique: string, duration: number) => {
+  const handleSessionComplete = useCallback((technique: string, duration: number) => {
     const minutes = Math.floor(duration / 60);
     const seconds = duration % 60;
     const timeStr = minutes > 0 ? `${minutes}min ${seconds}s` : `${seconds}s`;
@@ -88,36 +89,36 @@ export default function Home() {
     setShowBreathPacer(false);
     setShowMeditation(false);
     setSelectedTechnique(null);
-  };
+  }, []);
 
-  const handleTechniqueSelect = (technique: BreathingTechnique) => {
+  const handleTechniqueSelect = useCallback((technique: BreathingTechnique) => {
     setSelectedTechnique(technique);
     setShowBreathingSelector(false);
     setShowBreathPacer(true);
-  };
+  }, []);
 
-  // Quick Actions handlers
-  const handleMoodCheck = () => setShowMoodModal(true);
-  const handleBreathing = () => setShowBreathingSelector(true);
-  const handleMeditation = () => setShowMeditation(true);
-  const handleNutrition = () => setShowMealModal(true);
-  const handleJournal = () => navigate('/journal');
-  const handleInsights = () => navigate('/insights');
-  const handleJourneys = () => navigate('/journeys');
-  const handleAnimationStudio = () => navigate('/animation-studio');
+  // Memoized Quick Actions handlers
+  const handleMoodCheck = useCallback(() => setShowMoodModal(true), []);
+  const handleBreathing = useCallback(() => setShowBreathingSelector(true), []);
+  const handleMeditation = useCallback(() => setShowMeditation(true), []);
+  const handleNutrition = useCallback(() => setShowMealModal(true), []);
+  const handleJournal = useCallback(() => navigate('/journal'), [navigate]);
+  const handleInsights = useCallback(() => navigate('/insights'), [navigate]);
+  const handleJourneys = useCallback(() => navigate('/journeys'), [navigate]);
+  const handleAnimationStudio = useCallback(() => navigate('/animation-studio'), [navigate]);
 
-  const containerVariants = {
+  const containerVariants = useMemo(() => ({
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
       transition: { staggerChildren: 0.06 }
     }
-  };
+  }), []);
 
-  const itemVariants = {
+  const itemVariants = useMemo(() => ({
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] as const } }
-  };
+  }), []);
 
   return (
     <div className="min-h-[100dvh] flex flex-col pb-32 bg-background relative overflow-hidden">

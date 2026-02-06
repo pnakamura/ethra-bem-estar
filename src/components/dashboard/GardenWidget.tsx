@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { Flame, Award, TrendingUp, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useGardenState } from '@/hooks/useGardenState';
@@ -24,6 +24,7 @@ const motivationalTips = [
 export function GardenWidget({ isLoading: externalLoading }: GardenWidgetProps) {
   const [showTip, setShowTip] = useState(false);
   const [currentTip, setCurrentTip] = useState(0);
+  const prefersReducedMotion = useReducedMotion();
   
   const {
     currentStreak,
@@ -95,7 +96,8 @@ export function GardenWidget({ isLoading: externalLoading }: GardenWidgetProps) 
               currentStage.bgClass
             )}
           >
-            {/* Glow effect */}
+          {/* Glow effect - respects reduced motion */}
+          {!prefersReducedMotion && (
             <motion.div
               animate={{ 
                 scale: [1, 1.2, 1],
@@ -107,22 +109,31 @@ export function GardenWidget({ isLoading: externalLoading }: GardenWidgetProps) 
                 currentStage.bgClass
               )}
             />
+          )}
+          {prefersReducedMotion && (
+            <div
+              className={cn(
+                'absolute inset-0 rounded-xl blur-xl opacity-30',
+                currentStage.bgClass
+              )}
+            />
+          )}
             
-            {/* Plant emoji - 15% larger */}
-            <motion.span
-              className="text-5xl relative z-10 filter drop-shadow-lg"
-              animate={{ 
-                y: [0, -4, 0],
-                rotate: [-2, 2, -2],
-              }}
-              transition={{ 
-                duration: 3, 
-                repeat: Infinity, 
-                ease: 'easeInOut' 
-              }}
-            >
-              {currentStage.plant}
-            </motion.span>
+          {/* Plant emoji - 15% larger with reduced motion support */}
+          <motion.span
+            className="text-5xl relative z-10 filter drop-shadow-lg"
+            animate={prefersReducedMotion ? {} : { 
+              y: [0, -4, 0],
+              rotate: [-2, 2, -2],
+            }}
+            transition={{ 
+              duration: 3, 
+              repeat: Infinity, 
+              ease: 'easeInOut' 
+            }}
+          >
+            {currentStage.plant}
+          </motion.span>
 
             {/* Sparkle effect on rainbow weather */}
             {weatherEffect === 'rainbow' && (

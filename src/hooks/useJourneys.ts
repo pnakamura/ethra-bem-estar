@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
 
 export interface Journey {
   id: string;
@@ -60,7 +61,7 @@ export function useJourneys() {
         .order('display_order', { ascending: true });
 
       if (error) {
-        console.error('Error fetching journeys:', error);
+        logger.error('Error fetching journeys:', error);
         throw error;
       }
 
@@ -70,7 +71,8 @@ export function useJourneys() {
         difficulty: j.difficulty as Journey['difficulty'],
       }));
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 10 * 60 * 1000, // 10 minutes - static content
+    gcTime: 30 * 60 * 1000, // 30 minutes
   });
 }
 
@@ -87,7 +89,7 @@ export function useJourney(journeyId: string | undefined) {
         .single();
 
       if (error) {
-        console.error('Error fetching journey:', error);
+        logger.error('Error fetching journey:', error);
         throw error;
       }
 
@@ -98,6 +100,8 @@ export function useJourney(journeyId: string | undefined) {
       } : null;
     },
     enabled: !!journeyId,
+    staleTime: 10 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
   });
 }
 
@@ -132,7 +136,7 @@ export function useJourneyDays(journeyId: string | undefined) {
         .order('day_number', { ascending: true });
 
       if (error) {
-        console.error('Error fetching journey days:', error);
+        logger.error('Error fetching journey days:', error);
         throw error;
       }
 
@@ -144,6 +148,7 @@ export function useJourneyDays(journeyId: string | undefined) {
       }));
     },
     enabled: !!journeyId,
-    staleTime: 0, // Sempre buscar dados frescos
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 15 * 60 * 1000,
   });
 }

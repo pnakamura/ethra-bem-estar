@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 export interface UserJourney {
   id: string;
@@ -48,7 +49,7 @@ export function useActiveUserJourney() {
         .maybeSingle();
 
       if (error) {
-        console.error('Error fetching active journey:', error);
+        logger.error('Error fetching active journey:', error);
         toast.error('Erro ao carregar jornada ativa');
         throw error;
       }
@@ -61,6 +62,9 @@ export function useActiveUserJourney() {
       } as UserJourney & { journey: { title: string; icon: string; duration_days: number; theme_color: string } };
     },
     enabled: !!user?.id,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    gcTime: 5 * 60 * 1000,
+    retry: 2,
   });
 }
 
@@ -79,7 +83,7 @@ export function useUserJourneys() {
         .order('started_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching user journeys:', error);
+        logger.error('Error fetching user journeys:', error);
         toast.error('Erro ao carregar suas jornadas');
         throw error;
       }
@@ -87,6 +91,8 @@ export function useUserJourneys() {
       return (data || []) as UserJourney[];
     },
     enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 }
 
@@ -103,7 +109,7 @@ export function useJourneyCompletions(userJourneyId: string | undefined) {
         .order('day_number', { ascending: true });
 
       if (error) {
-        console.error('Error fetching completions:', error);
+        logger.error('Error fetching completions:', error);
         toast.error('Erro ao carregar progresso da jornada');
         throw error;
       }
@@ -111,6 +117,8 @@ export function useJourneyCompletions(userJourneyId: string | undefined) {
       return data || [];
     },
     enabled: !!userJourneyId,
+    staleTime: 2 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
   });
 }
 
@@ -149,7 +157,7 @@ export function useStartJourney() {
       queryClient.invalidateQueries({ queryKey: ['user-journeys'] });
     },
     onError: (error) => {
-      console.error('Error starting journey:', error);
+      logger.error('Error starting journey:', error);
       toast.error('Erro ao iniciar jornada');
     },
   });
@@ -212,7 +220,7 @@ export function useCompleteDay() {
       queryClient.invalidateQueries({ queryKey: ['active-user-journey'] });
     },
     onError: (error) => {
-      console.error('Error completing day:', error);
+      logger.error('Error completing day:', error);
       toast.error('Erro ao completar dia da jornada');
     },
   });
@@ -238,7 +246,7 @@ export function useCompleteJourney() {
       queryClient.invalidateQueries({ queryKey: ['user-journeys'] });
     },
     onError: (error) => {
-      console.error('Error completing journey:', error);
+      logger.error('Error completing journey:', error);
       toast.error('Erro ao finalizar jornada');
     },
   });

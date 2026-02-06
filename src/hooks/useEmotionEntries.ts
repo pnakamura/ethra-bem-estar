@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 import type { Json } from '@/integrations/supabase/types';
 
 export interface EmotionEntry {
@@ -36,6 +37,8 @@ export function useEmotionEntries() {
       return data as unknown as EmotionEntry[];
     },
     enabled: !!user,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    gcTime: 5 * 60 * 1000, // 5 minutes
   });
 }
 
@@ -71,7 +74,7 @@ export function useCreateEmotionEntry() {
       queryClient.invalidateQueries({ queryKey: ['emotion-entries'] });
     },
     onError: (error) => {
-      console.error('Error creating emotion entry:', error);
+      logger.error('Error creating emotion entry:', error);
       toast.error('Erro ao salvar registro de emoções');
     },
   });

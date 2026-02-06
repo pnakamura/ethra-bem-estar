@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 import type { Journey, JourneyDay } from './useJourneys';
 
 // ============ JOURNEY HOOKS ============
@@ -88,7 +89,7 @@ export function useCreateJourney() {
       toast.success('Jornada criada com sucesso!');
     },
     onError: (error) => {
-      console.error('Error creating journey:', error);
+      logger.error('Error creating journey:', error);
       toast.error('Erro ao criar jornada');
     },
   });
@@ -120,7 +121,7 @@ export function useUpdateJourney() {
       toast.success('Jornada atualizada com sucesso!');
     },
     onError: (error) => {
-      console.error('Error updating journey:', error);
+      logger.error('Error updating journey:', error);
       toast.error('Erro ao atualizar jornada');
     },
   });
@@ -144,7 +145,7 @@ export function useDeleteJourney() {
       toast.success('Jornada removida com sucesso!');
     },
     onError: (error) => {
-      console.error('Error deleting journey:', error);
+      logger.error('Error deleting journey:', error);
       toast.error('Erro ao remover jornada');
     },
   });
@@ -235,7 +236,7 @@ export function useCreateJourneyDay() {
       toast.success('Dia criado com sucesso!');
     },
     onError: (error) => {
-      console.error('Error creating journey day:', error);
+      logger.error('Error creating journey day:', error);
       toast.error('Erro ao criar dia');
     },
   });
@@ -265,7 +266,7 @@ export function useUpdateJourneyDay() {
       toast.success('Dia atualizado com sucesso!');
     },
     onError: (error) => {
-      console.error('Error updating journey day:', error);
+      logger.error('Error updating journey day:', error);
       toast.error('Erro ao atualizar dia');
     },
   });
@@ -290,7 +291,7 @@ export function useDeleteJourneyDay() {
       toast.success('Dia removido com sucesso!');
     },
     onError: (error) => {
-      console.error('Error deleting journey day:', error);
+      logger.error('Error deleting journey day:', error);
       toast.error('Erro ao remover dia');
     },
   });

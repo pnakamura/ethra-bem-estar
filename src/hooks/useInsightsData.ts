@@ -403,6 +403,8 @@ export function useInsightsData(period: Period) {
       return data || [];
     },
     enabled: !!user?.id,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    gcTime: 5 * 60 * 1000,
   });
 
   const { data: breathingSessions = [], isLoading: loadingBreathing } = useQuery({
@@ -420,6 +422,8 @@ export function useInsightsData(period: Period) {
       return data || [];
     },
     enabled: !!user?.id,
+    staleTime: 2 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
   });
 
   const { data: hydrationEntries = [], isLoading: loadingHydration } = useQuery({
@@ -437,6 +441,8 @@ export function useInsightsData(period: Period) {
       return data || [];
     },
     enabled: !!user?.id,
+    staleTime: 2 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
   });
 
   // Process emotion counts per primary emotion

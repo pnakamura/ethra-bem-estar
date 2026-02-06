@@ -15,6 +15,8 @@ export function useMeditationTracks() {
       if (error) throw error;
       return data as MeditationTrack[];
     },
+    staleTime: 10 * 60 * 1000, // 10 minutes - static content
+    gcTime: 30 * 60 * 1000,
   });
 }
 
@@ -48,6 +50,8 @@ export function useMeditationCategories() {
       if (error) throw error;
       return data as MeditationCategory[];
     },
+    staleTime: 10 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
   });
 }
 

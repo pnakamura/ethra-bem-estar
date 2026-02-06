@@ -70,44 +70,44 @@ export function BottomNavigation() {
               aria-label={`Ir para ${item.label}`}
               aria-current={isActive ? 'page' : undefined}
             >
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 + index * 0.05, duration: 0.5 }}
-                whileTap={{ scale: 0.95 }}
-                className={cn(
-                  'flex flex-col items-center gap-1 min-w-[4rem] min-h-[56px] px-3 py-2 rounded-xl transition-all duration-300',
-                  isActive ? 'bg-primary/10 dark:bg-primary/15' : 'hover:bg-muted/50'
-                )}
-              >
-                {/* Active indicator line with glow */}
-                {isActive && (
-                  <motion.div
-                    layoutId="nav-indicator"
-                    className="section-indicator absolute -top-0.5 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-primary"
-                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                  />
-                )}
-
-                <Icon
-                  size={26}
-                  weight={isActive ? 'regular' : 'light'}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 + index * 0.05, duration: 0.5 }}
+                  whileTap={{ scale: 0.92 }}
                   className={cn(
-                    'transition-all duration-300',
-                    isActive
-                      ? 'text-primary nav-icon-active'
-                      : 'text-muted-foreground'
-                  )}
-                />
-                <span
-                  className={cn(
-                    'text-xs font-medium transition-colors duration-300',
-                    isActive ? 'text-primary dark:text-highlight' : 'text-muted-foreground dark:text-muted-enhanced'
+                    'flex flex-col items-center gap-1.5 min-w-[4.5rem] min-h-[60px] px-3 py-2.5 rounded-xl transition-all duration-300',
+                    isActive ? 'bg-primary/10 dark:bg-primary/15' : 'hover:bg-muted/50'
                   )}
                 >
-                  {item.label}
-                </span>
-              </motion.div>
+                  {/* Active indicator line with glow - enhanced height */}
+                  {isActive && (
+                    <motion.div
+                      layoutId="nav-indicator"
+                      className="section-indicator absolute -top-0.5 left-1/2 -translate-x-1/2 w-8 h-1 rounded-full bg-primary"
+                      transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                    />
+                  )}
+
+                  <Icon
+                    size={28}
+                    weight={isActive ? 'regular' : 'light'}
+                    className={cn(
+                      'transition-all duration-300',
+                      isActive
+                        ? 'text-primary nav-icon-active'
+                        : 'text-muted-foreground'
+                    )}
+                  />
+                  <span
+                    className={cn(
+                      'text-xs font-medium transition-colors duration-300',
+                      isActive ? 'text-primary dark:text-highlight' : 'text-muted-foreground dark:text-muted-enhanced'
+                    )}
+                  >
+                    {item.label}
+                  </span>
+                </motion.div>
             </NavLink>
           );
         })}

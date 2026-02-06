@@ -148,8 +148,8 @@
     --accent: 175 30% 45%;
     --accent-foreground: 40 18% 98%;
 
-    --muted: 30 8% 15%;
-    --muted-foreground: 40 15% 75%;
+  --muted: 30 8% 15%;
+    --muted-foreground: 40 15% 78%;
 
     --destructive: 0 55% 50%;
     --destructive-foreground: 0 0% 100%;
@@ -1131,10 +1131,89 @@
     background: radial-gradient(circle at center, hsl(var(--primary) / 0.05) 0%, transparent 70%);
   }
 
-  /* Luxury Divider */
+/* Luxury Divider */
   .divider-elegant {
     height: 1px;
     background: linear-gradient(90deg, transparent, hsl(var(--border)), transparent);
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
+     UX ENHANCEMENT UTILITIES - Touch Targets, Feedback, Focus
+     ═══════════════════════════════════════════════════════════════ */
+
+  /* Minimum touch target - 44x44px (WCAG 2.1 AAA) */
+  .touch-target {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .touch-target-lg {
+    min-width: 48px;
+    min-height: 48px;
+  }
+
+  /* Button feedback animation */
+  .btn-feedback {
+    @apply transition-all duration-150 ease-out;
+  }
+
+  .btn-feedback:active {
+    transform: scale(0.97);
+    box-shadow: inset 0 2px 4px hsl(0 0% 0% / 0.1);
+  }
+
+  /* Enhanced focus visible for accessibility */
+  .focus-enhanced:focus-visible {
+    outline: 3px solid hsl(var(--primary));
+    outline-offset: 3px;
+    border-radius: var(--radius);
+  }
+
+  /* Card standardization variables (applied via classes) */
+  .card-standard {
+    --card-radius: 1.25rem;
+    --card-padding: 1.25rem;
+    border-radius: var(--card-radius);
+    padding: var(--card-padding);
+  }
+
+  /* Empty state container */
+  .empty-state {
+    @apply flex flex-col items-center justify-center text-center py-12 px-6;
+  }
+
+  .empty-state-icon {
+    @apply w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4;
+  }
+
+  .empty-state-title {
+    @apply text-lg font-semibold text-foreground mb-2;
+  }
+
+  .empty-state-description {
+    @apply text-sm text-muted-foreground mb-4 max-w-xs;
+  }
+
+  /* Skeleton variations */
+  .skeleton-card {
+    @apply animate-pulse rounded-2xl bg-muted;
+  }
+
+  .skeleton-text {
+    @apply animate-pulse rounded bg-muted h-4;
+  }
+
+  .skeleton-circle {
+    @apply animate-pulse rounded-full bg-muted;
+  }
+
+  /* Section spacing */
+  .section-spacing {
+    @apply space-y-6;
+  }
+
+  .section-spacing-lg {
+    @apply space-y-8;
   }
 }
 

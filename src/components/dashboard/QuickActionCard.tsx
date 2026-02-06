@@ -128,23 +128,23 @@ export function QuickActionCard({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      whileHover={{ y: -3 }}
-      whileTap={{ scale: 0.97 }}
+      whileHover={{ y: -6, scale: 1.02 }}
+      whileTap={{ scale: 0.95 }}
       onClick={onClick}
       className={cn(
-        'quick-action-card',
-        'relative flex flex-col items-center justify-center p-4 sm:p-5 rounded-xl',
+        'quick-action-card btn-feedback',
+        'relative flex flex-col items-center justify-center p-4 sm:p-5 rounded-2xl',
         'border bg-card shadow-sm',
         'transition-all duration-300',
-        'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50',
-        'min-h-[110px] sm:min-h-[120px] w-full',
-        'hover:shadow-md',
+        'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2',
+        'min-h-[120px] sm:min-h-[130px] w-full',
+        'hover:shadow-lg',
         colors.border
       )}
     >
       {/* Icon/Illustration Container */}
       <div className={cn(
-        'w-14 h-14 sm:w-16 sm:h-16 rounded-xl flex items-center justify-center mb-2',
+        'w-14 h-14 sm:w-16 sm:h-16 rounded-xl flex items-center justify-center mb-3 transition-transform duration-300 group-hover:scale-110',
         Illustration ? 'bg-transparent' : colors.iconBg,
         iconGlowClass
       )}>
@@ -152,13 +152,13 @@ export function QuickActionCard({
       </div>
 
       {/* Label */}
-      <span className="text-sm font-medium text-foreground dark:text-title-glow leading-tight text-center">
+      <span className="text-sm font-semibold text-foreground dark:text-title-glow leading-tight text-center">
         {label}
       </span>
 
       {/* Description - optional */}
       {description && (
-        <span className="text-xs text-muted-foreground mt-1 text-center line-clamp-1">
+        <span className="text-xs text-muted-foreground mt-1.5 text-center line-clamp-1">
           {description}
         </span>
       )}

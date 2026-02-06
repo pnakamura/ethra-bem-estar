@@ -81,9 +81,9 @@ export function GardenWidget({ isLoading: externalLoading }: GardenWidgetProps) 
       </div>
 
       {/* Content */}
-      <div className="relative z-10 p-4">
+      <div className="relative z-10 p-5">
         {/* Row 1: Plant + Streak + Level */}
-        <div className="flex items-center gap-3 mb-3">
+        <div className="flex items-center gap-4 mb-4">
           {/* Plant Container */}
           <motion.button
             onClick={handlePlantTap}
@@ -108,11 +108,11 @@ export function GardenWidget({ isLoading: externalLoading }: GardenWidgetProps) 
               )}
             />
             
-            {/* Plant emoji */}
+            {/* Plant emoji - 15% larger */}
             <motion.span
-              className="text-4xl relative z-10 filter drop-shadow-lg"
+              className="text-5xl relative z-10 filter drop-shadow-lg"
               animate={{ 
-                y: [0, -3, 0],
+                y: [0, -4, 0],
                 rotate: [-2, 2, -2],
               }}
               transition={{ 
@@ -163,13 +163,13 @@ export function GardenWidget({ isLoading: externalLoading }: GardenWidgetProps) 
         </div>
 
         {/* Row 2: Stage message */}
-        <p className="text-sm text-muted-foreground mb-3 line-clamp-1">
+        <p className="text-sm text-muted-foreground dark:text-muted-enhanced mb-4 line-clamp-1">
           {currentStage.message}
         </p>
 
         {/* Row 3: Progress to next stage */}
         {nextStage && (
-          <div className="space-y-1.5 mb-3">
+          <div className="space-y-2 mb-4">
             <div className="flex items-center justify-between text-xs">
               <span className="text-muted-foreground">
                 Próximo: {nextStage.plant} {nextStage.name}
@@ -190,7 +190,7 @@ export function GardenWidget({ isLoading: externalLoading }: GardenWidgetProps) 
         )}
 
         {/* Row 4: Secondary stats */}
-        <div className="flex items-center justify-between pt-2 border-t border-border/30">
+        <div className="flex items-center justify-between pt-3 border-t border-border/40 dark:border-border/50">
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <TrendingUp className="w-3.5 h-3.5" />
             <span>{totalPoints} pontos</span>

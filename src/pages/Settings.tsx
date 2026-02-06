@@ -42,9 +42,9 @@ export default function Settings() {
   ];
 
   const fontScaleOptions: { value: FontScale; label: string; size: string }[] = [
-    { value: 'normal', label: 'Normal', size: '125%' },
-    { value: 'large', label: 'Grande', size: '140%' },
-    { value: 'xlarge', label: 'Extra', size: '156%' },
+    { value: 'normal', label: 'Normal', size: '137%' },
+    { value: 'large', label: 'Grande', size: '156%' },
+    { value: 'xlarge', label: 'Extra', size: '175%' },
   ];
 
   const currentTheme = (theme as ThemeOption) || 'system';
@@ -167,7 +167,7 @@ export default function Settings() {
                 <span className="text-sm font-medium text-foreground">Tamanho do Texto</span>
                 {accessibilityMounted && (
                   <span className="text-xs text-primary font-medium px-2 py-1 rounded-full bg-primary/10">
-                    {fontScale === 'normal' ? '125%' : fontScale === 'large' ? '140%' : '156%'}
+                    {fontScale === 'normal' ? '137%' : fontScale === 'large' ? '156%' : '175%'}
                   </span>
                 )}
               </div>

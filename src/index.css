@@ -128,13 +128,13 @@
        ═══════════════════════════════════════════════════════════════ */
 
     --background: 30 8% 7%;
-    --foreground: 40 18% 96%;
+    --foreground: 40 22% 98%;
 
     --card: 30 8% 10%;
-    --card-foreground: 40 18% 96%;
+    --card-foreground: 40 22% 98%;
 
     --popover: 30 8% 10%;
-    --popover-foreground: 40 18% 96%;
+    --popover-foreground: 40 22% 98%;
 
     /* Primary - Luminous Gold */
     --primary: 40 55% 58%;
@@ -146,10 +146,10 @@
 
     /* Accent - Warm Teal */
     --accent: 175 30% 45%;
-    --accent-foreground: 40 15% 95%;
+    --accent-foreground: 40 18% 98%;
 
     --muted: 30 8% 15%;
-    --muted-foreground: 40 12% 68%;
+    --muted-foreground: 40 15% 75%;
 
     --destructive: 0 55% 50%;
     --destructive-foreground: 0 0% 100%;
@@ -246,36 +246,51 @@
   }
 
   /* ═══════════════════════════════════════════════════════════════
-     DARK MODE TEXT ENHANCEMENT CLASSES
+     DARK MODE TEXT ENHANCEMENT CLASSES - HIGH CONTRAST
      ═══════════════════════════════════════════════════════════════ */
 
-  /* Titles with strong glow for emphasis */
+  /* Titles with strong glow for emphasis - Maximum brightness */
   .dark .text-title-glow {
-    color: hsl(40 20% 98%);
-    text-shadow: 0 0 20px hsl(var(--primary) / 0.25);
+    color: hsl(40 25% 99%);
+    text-shadow: 0 0 25px hsl(var(--primary) / 0.35);
   }
 
-  /* Important text with subtle highlight */
+  /* Important text with subtle highlight - Very bright */
   .dark .text-highlight {
-    color: hsl(40 18% 96%);
-    text-shadow: 0 0 12px hsl(40 20% 90% / 0.15);
+    color: hsl(40 22% 98%);
+    text-shadow: 0 0 15px hsl(40 25% 95% / 0.2);
   }
 
-  /* Enhanced muted text with better contrast */
+  /* Enhanced muted text with better contrast - Much brighter */
   .dark .text-muted-enhanced {
-    color: hsl(40 12% 72%);
+    color: hsl(40 15% 78%);
   }
 
-  /* Section titles enhanced */
+  /* Section titles enhanced - Higher contrast */
   .dark .section-title {
-    color: hsl(40 15% 85%);
-    text-shadow: 0 0 15px hsl(var(--primary) / 0.15);
+    color: hsl(40 18% 92%);
+    text-shadow: 0 0 18px hsl(var(--primary) / 0.2);
   }
 
-  /* Labels with glow */
+  /* Labels with glow - Brighter */
   .dark .label-glow {
-    color: hsl(40 18% 94%);
-    text-shadow: 0 0 10px hsl(40 20% 90% / 0.12);
+    color: hsl(40 22% 97%);
+    text-shadow: 0 0 12px hsl(40 25% 95% / 0.18);
+  }
+
+  /* Ultra bright foreground for critical text */
+  .dark .text-ultra-bright {
+    color: hsl(40 30% 99%);
+    text-shadow: 0 0 20px hsl(40 30% 100% / 0.25);
+  }
+
+  /* Card text enhancement */
+  .dark .card-text-primary {
+    color: hsl(40 22% 98%);
+  }
+
+  .dark .card-text-secondary {
+    color: hsl(40 15% 80%);
   }
 }
 
@@ -289,17 +304,17 @@
     -webkit-tap-highlight-color: transparent;
   }
 
-  /* Accessibility - Font Scaling (Increased base for better readability) */
+  /* Accessibility - Font Scaling (Large base for superior readability) */
   html.font-scale-normal {
-    font-size: 125%;
+    font-size: 137%;
   }
 
   html.font-scale-large {
-    font-size: 140%;
+    font-size: 156%;
   }
 
   html.font-scale-xlarge {
-    font-size: 156%;
+    font-size: 175%;
   }
 
   body {

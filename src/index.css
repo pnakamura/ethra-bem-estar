@@ -128,13 +128,13 @@
        ═══════════════════════════════════════════════════════════════ */
 
     --background: 30 8% 7%;
-    --foreground: 40 15% 92%;
+    --foreground: 40 18% 96%;
 
     --card: 30 8% 10%;
-    --card-foreground: 40 15% 92%;
+    --card-foreground: 40 18% 96%;
 
     --popover: 30 8% 10%;
-    --popover-foreground: 40 15% 92%;
+    --popover-foreground: 40 18% 96%;
 
     /* Primary - Luminous Gold */
     --primary: 40 55% 58%;
@@ -149,7 +149,7 @@
     --accent-foreground: 40 15% 95%;
 
     --muted: 30 8% 15%;
-    --muted-foreground: 40 10% 55%;
+    --muted-foreground: 40 12% 68%;
 
     --destructive: 0 55% 50%;
     --destructive-foreground: 0 0% 100%;
@@ -244,6 +244,39 @@
     --border-glow: 0 0 12px hsl(40 55% 58% / 0.15);
     --border-glow-hover: 0 0 20px hsl(40 55% 58% / 0.25);
   }
+
+  /* ═══════════════════════════════════════════════════════════════
+     DARK MODE TEXT ENHANCEMENT CLASSES
+     ═══════════════════════════════════════════════════════════════ */
+
+  /* Titles with strong glow for emphasis */
+  .dark .text-title-glow {
+    color: hsl(40 20% 98%);
+    text-shadow: 0 0 20px hsl(var(--primary) / 0.25);
+  }
+
+  /* Important text with subtle highlight */
+  .dark .text-highlight {
+    color: hsl(40 18% 96%);
+    text-shadow: 0 0 12px hsl(40 20% 90% / 0.15);
+  }
+
+  /* Enhanced muted text with better contrast */
+  .dark .text-muted-enhanced {
+    color: hsl(40 12% 72%);
+  }
+
+  /* Section titles enhanced */
+  .dark .section-title {
+    color: hsl(40 15% 85%);
+    text-shadow: 0 0 15px hsl(var(--primary) / 0.15);
+  }
+
+  /* Labels with glow */
+  .dark .label-glow {
+    color: hsl(40 18% 94%);
+    text-shadow: 0 0 10px hsl(40 20% 90% / 0.12);
+  }
 }
 
 @layer base {
@@ -256,17 +289,17 @@
     -webkit-tap-highlight-color: transparent;
   }
 
-  /* Accessibility - Font Scaling */
+  /* Accessibility - Font Scaling (Increased base for better readability) */
   html.font-scale-normal {
-    font-size: 100%;
+    font-size: 125%;
   }
 
   html.font-scale-large {
-    font-size: 112%;
+    font-size: 140%;
   }
 
   html.font-scale-xlarge {
-    font-size: 125%;
+    font-size: 156%;
   }
 
   body {

@@ -152,7 +152,7 @@ export function QuickActionCard({
       </div>
 
       {/* Label */}
-      <span className="text-sm font-medium text-foreground leading-tight text-center">
+      <span className="text-sm font-medium text-foreground dark:text-title-glow leading-tight text-center">
         {label}
       </span>
 

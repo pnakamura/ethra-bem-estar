@@ -1,144 +1,323 @@
 
-# Plano: Aumentar Tamanho de Fonte e Contraste no Dark Mode
+# Plano de Melhorias UX/UI - ETHRA
 
-## Resumo das Mudanças
+## Visao Geral
 
-O usuário deseja:
-1. **Tamanhos de fonte maiores** - o "normal" atual deve ser o que é hoje "extra grande" (125%)
-2. **Textos mais claros e destacados** no modo escuro
-
----
-
-## Fase 1: Atualizar Escala de Fontes
-
-### Valores Atuais vs Novos
-
-| Opção | Valor Atual | Novo Valor |
-|-------|-------------|------------|
-| Normal | 100% | **125%** |
-| Grande | 112% | **140%** |
-| Extra | 125% | **156%** |
-
-### Arquivos a Modificar
-
-**`src/index.css`** - Ajustar os valores das classes CSS:
-```css
-/* De */
-html.font-scale-normal { font-size: 100%; }
-html.font-scale-large { font-size: 112%; }
-html.font-scale-xlarge { font-size: 125%; }
-
-/* Para */
-html.font-scale-normal { font-size: 125%; }
-html.font-scale-large { font-size: 140%; }
-html.font-scale-xlarge { font-size: 156%; }
-```
-
-**`src/pages/Settings.tsx`** - Atualizar labels de porcentagem:
-- Normal: "125%"
-- Grande: "140%"
-- Extra: "156%"
+Apos analise completa do aplicativo, identifiquei melhorias em 5 categorias principais:
+1. **Hierarquia Visual e Espacamento**
+2. **Interacoes e Feedback**
+3. **Consistencia de Componentes**
+4. **Acessibilidade e Usabilidade Mobile**
+5. **Estados Vazios e Loading**
 
 ---
 
-## Fase 2: Melhorar Contraste de Texto no Dark Mode
+## Fase 1: Hierarquia Visual e Espacamento
 
-### Variáveis CSS a Ajustar
+### 1.1 Home Page - Espacamento Inconsistente
 
-| Variável | Valor Atual | Novo Valor | Descrição |
-|----------|-------------|------------|-----------|
-| `--foreground` | `40 15% 92%` | `40 18% 96%` | Texto principal mais brilhante |
-| `--muted-foreground` | `40 10% 55%` | `40 12% 68%` | Texto secundário mais visível |
-| `--card-foreground` | `40 15% 92%` | `40 18% 96%` | Texto em cards |
+| Problema | Solucao |
+|----------|---------|
+| Header muito compacto em mobile | Aumentar padding vertical de `pt-10` para `pt-12` |
+| Cards muito proximos | Aumentar gap de `gap-3` para `gap-4` nos QuickActionCards |
+| Secoes sem separacao clara | Adicionar dividers sutis ou mais espacamento vertical |
 
-### Novas Classes de Texto com Glow
+### 1.2 Tipografia - Melhor Hierarquia
 
-Adicionar classes para textos importantes com destaque extra:
+```text
+ANTES                           DEPOIS
+h1: text-2xl                    h1: text-3xl font-bold
+h2: text-sm uppercase           h2: text-base uppercase tracking-wider
+p: text-sm                      p: text-base leading-relaxed
+```
+
+### 1.3 GardenWidget - Layout Mais Equilibrado
+
+- Adicionar padding interno de `p-4` para `p-5`
+- Separar estatisticas com bordas mais visiveis
+- Aumentar tamanho do emoji da planta em 15%
+
+---
+
+## Fase 2: Interacoes e Feedback
+
+### 2.1 Feedback Haptico Visual
+
+Adicionar animacoes de feedback em interacoes criticas:
 
 ```css
-/* Títulos com glow forte */
-.dark .text-title-glow {
-  color: hsl(40 20% 98%);
-  text-shadow: 0 0 20px hsl(var(--primary) / 0.25);
+/* Botao pressionado com feedback visual */
+.btn-feedback {
+  transition: transform 150ms ease, box-shadow 150ms ease;
 }
-
-/* Texto importante destacado */
-.dark .text-highlight {
-  color: hsl(40 18% 96%);
-  text-shadow: 0 0 12px hsl(40 20% 90% / 0.15);
-}
-
-/* Texto muted com mais contraste */
-.dark .text-muted-enhanced {
-  color: hsl(40 12% 72%);
+.btn-feedback:active {
+  transform: scale(0.97);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
 }
 ```
 
-### Aplicar Classes aos Componentes
+### 2.2 QuickActionCards - Melhor Responsividade
 
-| Componente | Elemento | Classe a Adicionar |
-|------------|----------|-------------------|
-| `Home.tsx` | Títulos de seção | `dark:text-title-glow` |
-| `BottomNavigation.tsx` | Labels | `dark:text-highlight` |
-| `QuickActionCard.tsx` | Títulos | `dark:text-title-glow` |
-| `DailyGuidanceCard.tsx` | Texto | `dark:text-highlight` |
+| Atual | Proposto |
+|-------|----------|
+| Hover sutil | Hover mais pronunciado com lift de -6px |
+| Sem estado active | Adicionar estado pressed com scale(0.95) |
+| Icone estatico | Icone com animacao sutil no hover |
+
+### 2.3 Bottom Navigation - Indicador Ativo
+
+- Aumentar altura do indicador de `h-0.5` para `h-1`
+- Adicionar transicao mais fluida entre paginas
+- Implementar bounce sutil no tap
+
+### 2.4 Floating Action Button (FAB)
+
+- Adicionar pulse animation quando idle por 30 segundos
+- Melhorar sombra para maior destaque
+- Adicionar tooltip contextual
+
+---
+
+## Fase 3: Consistencia de Componentes
+
+### 3.1 Cards - Padronizacao
+
+Criar variaveis CSS para padronizar todos os cards:
+
+```css
+--card-radius: 1.25rem;
+--card-padding: 1.25rem;
+--card-shadow-light: 0 2px 12px hsl(30 15% 20% / 0.08);
+--card-shadow-dark: 0 4px 24px hsl(0 0% 0% / 0.35);
+--card-border-light: hsl(40 15% 85%);
+--card-border-dark: hsl(30 8% 22%);
+```
+
+### 3.2 Botoes - Sistema Unificado
+
+| Variante | Uso | Estilo |
+|----------|-----|--------|
+| Primary | Acoes principais | Gradient gold, shadow-lg |
+| Secondary | Acoes secundarias | Outline, border visivel |
+| Ghost | Navegacao | Transparente, hover sutil |
+| Destructive | Acoes perigosas | Vermelho, sem shadow |
+
+### 3.3 Inputs - Melhor Definicao
+
+- Aumentar altura de `h-10` para `h-12`
+- Bordas mais visiveis no estado default
+- Focus ring mais pronunciado
+
+### 3.4 Modais - Consistencia
+
+Todos os modais devem seguir o padrao do MoodCheckModal:
+- Bottom sheet em mobile
+- Drag indicator no topo
+- Header fixo com titulo e botao fechar
+- Footer fixo com CTA principal
+- Safe area bottom padding
+
+---
+
+## Fase 4: Acessibilidade e Usabilidade Mobile
+
+### 4.1 Touch Targets
+
+Todos os elementos interativos devem ter minimo 44x44px:
+
+| Componente | Atual | Proposto |
+|------------|-------|----------|
+| Nav icons | 40x40 | 48x48 |
+| Card buttons | variavel | min 44x44 |
+| Close buttons | 32x32 | 40x40 |
+| FAB | 56x56 | 60x60 |
+
+### 4.2 Contraste no Dark Mode
+
+Aumentar contraste de textos secundarios:
+
+```css
+/* Muted text mais visivel */
+.dark --muted-foreground: 40 15% 78%;  /* era 75% */
+
+/* Labels em cards */
+.dark .card-label {
+  color: hsl(40 18% 85%);
+}
+```
+
+### 4.3 Estados de Foco
+
+Melhorar visibilidade do focus-visible para navegacao por teclado:
+
+```css
+.focus-visible-enhanced:focus-visible {
+  outline: 3px solid hsl(var(--primary));
+  outline-offset: 3px;
+  border-radius: var(--radius);
+}
+```
+
+### 4.4 Reducao de Movimento
+
+Respeitar `prefers-reduced-motion`:
+
+```css
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+```
+
+---
+
+## Fase 5: Estados Vazios e Loading
+
+### 5.1 Empty States Personalizados
+
+Cada secao deve ter empty state contextual:
+
+| Pagina | Mensagem | CTA |
+|--------|----------|-----|
+| Favorites | "Ainda nao tem favoritos" | "Explorar tecnicas" |
+| Journal | "Comece seu diario" | "Escrever primeira entrada" |
+| Insights | "Registre emocoes para ver insights" | "Fazer check-in" |
+
+### 5.2 Loading Skeletons Melhorados
+
+Substituir Skeletons genericos por componentes especificos:
+
+- QuickActionCardSkeleton com formato do card real
+- GardenWidgetSkeleton com layout correto
+- JournalEntrySkeleton com linhas de texto
+
+### 5.3 Micro-loading States
+
+Adicionar loading inline para acoes rapidas:
+
+```tsx
+// Botao com loading interno
+<Button disabled={isLoading}>
+  {isLoading ? <Spinner /> : <Icon />}
+  {isLoading ? "Salvando..." : "Salvar"}
+</Button>
+```
+
+---
+
+## Fase 6: Melhorias Especificas por Pagina
+
+### 6.1 Home Page
+
+1. **Header**: Adicionar saudacao mais proeminente
+2. **GardenWidget**: Animacao de entrada mais elaborada
+3. **QuickActionCards**: Grid de 2 colunas em telas muito pequenas
+4. **DailyGuidanceCard**: Swipe gesture para proximo dia
+
+### 6.2 Journal Page
+
+1. **Editor**: Toolbar de formatacao mais visivel
+2. **Historia**: Cards com preview de conteudo
+3. **Salvamento**: Indicador visual de auto-save
+4. **Empty State**: Prompts inspiracionais
+
+### 6.3 Guide Chat
+
+1. **Messages**: Melhor espacamento entre bolhas
+2. **Typing indicator**: Animacao mais suave
+3. **Input**: Botao de envio mais destacado
+4. **Sugestoes**: Scroll horizontal com indicadores
+
+### 6.4 Insights Page
+
+1. **Charts**: Tooltips mais informativos
+2. **Patterns**: Cards com cores de categoria
+3. **Period selector**: Indicador visual da selecao
+4. **Empty state**: Demo data mais acessivel
+
+### 6.5 Profile Page
+
+1. **Avatar**: Area de foto maior
+2. **Stats**: Cards com progresso visual
+3. **Settings**: Agrupamento por categoria
+4. **Logout**: Confirmacao antes de sair
 
 ---
 
 ## Arquivos a Modificar
 
-| Arquivo | Alteração |
-|---------|-----------|
-| `src/index.css` | Aumentar font-size das escalas + novas classes de texto |
-| `src/pages/Settings.tsx` | Atualizar labels de porcentagem |
-| `src/pages/Home.tsx` | Aplicar classes de glow nos títulos |
-| `src/components/BottomNavigation.tsx` | Melhorar contraste dos labels |
-| `src/components/dashboard/QuickActionCard.tsx` | Texto mais destacado |
-| `src/components/dashboard/DailyGuidanceCard.tsx` | Texto mais destacado |
+| Arquivo | Alteracoes |
+|---------|------------|
+| `src/index.css` | Variaveis de espacamento, animacoes, classes de acessibilidade |
+| `src/pages/Home.tsx` | Layout e espacamento |
+| `src/components/dashboard/QuickActionCard.tsx` | Interacoes e hover states |
+| `src/components/dashboard/GardenWidget.tsx` | Layout e animacoes |
+| `src/components/dashboard/DailyGuidanceCard.tsx` | Espacamento e CTA |
+| `src/components/BottomNavigation.tsx` | Touch targets e indicador |
+| `src/pages/Journal.tsx` | Editor e empty state |
+| `src/pages/Profile.tsx` | Layout e agrupamento |
+| `src/pages/Insights.tsx` | Charts e feedback visual |
+| `src/components/ui/button.tsx` | Variantes e estados |
+| `src/components/ui/skeleton.tsx` | Skeletons especificos |
 
 ---
 
-## Comparativo Visual
+## Prioridades de Implementacao
 
 ```text
-ANTES (Fonte Normal = 100%)          DEPOIS (Fonte Normal = 125%)
-┌─────────────────────────┐         ┌─────────────────────────┐
-│ Texto pequeno           │    →    │ Texto maior e           │
-│ difícil de ler          │         │ mais legível            │
-└─────────────────────────┘         └─────────────────────────┘
+Prioridade Alta (Impacto imediato)
+├── Touch targets minimos
+├── Contraste de texto dark mode
+├── Empty states contextuais
+└── Feedback de interacao
 
-ANTES (Dark Mode Apagado)            DEPOIS (Dark Mode Brilhante)
-┌─────────────────────────┐         ┌─────────────────────────┐
-│ Texto cinza escuro      │    →    │ Texto ivory claro       │
-│ contraste baixo         │         │ com glow sutil          │
-└─────────────────────────┘         └─────────────────────────┘
+Prioridade Media (Polimento)
+├── Espacamento consistente
+├── Loading states especificos
+├── Animacoes de entrada
+└── Hierarquia tipografica
+
+Prioridade Baixa (Refinamento)
+├── Micro-interacoes avancadas
+├── Transicoes entre paginas
+├── Gestos adicionais
+└── Tooltips contextuais
 ```
 
 ---
 
-## Seção Técnica
+## Metricas de Sucesso
 
-### Valores HSL do Dark Mode
+| Metrica | Atual (estimado) | Meta |
+|---------|------------------|------|
+| Touch target compliance | ~70% | 100% |
+| Contrast ratio (dark) | 4.5:1 | 7:1 |
+| Time to first interaction | ~2s | <1s |
+| Empty state coverage | ~50% | 100% |
+| Loading state coverage | ~60% | 100% |
 
-**Foreground (Texto Principal)**
-- Atual: `40 15% 92%` → `hsl(40, 15%, 92%)` = Ivory suave
-- Novo: `40 18% 96%` → `hsl(40, 18%, 96%)` = Ivory brilhante
+---
 
-**Muted Foreground (Texto Secundário)**
-- Atual: `40 10% 55%` → `hsl(40, 10%, 55%)` = Cinza médio
-- Novo: `40 12% 68%` → `hsl(40, 12%, 68%)` = Cinza claro
+## Observacoes Tecnicas
 
-### Cálculo das Novas Escalas de Fonte
+### Dependencias Necessarias
 
-O usuário quer que "normal" seja 125%. Mantendo proporção similar:
+Nenhuma nova dependencia - todas as melhorias usam tecnologias existentes:
+- Framer Motion para animacoes
+- Tailwind para estilos
+- Radix UI para componentes
 
-- Base (125%) × 1.12 = 140% (grande)
-- Base (125%) × 1.25 = 156% (extra grande)
+### Compatibilidade
 
-### Classes de Glow para Texto
+- iOS 14+ (safe area insets)
+- Android 8+ (CSS variables)
+- Desktop browsers modernos
 
-```css
-/* Text shadow values para destaque */
---text-glow-strong: 0 0 20px hsl(var(--primary) / 0.25);
---text-glow-soft: 0 0 12px hsl(40 20% 90% / 0.15);
-```
+### Performance
+
+- Animacoes devem usar `transform` e `opacity` apenas
+- Evitar layout shifts com dimensoes fixas em skeletons
+- Lazy load de componentes pesados mantido

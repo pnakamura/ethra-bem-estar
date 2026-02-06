@@ -145,7 +145,7 @@ export default function Home() {
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-        className="relative pt-10 px-6 pb-6 z-10"
+        className="relative pt-12 px-6 pb-8 z-10"
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -227,7 +227,7 @@ export default function Home() {
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="flex-1 px-6 space-y-6 relative z-10"
+        className="flex-1 px-6 space-y-8 relative z-10"
       >
         {/* Active Journey Banner */}
         {activeJourney && (
@@ -251,14 +251,14 @@ export default function Home() {
 
         {/* Quick Actions Grid */}
         <motion.section variants={itemVariants}>
-          <div className="flex items-center gap-2 mb-4">
-            <h2 className="section-title text-sm font-medium text-muted-foreground dark:text-foreground/80 uppercase tracking-wider flex items-center gap-2">
-              <span className="section-indicator w-1.5 h-1.5 rounded-full bg-primary" />
+          <div className="flex items-center gap-2 mb-5">
+            <h2 className="section-title text-base font-semibold text-muted-foreground dark:text-foreground/85 uppercase tracking-wider flex items-center gap-2">
+              <span className="section-indicator w-2 h-2 rounded-full bg-primary" />
               Ações rápidas
             </h2>
             <ContextualHelp helpKey="quick-actions" size="sm" variant="subtle" />
           </div>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-3 gap-4">
             <QuickActionCard
               illustration={EmotionsIllustration}
               label="Emoções"
@@ -329,16 +329,18 @@ export default function Home() {
         <div className="h-4" />
       </motion.main>
 
-      {/* Floating Action Button */}
+      {/* Floating Action Button - Enhanced size and interaction */}
       <motion.button
         initial={{ scale: 0, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ delay: 0.6, type: 'spring' }}
-        whileTap={{ scale: 0.95 }}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.92 }}
         onClick={handleMoodCheck}
-        className="fixed bottom-28 right-6 w-14 h-14 rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/20 flex items-center justify-center z-40 hover:shadow-xl hover:shadow-primary/25 transition-shadow duration-300"
+        className="fixed bottom-28 right-6 w-[60px] h-[60px] rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/25 flex items-center justify-center z-40 hover:shadow-xl hover:shadow-primary/30 transition-all duration-300"
+        aria-label="Fazer check-in emocional"
       >
-        <PlusIcon size={26} />
+        <PlusIcon size={28} />
       </motion.button>
 
       <BottomNavigation />

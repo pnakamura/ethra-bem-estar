@@ -148,8 +148,20 @@ export default function Journal() {
               </div>
 
               {loadingEntries ? (
-                <div className="flex items-center justify-center py-12">
-                  <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                <div className="space-y-3">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="card-elevated p-4 space-y-2 animate-pulse">
+                      <div className="flex items-start justify-between">
+                        <div className="h-3 bg-muted rounded w-32" />
+                        <div className="h-6 w-6 bg-muted rounded-lg" />
+                      </div>
+                      <div className="space-y-2">
+                        <div className="h-4 bg-muted rounded w-full" />
+                        <div className="h-4 bg-muted rounded w-4/5" />
+                      </div>
+                      <div className="h-3 bg-muted rounded w-20 mt-2" />
+                    </div>
+                  ))}
                 </div>
               ) : entries && entries.length > 0 ? (
                 <div className="space-y-3">
@@ -193,17 +205,20 @@ export default function Journal() {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-12">
-                  <div className="w-16 h-16 rounded-full bg-muted mx-auto flex items-center justify-center mb-4">
+                <div className="empty-state">
+                  <div className="empty-state-icon">
                     <BookOpen className="w-8 h-8 text-muted-foreground" />
                   </div>
-                  <p className="text-muted-foreground">Nenhuma entrada ainda</p>
+                  <h3 className="empty-state-title">Comece seu diário</h3>
+                  <p className="empty-state-description">
+                    Escrever sobre suas emoções ajuda a processá-las e entendê-las melhor
+                  </p>
                   <Button
-                    variant="link"
                     onClick={() => setShowHistory(false)}
-                    className="mt-2 text-primary"
+                    className="mt-2"
                   >
-                    Escreva sua primeira entrada
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    Escrever primeira entrada
                   </Button>
                 </div>
               )}

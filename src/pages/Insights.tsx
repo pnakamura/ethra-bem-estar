@@ -59,12 +59,12 @@ export default function Insights() {
       <motion.header
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="pt-8 px-6 pb-4"
+        className="pt-10 px-6 pb-6"
       >
-        <div className="flex items-center justify-between mb-5">
+        <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Seus Insights</h1>
-            <p className="text-sm text-muted-foreground mt-1">Acompanhe seu bem-estar</p>
+            <h1 className="text-3xl font-bold text-foreground">Seus Insights</h1>
+            <p className="text-base text-muted-foreground mt-1.5">Acompanhe seu bem-estar</p>
           </div>
           <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
             <TrendingUp className="w-5 h-5 text-primary" />
@@ -90,7 +90,7 @@ export default function Insights() {
       </motion.header>
 
       {/* Main Content */}
-      <main className="flex-1 px-6 space-y-5">
+      <main className="flex-1 px-6 space-y-6">
         {/* Demo Banner */}
         {isDemoMode && <DemoBanner onExitDemo={handleExitDemo} />}
 

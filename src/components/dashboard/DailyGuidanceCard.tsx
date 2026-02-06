@@ -73,14 +73,14 @@ export function DailyGuidanceCard({ onGuideClick }: DailyGuidanceCardProps) {
 
       <div className="relative">
         {/* Header */}
-        <div className="flex items-center gap-4 mb-3">
+        <div className="flex items-center gap-4 mb-4">
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.4, type: 'spring', stiffness: 200 }}
-            className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center shrink-0 shadow-lg shadow-primary/10"
+            className="w-14 h-14 rounded-xl bg-primary/20 flex items-center justify-center shrink-0 shadow-lg shadow-primary/10"
           >
-            <span className="text-2xl">{displayEmoji}</span>
+            <span className="text-3xl">{displayEmoji}</span>
           </motion.div>
           <div className="min-w-0">
             <div className="flex items-center gap-2">
@@ -97,20 +97,20 @@ export function DailyGuidanceCard({ onGuideClick }: DailyGuidanceCardProps) {
         </div>
 
         {/* Message */}
-        <p className="text-sm text-muted-foreground dark:text-muted-enhanced leading-relaxed mb-4">
+        <p className="text-base text-muted-foreground dark:text-muted-enhanced leading-relaxed mb-5">
           {todayMessage.message}
         </p>
 
-        {/* CTA Button */}
+        {/* CTA Button - Enhanced touch target */}
         {onGuideClick && (
           <motion.button
             whileHover={{ x: 4 }}
-            whileTap={{ scale: 0.98 }}
+            whileTap={{ scale: 0.96 }}
             onClick={onGuideClick}
-            className="flex items-center gap-1.5 text-sm font-semibold text-primary"
+            className="flex items-center gap-2 text-sm font-semibold text-primary py-2 -my-2 touch-target"
           >
             {preferredGuide ? `Falar com ${preferredGuide.name}` : 'Falar com seu guia'}
-            <ChevronRight className="w-4 h-4" />
+            <ChevronRight className="w-5 h-5" />
           </motion.button>
         )}
       </div>

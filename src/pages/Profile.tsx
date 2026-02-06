@@ -23,13 +23,13 @@ export default function Profile() {
       <motion.header
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="pt-8 px-6 pb-6"
+        className="pt-10 px-6 pb-8"
       >
-        <h1 className="text-2xl font-bold text-foreground dark:text-glow dark:animate-text-glow">Perfil</h1>
+        <h1 className="text-3xl font-bold text-foreground dark:text-glow">Perfil</h1>
       </motion.header>
 
       {/* Main Content */}
-      <main className="flex-1 px-6 space-y-5">
+      <main className="flex-1 px-6 space-y-6">
         {/* User Card */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}

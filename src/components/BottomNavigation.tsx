@@ -102,7 +102,7 @@ export function BottomNavigation() {
                 <span
                   className={cn(
                     'text-xs font-medium transition-colors duration-300',
-                    isActive ? 'text-primary' : 'text-muted-foreground'
+                    isActive ? 'text-primary dark:text-highlight' : 'text-muted-foreground dark:text-muted-enhanced'
                   )}
                 >
                   {item.label}

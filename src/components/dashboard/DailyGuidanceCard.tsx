@@ -90,14 +90,14 @@ export function DailyGuidanceCard({ onGuideClick }: DailyGuidanceCardProps) {
               </span>
               <ContextualHelp helpKey="daily-guidance" size="sm" variant="subtle" />
             </div>
-            <h3 className="text-base font-bold text-foreground truncate">
+            <h3 className="text-base font-bold text-foreground dark:text-title-glow truncate">
               {todayMessage.title}
             </h3>
           </div>
         </div>
 
         {/* Message */}
-        <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+        <p className="text-sm text-muted-foreground dark:text-muted-enhanced leading-relaxed mb-4">
           {todayMessage.message}
         </p>
 

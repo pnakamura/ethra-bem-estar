@@ -528,7 +528,618 @@ export const StudioIllustration: React.FC<IllustrationProps> = ({
   </svg>
 );
 
+// ═══════════════════════════════════════════════════════════════
+// PLUTCHIK EMOTION ILLUSTRATIONS
+// Abstract, artistic representations of the 8 primary emotions
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Joy (Alegria) - Radiating sunburst with uplifting curves
+ */
+export const JoyIllustration: React.FC<IllustrationProps> = ({
+  size = defaultProps.size,
+  className = '',
+  strokeWidth = defaultProps.strokeWidth,
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    className={className}
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    {/* Central bloom */}
+    <circle
+      cx="24"
+      cy="24"
+      r="8"
+      stroke="currentColor"
+      strokeWidth={strokeWidth}
+    />
+    <circle
+      cx="24"
+      cy="24"
+      r="4"
+      fill="currentColor"
+      opacity="0.2"
+    />
+    {/* Radiating petals/rays */}
+    <path d="M24 6V12" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" />
+    <path d="M24 36V42" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" />
+    <path d="M6 24H12" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" />
+    <path d="M36 24H42" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" />
+    {/* Diagonal rays */}
+    <path d="M11 11L15 15" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" opacity="0.8" />
+    <path d="M33 33L37 37" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" opacity="0.8" />
+    <path d="M37 11L33 15" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" opacity="0.8" />
+    <path d="M15 33L11 37" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" opacity="0.8" />
+    {/* Gentle upward curves - like smiles of joy */}
+    <path d="M16 18C18 16 22 16 24 16C26 16 30 16 32 18" stroke="currentColor" strokeWidth={strokeWidth * 0.8} strokeLinecap="round" opacity="0.5" />
+    <path d="M14 14C17 11 21 10 24 10C27 10 31 11 34 14" stroke="currentColor" strokeWidth={strokeWidth * 0.6} strokeLinecap="round" opacity="0.3" />
+  </svg>
+);
+
+/**
+ * Trust (Confiança) - Interlinked rings symbolizing connection
+ */
+export const TrustIllustration: React.FC<IllustrationProps> = ({
+  size = defaultProps.size,
+  className = '',
+  strokeWidth = defaultProps.strokeWidth,
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    className={className}
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    {/* Left ring */}
+    <circle
+      cx="18"
+      cy="24"
+      r="10"
+      stroke="currentColor"
+      strokeWidth={strokeWidth}
+    />
+    {/* Right ring - interlocked */}
+    <circle
+      cx="30"
+      cy="24"
+      r="10"
+      stroke="currentColor"
+      strokeWidth={strokeWidth}
+    />
+    {/* Intersection highlight */}
+    <path
+      d="M24 16C26 18 27 21 27 24C27 27 26 30 24 32"
+      stroke="currentColor"
+      strokeWidth={strokeWidth * 0.8}
+      strokeLinecap="round"
+      opacity="0.5"
+    />
+    {/* Connection dots */}
+    <circle cx="24" cy="20" r="1.5" fill="currentColor" opacity="0.4" />
+    <circle cx="24" cy="24" r="2" fill="currentColor" opacity="0.3" />
+    <circle cx="24" cy="28" r="1.5" fill="currentColor" opacity="0.4" />
+    {/* Gentle embrace curves */}
+    <path d="M8 18C10 14 14 12 18 12" stroke="currentColor" strokeWidth={strokeWidth * 0.6} strokeLinecap="round" opacity="0.4" />
+    <path d="M40 18C38 14 34 12 30 12" stroke="currentColor" strokeWidth={strokeWidth * 0.6} strokeLinecap="round" opacity="0.4" />
+  </svg>
+);
+
+/**
+ * Fear (Medo) - Shrinking, protective form
+ */
+export const FearIllustration: React.FC<IllustrationProps> = ({
+  size = defaultProps.size,
+  className = '',
+  strokeWidth = defaultProps.strokeWidth,
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    className={className}
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    {/* Central huddled form */}
+    <ellipse
+      cx="24"
+      cy="28"
+      rx="10"
+      ry="12"
+      stroke="currentColor"
+      strokeWidth={strokeWidth}
+    />
+    {/* Head/top - tucked in */}
+    <circle
+      cx="24"
+      cy="16"
+      r="6"
+      stroke="currentColor"
+      strokeWidth={strokeWidth}
+    />
+    {/* Protective shell lines */}
+    <path
+      d="M14 24C12 22 11 19 12 16"
+      stroke="currentColor"
+      strokeWidth={strokeWidth * 0.8}
+      strokeLinecap="round"
+      opacity="0.6"
+    />
+    <path
+      d="M34 24C36 22 37 19 36 16"
+      stroke="currentColor"
+      strokeWidth={strokeWidth * 0.8}
+      strokeLinecap="round"
+      opacity="0.6"
+    />
+    {/* Trembling lines */}
+    <path d="M8 32C9 31 10 32 11 31" stroke="currentColor" strokeWidth={strokeWidth * 0.6} strokeLinecap="round" opacity="0.4" />
+    <path d="M37 32C38 31 39 32 40 31" stroke="currentColor" strokeWidth={strokeWidth * 0.6} strokeLinecap="round" opacity="0.4" />
+    {/* Shrinking inward marks */}
+    <path d="M6 24L10 24" stroke="currentColor" strokeWidth={strokeWidth * 0.5} strokeLinecap="round" opacity="0.3" />
+    <path d="M38 24L42 24" stroke="currentColor" strokeWidth={strokeWidth * 0.5} strokeLinecap="round" opacity="0.3" />
+    <path d="M6 24L8 22" stroke="currentColor" strokeWidth={strokeWidth * 0.5} strokeLinecap="round" opacity="0.3" />
+    <path d="M42 24L40 22" stroke="currentColor" strokeWidth={strokeWidth * 0.5} strokeLinecap="round" opacity="0.3" />
+  </svg>
+);
+
+/**
+ * Surprise (Surpresa) - Starburst explosion
+ */
+export const SurpriseIllustration: React.FC<IllustrationProps> = ({
+  size = defaultProps.size,
+  className = '',
+  strokeWidth = defaultProps.strokeWidth,
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    className={className}
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    {/* Central burst point */}
+    <circle
+      cx="24"
+      cy="24"
+      r="6"
+      stroke="currentColor"
+      strokeWidth={strokeWidth}
+    />
+    <circle cx="24" cy="24" r="2" fill="currentColor" opacity="0.3" />
+    {/* Explosion rays - varying lengths */}
+    <path d="M24 4V14" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" />
+    <path d="M24 34V44" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" />
+    <path d="M4 24H14" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" />
+    <path d="M34 24H44" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" />
+    {/* Diagonal bursts */}
+    <path d="M9 9L16 16" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" />
+    <path d="M32 32L39 39" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" />
+    <path d="M39 9L32 16" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" />
+    <path d="M16 32L9 39" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" />
+    {/* Sparkle dots */}
+    <circle cx="18" cy="10" r="1.5" fill="currentColor" opacity="0.5" />
+    <circle cx="38" cy="18" r="1.5" fill="currentColor" opacity="0.5" />
+    <circle cx="30" cy="38" r="1.5" fill="currentColor" opacity="0.5" />
+    <circle cx="10" cy="30" r="1.5" fill="currentColor" opacity="0.5" />
+  </svg>
+);
+
+/**
+ * Sadness (Tristeza) - Drooping, wilting form with falling droplets
+ */
+export const SadnessIllustration: React.FC<IllustrationProps> = ({
+  size = defaultProps.size,
+  className = '',
+  strokeWidth = defaultProps.strokeWidth,
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    className={className}
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    {/* Wilting flower/plant */}
+    <path
+      d="M24 42V26"
+      stroke="currentColor"
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+    />
+    {/* Drooping head */}
+    <path
+      d="M24 26C24 26 28 24 30 20C32 16 30 12 26 10C22 8 18 10 16 14C14 18 16 24 24 26Z"
+      stroke="currentColor"
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    {/* Drooping leaves */}
+    <path
+      d="M24 32C20 34 16 33 14 30"
+      stroke="currentColor"
+      strokeWidth={strokeWidth * 0.8}
+      strokeLinecap="round"
+      opacity="0.7"
+    />
+    <path
+      d="M24 36C28 38 32 36 34 32"
+      stroke="currentColor"
+      strokeWidth={strokeWidth * 0.8}
+      strokeLinecap="round"
+      opacity="0.7"
+    />
+    {/* Falling droplets */}
+    <path
+      d="M10 18C10 16 11 14 12 14C13 14 14 16 14 18C14 20 13 21 12 21C11 21 10 20 10 18Z"
+      stroke="currentColor"
+      strokeWidth={strokeWidth * 0.8}
+      opacity="0.5"
+    />
+    <path
+      d="M36 24C36 22 37 20 38 20C39 20 40 22 40 24C40 26 39 27 38 27C37 27 36 26 36 24Z"
+      stroke="currentColor"
+      strokeWidth={strokeWidth * 0.8}
+      opacity="0.4"
+    />
+    <circle cx="8" cy="28" r="1.5" fill="currentColor" opacity="0.3" />
+  </svg>
+);
+
+/**
+ * Disgust (Aversão) - Turning away, wave of repulsion
+ */
+export const DisgustIllustration: React.FC<IllustrationProps> = ({
+  size = defaultProps.size,
+  className = '',
+  strokeWidth = defaultProps.strokeWidth,
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    className={className}
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    {/* Central form turning away */}
+    <ellipse
+      cx="20"
+      cy="24"
+      rx="10"
+      ry="12"
+      stroke="currentColor"
+      strokeWidth={strokeWidth}
+      transform="rotate(-15 20 24)"
+    />
+    {/* Repulsion waves */}
+    <path
+      d="M32 16C36 18 38 21 38 24C38 27 36 30 32 32"
+      stroke="currentColor"
+      strokeWidth={strokeWidth * 0.8}
+      strokeLinecap="round"
+      opacity="0.6"
+    />
+    <path
+      d="M36 14C40 17 42 20 42 24C42 28 40 31 36 34"
+      stroke="currentColor"
+      strokeWidth={strokeWidth * 0.6}
+      strokeLinecap="round"
+      opacity="0.4"
+    />
+    <path
+      d="M40 12C44 16 46 20 46 24C46 28 44 32 40 36"
+      stroke="currentColor"
+      strokeWidth={strokeWidth * 0.4}
+      strokeLinecap="round"
+      opacity="0.2"
+    />
+    {/* Barrier/shield feeling */}
+    <path
+      d="M28 18V30"
+      stroke="currentColor"
+      strokeWidth={strokeWidth * 0.8}
+      strokeLinecap="round"
+      strokeDasharray="2 2"
+      opacity="0.5"
+    />
+    {/* Turning gesture marks */}
+    <path d="M12 14L8 10" stroke="currentColor" strokeWidth={strokeWidth * 0.6} strokeLinecap="round" opacity="0.4" />
+    <path d="M10 20L6 18" stroke="currentColor" strokeWidth={strokeWidth * 0.6} strokeLinecap="round" opacity="0.4" />
+  </svg>
+);
+
+/**
+ * Anger (Raiva) - Sharp angular explosion, heat waves
+ */
+export const AngerIllustration: React.FC<IllustrationProps> = ({
+  size = defaultProps.size,
+  className = '',
+  strokeWidth = defaultProps.strokeWidth,
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    className={className}
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    {/* Central explosive core */}
+    <polygon
+      points="24,8 28,18 38,20 30,28 32,38 24,32 16,38 18,28 10,20 20,18"
+      stroke="currentColor"
+      strokeWidth={strokeWidth}
+      strokeLinejoin="round"
+      fill="currentColor"
+      fillOpacity="0.1"
+    />
+    {/* Inner intensity */}
+    <polygon
+      points="24,14 26,20 32,21 27,25 28,31 24,28 20,31 21,25 16,21 22,20"
+      stroke="currentColor"
+      strokeWidth={strokeWidth * 0.8}
+      strokeLinejoin="round"
+      opacity="0.6"
+    />
+    {/* Heat/pressure lines */}
+    <path d="M6 12L10 16" stroke="currentColor" strokeWidth={strokeWidth * 0.8} strokeLinecap="round" opacity="0.5" />
+    <path d="M42 12L38 16" stroke="currentColor" strokeWidth={strokeWidth * 0.8} strokeLinecap="round" opacity="0.5" />
+    <path d="M6 36L10 32" stroke="currentColor" strokeWidth={strokeWidth * 0.8} strokeLinecap="round" opacity="0.5" />
+    <path d="M42 36L38 32" stroke="currentColor" strokeWidth={strokeWidth * 0.8} strokeLinecap="round" opacity="0.5" />
+    {/* Zigzag energy */}
+    <path d="M4 24L7 22L4 20" stroke="currentColor" strokeWidth={strokeWidth * 0.6} strokeLinecap="round" strokeLinejoin="round" opacity="0.4" />
+    <path d="M44 24L41 22L44 20" stroke="currentColor" strokeWidth={strokeWidth * 0.6} strokeLinecap="round" strokeLinejoin="round" opacity="0.4" />
+  </svg>
+);
+
+/**
+ * Anticipation (Antecipação) - Forward motion, horizon with path
+ */
+export const AnticipationIllustration: React.FC<IllustrationProps> = ({
+  size = defaultProps.size,
+  className = '',
+  strokeWidth = defaultProps.strokeWidth,
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    className={className}
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    {/* Horizon line */}
+    <path
+      d="M4 32H44"
+      stroke="currentColor"
+      strokeWidth={strokeWidth * 0.6}
+      strokeLinecap="round"
+      opacity="0.4"
+    />
+    {/* Rising sun/goal on horizon */}
+    <path
+      d="M32 32C32 24 28 18 24 18C20 18 16 24 16 32"
+      stroke="currentColor"
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+    />
+    {/* Sun rays */}
+    <path d="M24 10V14" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" />
+    <path d="M14 14L17 17" stroke="currentColor" strokeWidth={strokeWidth * 0.8} strokeLinecap="round" opacity="0.7" />
+    <path d="M34 14L31 17" stroke="currentColor" strokeWidth={strokeWidth * 0.8} strokeLinecap="round" opacity="0.7" />
+    {/* Path leading forward */}
+    <path
+      d="M20 42L24 36L28 42"
+      stroke="currentColor"
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M22 38L24 34L26 38"
+      stroke="currentColor"
+      strokeWidth={strokeWidth * 0.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      opacity="0.6"
+    />
+    {/* Forward motion dots */}
+    <circle cx="8" cy="38" r="1" fill="currentColor" opacity="0.3" />
+    <circle cx="12" cy="36" r="1.5" fill="currentColor" opacity="0.4" />
+    <circle cx="16" cy="34" r="2" fill="currentColor" opacity="0.5" />
+    {/* Sparkle of possibility */}
+    <circle cx="40" cy="20" r="2" fill="currentColor" opacity="0.3" />
+    <path d="M40 16V18M40 22V24M36 20H38M42 20H44" stroke="currentColor" strokeWidth={strokeWidth * 0.6} strokeLinecap="round" opacity="0.4" />
+  </svg>
+);
+
+// ═══════════════════════════════════════════════════════════════
+// CATEGORY ILLUSTRATIONS
+// For breathing categories, nutrition, streaks, etc.
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Calming (Calmante) - Moon with gentle waves
+ */
+export const CalmingIllustration: React.FC<IllustrationProps> = ({
+  size = defaultProps.size,
+  className = '',
+  strokeWidth = defaultProps.strokeWidth,
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    className={className}
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    {/* Crescent moon */}
+    <path
+      d="M28 8C22 10 18 16 18 24C18 32 22 38 28 40C20 40 14 33 14 24C14 15 20 8 28 8Z"
+      stroke="currentColor"
+      strokeWidth={strokeWidth}
+      fill="currentColor"
+      fillOpacity="0.1"
+    />
+    {/* Gentle waves below */}
+    <path d="M8 36C12 34 16 36 20 34C24 32 28 34 32 32C36 30 40 32 44 30" stroke="currentColor" strokeWidth={strokeWidth * 0.8} strokeLinecap="round" opacity="0.5" />
+    <path d="M6 40C10 38 14 40 18 38C22 36 26 38 30 36C34 34 38 36 42 34" stroke="currentColor" strokeWidth={strokeWidth * 0.6} strokeLinecap="round" opacity="0.3" />
+    {/* Stars */}
+    <circle cx="36" cy="12" r="1" fill="currentColor" opacity="0.6" />
+    <circle cx="40" cy="18" r="1.5" fill="currentColor" opacity="0.4" />
+    <circle cx="34" cy="20" r="1" fill="currentColor" opacity="0.5" />
+  </svg>
+);
+
+/**
+ * Energizing (Energizante) - Lightning bolt with radiating energy
+ */
+export const EnergizingIllustration: React.FC<IllustrationProps> = ({
+  size = defaultProps.size,
+  className = '',
+  strokeWidth = defaultProps.strokeWidth,
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    className={className}
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    {/* Lightning bolt */}
+    <path
+      d="M28 4L16 22H24L20 44L36 22H26L28 4Z"
+      stroke="currentColor"
+      strokeWidth={strokeWidth}
+      strokeLinejoin="round"
+      fill="currentColor"
+      fillOpacity="0.1"
+    />
+    {/* Energy radiating */}
+    <path d="M8 16L12 18" stroke="currentColor" strokeWidth={strokeWidth * 0.8} strokeLinecap="round" opacity="0.5" />
+    <path d="M6 24L10 24" stroke="currentColor" strokeWidth={strokeWidth * 0.8} strokeLinecap="round" opacity="0.5" />
+    <path d="M8 32L12 30" stroke="currentColor" strokeWidth={strokeWidth * 0.8} strokeLinecap="round" opacity="0.5" />
+    <path d="M40 16L36 18" stroke="currentColor" strokeWidth={strokeWidth * 0.8} strokeLinecap="round" opacity="0.5" />
+    <path d="M42 24L38 24" stroke="currentColor" strokeWidth={strokeWidth * 0.8} strokeLinecap="round" opacity="0.5" />
+    <path d="M40 32L36 30" stroke="currentColor" strokeWidth={strokeWidth * 0.8} strokeLinecap="round" opacity="0.5" />
+    {/* Sparkle dots */}
+    <circle cx="10" cy="10" r="1.5" fill="currentColor" opacity="0.4" />
+    <circle cx="38" cy="38" r="1.5" fill="currentColor" opacity="0.4" />
+  </svg>
+);
+
+/**
+ * Balancing (Equilibrante) - Yin-yang inspired balance
+ */
+export const BalancingIllustration: React.FC<IllustrationProps> = ({
+  size = defaultProps.size,
+  className = '',
+  strokeWidth = defaultProps.strokeWidth,
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    className={className}
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    {/* Outer circle */}
+    <circle
+      cx="24"
+      cy="24"
+      r="18"
+      stroke="currentColor"
+      strokeWidth={strokeWidth}
+    />
+    {/* S-curve divider */}
+    <path
+      d="M24 6C24 6 33 15 33 24C33 33 24 42 24 42C24 42 15 33 15 24C15 15 24 6 24 6Z"
+      stroke="currentColor"
+      strokeWidth={strokeWidth * 0.8}
+      strokeLinecap="round"
+    />
+    {/* Balance dots */}
+    <circle cx="24" cy="15" r="3" fill="currentColor" opacity="0.3" />
+    <circle cx="24" cy="33" r="3" stroke="currentColor" strokeWidth={strokeWidth * 0.8} />
+    {/* Gentle equilibrium lines */}
+    <path d="M8 24H12" stroke="currentColor" strokeWidth={strokeWidth * 0.6} strokeLinecap="round" opacity="0.4" />
+    <path d="M36 24H40" stroke="currentColor" strokeWidth={strokeWidth * 0.6} strokeLinecap="round" opacity="0.4" />
+  </svg>
+);
+
+/**
+ * Growth/Streak (Crescimento) - Sprouting plant progression
+ */
+export const GrowthIllustration: React.FC<IllustrationProps> = ({
+  size = defaultProps.size,
+  className = '',
+  strokeWidth = defaultProps.strokeWidth,
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    className={className}
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    {/* Ground line */}
+    <path d="M4 40H44" stroke="currentColor" strokeWidth={strokeWidth * 0.6} strokeLinecap="round" opacity="0.3" />
+    {/* Main stem */}
+    <path d="M24 40V16" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" />
+    {/* Leaves growing */}
+    <path
+      d="M24 30C20 30 16 28 16 24C16 20 20 18 24 20"
+      stroke="currentColor"
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      fill="currentColor"
+      fillOpacity="0.1"
+    />
+    <path
+      d="M24 24C28 24 32 22 32 18C32 14 28 12 24 14"
+      stroke="currentColor"
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      fill="currentColor"
+      fillOpacity="0.1"
+    />
+    {/* Top bloom/bud */}
+    <path
+      d="M20 12C20 8 22 6 24 6C26 6 28 8 28 12"
+      stroke="currentColor"
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+    />
+    <path
+      d="M22 10C22 8 23 7 24 7C25 7 26 8 26 10"
+      stroke="currentColor"
+      strokeWidth={strokeWidth * 0.8}
+      strokeLinecap="round"
+      opacity="0.6"
+    />
+    {/* Growth sparkles */}
+    <circle cx="12" cy="16" r="1" fill="currentColor" opacity="0.4" />
+    <circle cx="36" cy="12" r="1.5" fill="currentColor" opacity="0.3" />
+    <circle cx="8" cy="28" r="1" fill="currentColor" opacity="0.3" />
+  </svg>
+);
+
 export default {
+  // Quick Action illustrations
   EmotionsIllustration,
   BreatheIllustration,
   MeditateIllustration,
@@ -537,4 +1148,18 @@ export default {
   NutritionIllustration,
   InsightsIllustration,
   StudioIllustration,
+  // Plutchik Emotion illustrations
+  JoyIllustration,
+  TrustIllustration,
+  FearIllustration,
+  SurpriseIllustration,
+  SadnessIllustration,
+  DisgustIllustration,
+  AngerIllustration,
+  AnticipationIllustration,
+  // Category illustrations
+  CalmingIllustration,
+  EnergizingIllustration,
+  BalancingIllustration,
+  GrowthIllustration,
 };

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Wind, Loader2, Clock, Repeat } from 'lucide-react';
+import { X, Wind, Loader2, Clock, Repeat, Sparkles, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useBreathingTechniques } from '@/hooks/useBreathingTechniques';
 import { cn } from '@/lib/utils';
@@ -8,6 +8,11 @@ import { FavoriteButton } from '@/components/FavoriteButton';
 import { useFavoriteBreathings } from '@/hooks/useFavorites';
 import { ContentLock } from '@/components/access/ContentLock';
 import { ExpandableExplanation } from '@/components/ui/ExpandableExplanation';
+import {
+  CalmingIllustration,
+  EnergizingIllustration,
+  BalancingIllustration,
+} from '@/components/ui/illustrations';
 // Use the return type from the hook instead of Tables
 type BreathingTechnique = NonNullable<ReturnType<typeof useBreathingTechniques>['data']>[number];
 
@@ -41,9 +46,24 @@ const getArousalState = (technique: BreathingTechnique): 'calming' | 'energizing
 };
 
 const arousalLabels = {
-  calming: { label: 'Acalmar', emoji: '🌙', color: 'text-calm', bg: 'bg-calm/10' },
-  energizing: { label: 'Energizar', emoji: '⚡', color: 'text-energy', bg: 'bg-energy/10' },
-  balancing: { label: 'Equilibrar', emoji: '☯️', color: 'text-grounding', bg: 'bg-grounding/10' },
+  calming: {
+    label: 'Acalmar',
+    color: 'text-calm',
+    bg: 'bg-calm/10',
+    Illustration: CalmingIllustration,
+  },
+  energizing: {
+    label: 'Energizar',
+    color: 'text-energy',
+    bg: 'bg-energy/10',
+    Illustration: EnergizingIllustration,
+  },
+  balancing: {
+    label: 'Equilibrar',
+    color: 'text-grounding',
+    bg: 'bg-grounding/10',
+    Illustration: BalancingIllustration,
+  },
 };
 
 type FilterType = 'all' | 'calming' | 'energizing' | 'balancing' | 'favorites';
@@ -126,12 +146,13 @@ export function BreathingTechniqueSelector({ isOpen, onClose, onSelect }: Breath
               if (filterType === 'favorites') return 'Favoritas';
               return arousalLabels[filterType].label;
             };
-            const getEmoji = () => {
-              if (filterType === 'all') return '✨';
-              if (filterType === 'favorites') return '❤️';
-              return arousalLabels[filterType].emoji;
+            const getIcon = () => {
+              if (filterType === 'all') return <Sparkles className="w-4 h-4" />;
+              if (filterType === 'favorites') return <Heart className="w-4 h-4" />;
+              const { Illustration } = arousalLabels[filterType];
+              return <Illustration size={18} className="opacity-90" />;
             };
-            
+
             return (
               <motion.button
                 key={filterType}
@@ -139,12 +160,12 @@ export function BreathingTechniqueSelector({ isOpen, onClose, onSelect }: Breath
                 onClick={() => setFilter(filterType)}
                 className={cn(
                   'px-3.5 py-2 rounded-full text-sm font-medium flex items-center gap-1.5 whitespace-nowrap transition-all shrink-0',
-                  isActive 
-                    ? 'bg-primary text-primary-foreground shadow-sm' 
+                  isActive
+                    ? 'bg-primary text-primary-foreground shadow-sm'
                     : 'bg-muted/50 text-muted-foreground active:bg-muted'
                 )}
               >
-                <span className="text-sm">{getEmoji()}</span>
+                {getIcon()}
                 <span>{getLabel()}</span>
               </motion.button>
             );
@@ -167,7 +188,7 @@ export function BreathingTechniqueSelector({ isOpen, onClose, onSelect }: Breath
             <div className="space-y-2.5 pt-1">
               {filteredTechniques.map((technique, index) => {
                 const arousal = getArousalState(technique);
-                const { emoji, color, bg } = arousalLabels[arousal];
+                const { color, bg, Illustration } = arousalLabels[arousal];
                 
                 return (
                   <ContentLock
@@ -193,18 +214,18 @@ export function BreathingTechniqueSelector({ isOpen, onClose, onSelect }: Breath
                         <FavoriteButton type="breathing" itemId={technique.id} size="sm" />
                       </div>
                       <div className="flex items-start gap-3">
-                        {/* Icon - slightly smaller */}
-                        <div 
+                        {/* Icon - illustration style */}
+                        <div
                           role="button"
                           tabIndex={0}
                           onClick={() => onSelect(technique)}
                           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onSelect(technique); }}
                           className={cn(
-                            'w-12 h-12 rounded-xl flex items-center justify-center text-xl shrink-0 cursor-pointer',
+                            'w-12 h-12 rounded-xl flex items-center justify-center shrink-0 cursor-pointer',
                             bg
                           )}
                         >
-                          {technique.icon || emoji}
+                          <Illustration size={28} className={color} />
                         </div>
                         
                         {/* Content */}

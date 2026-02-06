@@ -5,10 +5,21 @@ export interface EmotionIntensity {
   label: string;
 }
 
+export type EmotionIllustration =
+  | 'joy'
+  | 'trust'
+  | 'fear'
+  | 'surprise'
+  | 'sadness'
+  | 'disgust'
+  | 'anger'
+  | 'anticipation';
+
 export interface PrimaryEmotion {
   id: string;
   label: string;
   icon: string;
+  illustration: EmotionIllustration;
   color: string;
   bgColor: string;
   opposite: string;
@@ -25,6 +36,7 @@ export const primaryEmotions: PrimaryEmotion[] = [
     id: 'joy',
     label: 'Alegria',
     icon: '😊',
+    illustration: 'joy',
     color: 'hsl(45, 100%, 50%)', // Amarelo
     bgColor: 'hsl(45, 100%, 90%)',
     opposite: 'sadness',
@@ -39,6 +51,7 @@ export const primaryEmotions: PrimaryEmotion[] = [
     id: 'trust',
     label: 'Confiança',
     icon: '🤝',
+    illustration: 'trust',
     color: 'hsl(120, 60%, 60%)', // Verde claro
     bgColor: 'hsl(120, 60%, 90%)',
     opposite: 'disgust',
@@ -53,6 +66,7 @@ export const primaryEmotions: PrimaryEmotion[] = [
     id: 'fear',
     label: 'Medo',
     icon: '😨',
+    illustration: 'fear',
     color: 'hsl(120, 100%, 25%)', // Verde escuro
     bgColor: 'hsl(120, 100%, 90%)',
     opposite: 'anger',
@@ -67,6 +81,7 @@ export const primaryEmotions: PrimaryEmotion[] = [
     id: 'surprise',
     label: 'Surpresa',
     icon: '😲',
+    illustration: 'surprise',
     color: 'hsl(180, 100%, 40%)', // Ciano
     bgColor: 'hsl(180, 100%, 90%)',
     opposite: 'anticipation',
@@ -81,6 +96,7 @@ export const primaryEmotions: PrimaryEmotion[] = [
     id: 'sadness',
     label: 'Tristeza',
     icon: '😢',
+    illustration: 'sadness',
     color: 'hsl(220, 70%, 50%)', // Azul
     bgColor: 'hsl(220, 70%, 90%)',
     opposite: 'joy',
@@ -95,6 +111,7 @@ export const primaryEmotions: PrimaryEmotion[] = [
     id: 'disgust',
     label: 'Aversão',
     icon: '🤢',
+    illustration: 'disgust',
     color: 'hsl(270, 50%, 60%)', // Roxo
     bgColor: 'hsl(270, 50%, 90%)',
     opposite: 'trust',
@@ -109,6 +126,7 @@ export const primaryEmotions: PrimaryEmotion[] = [
     id: 'anger',
     label: 'Raiva',
     icon: '😠',
+    illustration: 'anger',
     color: 'hsl(15, 100%, 50%)', // Vermelho-laranja
     bgColor: 'hsl(15, 100%, 90%)',
     opposite: 'fear',
@@ -123,6 +141,7 @@ export const primaryEmotions: PrimaryEmotion[] = [
     id: 'anticipation',
     label: 'Antecipação',
     icon: '🔮',
+    illustration: 'anticipation',
     color: 'hsl(30, 100%, 50%)', // Laranja
     bgColor: 'hsl(30, 100%, 90%)',
     opposite: 'surprise',

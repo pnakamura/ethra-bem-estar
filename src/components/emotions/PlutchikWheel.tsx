@@ -1,8 +1,30 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Check, X } from 'lucide-react';
-import { primaryEmotions, getIntensityLabel } from '@/data/plutchik-emotions';
+import { primaryEmotions, getIntensityLabel, EmotionIllustration } from '@/data/plutchik-emotions';
 import { useState, useCallback } from 'react';
+import {
+  JoyIllustration,
+  TrustIllustration,
+  FearIllustration,
+  SurpriseIllustration,
+  SadnessIllustration,
+  DisgustIllustration,
+  AngerIllustration,
+  AnticipationIllustration,
+} from '@/components/ui/illustrations';
+
+// Map emotion IDs to their illustration components
+const emotionIllustrations: Record<EmotionIllustration, React.FC<{ size?: number; className?: string }>> = {
+  joy: JoyIllustration,
+  trust: TrustIllustration,
+  fear: FearIllustration,
+  surprise: SurpriseIllustration,
+  sadness: SadnessIllustration,
+  disgust: DisgustIllustration,
+  anger: AngerIllustration,
+  anticipation: AnticipationIllustration,
+};
 
 interface SelectedEmotion {
   id: string;
@@ -127,19 +149,30 @@ export function PlutchikWheel({
                   )}
                 </AnimatePresence>
 
-                {/* Emoji */}
+                {/* Emotion Illustration */}
                 <motion.div
                   className={cn(
-                    "text-4xl sm:text-5xl mb-2 transition-transform duration-300",
+                    "mb-2 transition-transform duration-300",
                     !selected && "group-hover:scale-110"
                   )}
-                  animate={isRecent && selected ? { 
+                  animate={isRecent && selected ? {
                     scale: [1, 1.2, 1],
                     rotate: [0, -8, 8, 0]
                   } : {}}
                   transition={{ duration: 0.4 }}
                 >
-                  {emotion.icon}
+                  {(() => {
+                    const IllustrationComponent = emotionIllustrations[emotion.illustration];
+                    return (
+                      <IllustrationComponent
+                        size={48}
+                        className={cn(
+                          "transition-colors duration-300",
+                          selected ? "text-white" : "text-foreground"
+                        )}
+                      />
+                    );
+                  })()}
                 </motion.div>
 
                 {/* Label */}
@@ -179,17 +212,25 @@ export function PlutchikWheel({
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.8 }}
                     transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-                    className="flex items-center gap-2 pl-3 pr-1.5 py-1.5 rounded-full border shadow-sm"
-                    style={{ 
+                    className="flex items-center gap-2 pl-2 pr-1.5 py-1.5 rounded-full border shadow-sm"
+                    style={{
                       backgroundColor: `${emotion.color}15`,
                       borderColor: `${emotion.color}30`,
                     }}
                   >
-                    <span className="text-base">{emotion.icon}</span>
+                    {(() => {
+                      const IllustrationComponent = emotionIllustrations[emotion.illustration];
+                      return (
+                        <IllustrationComponent
+                          size={20}
+                          className="text-foreground"
+                        />
+                      );
+                    })()}
                     <span className="text-sm font-medium text-foreground">
                       {getIntensityLabel(emotion, selected.intensity)}
                     </span>
-                    
+
                     <button
                       onClick={(e) => {
                         e.stopPropagation();

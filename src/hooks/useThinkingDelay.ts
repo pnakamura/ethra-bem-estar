@@ -9,6 +9,9 @@ export const thinkingPhrasesByContext = {
     'Um momento...',
     'Pensando com cuidado...',
     'Considerando suas palavras...',
+    'Veja bem...',
+    'Pois é...',
+    'Deixe-me formular...',
   ],
   emotional: [
     'Entendo... deixe-me responder com carinho...',
@@ -17,6 +20,10 @@ export const thinkingPhrasesByContext = {
     'Acolhendo suas palavras...',
     'Com cuidado e atenção...',
     'Preparando uma resposta com carinho...',
+    'Preciso de um momento para responder com cuidado...',
+    'Isso merece uma resposta atenciosa...',
+    'Deixe-me formular isso com carinho...',
+    'Estou aqui com você... pensando...',
   ],
   question: [
     'Boa pergunta...',
@@ -24,11 +31,21 @@ export const thinkingPhrasesByContext = {
     'Hmm, vamos ver...',
     'Pensando na melhor resposta...',
     'Interessante pergunta...',
+    'Refletindo sobre sua pergunta...',
+    'Essa pergunta me fez pensar...',
   ],
   greeting: [
     'Que bom te ver por aqui...',
     'Olá! Um momento...',
     'Bem-vindo de volta...',
+    'Fico feliz em te ver...',
+  ],
+  deepEmotional: [
+    'Preciso de um momento para responder com todo cuidado...',
+    'Isso merece uma resposta muito atenciosa...',
+    'Deixe-me acolher isso antes de responder...',
+    'Estou aqui com você... preparando uma resposta...',
+    'Respirando junto com você...',
   ],
   // Minimal phrases for pauses between chunks - just visual indicator
   pause: [],

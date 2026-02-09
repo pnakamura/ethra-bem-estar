@@ -91,25 +91,26 @@ export interface ChunkDelayOptions {
 /**
  * Calculate delay before showing the next chunk
  * Based on chunk content and position
+ * Delays are longer to create more human-like pacing
  */
 export function getChunkDelay(chunk: string, index: number, options?: ChunkDelayOptions): number {
-  // Base delay - longer for subsequent chunks
-  const baseDelay = index === 0 ? 1500 : 2500;
+  // Base delay - much longer for subsequent chunks (simulates "breathing" between thoughts)
+  const baseDelay = index === 0 ? 2000 : 3500;
   
   // Length bonus - longer chunks need more "reading" time
-  const lengthBonus = Math.min(chunk.length * 6, 1800);
+  const lengthBonus = Math.min(chunk.length * 8, 2400);
   
-  // Emotional content bonus
-  const emotionalBonus = hasEmotionalContent(chunk) ? 1200 : 0;
+  // Emotional content bonus - double the pause for sensitive content
+  const emotionalBonus = hasEmotionalContent(chunk) ? 2000 : 0;
   
-  // Transition bonus for subsequent chunks
-  const transitionBonus = index > 0 ? 500 : 0;
+  // Transition bonus for subsequent chunks (simulates gathering thoughts)
+  const transitionBonus = index > 0 ? 800 : 0;
   
-  // Random variation for natural feel
-  const randomVariation = Math.random() * 1000;
+  // Random variation for natural feel (higher variance)
+  const randomVariation = Math.random() * 1500;
   
-  // Extra time for first chunk after user question
-  const questionBonus = (index === 0 && options?.isAfterQuestion) ? 1000 : 0;
+  // Extra time for first chunk after user question (reflection time)
+  const questionBonus = (index === 0 && options?.isAfterQuestion) ? 1500 : 0;
   
   return baseDelay + lengthBonus + emotionalBonus + transitionBonus + randomVariation + questionBonus;
 }

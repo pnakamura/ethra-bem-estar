@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Send, RefreshCw, Users } from 'lucide-react';
@@ -11,9 +11,11 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { useGuideChat } from '@/hooks/useGuideChat';
 import { useGuide, useUserGuidePreference, useGuides } from '@/hooks/useGuides';
 import { useAuth } from '@/contexts/AuthContext';
-import { getRandomThinkingPhrase } from '@/hooks/useThinkingDelay';
+import { getRandomThinkingPhrase, detectMessageContext, type MessageContext } from '@/hooks/useThinkingDelay';
+import { hasDeepEmotionalContent } from '@/lib/emotionDetection';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BottomNavigation } from '@/components/BottomNavigation';
+import { logger } from '@/lib/logger';
 
 type ChatPhase = 'idle' | 'reading' | 'thinking' | 'transitioning' | 'responding';
 
@@ -149,7 +151,7 @@ export default function GuideChat() {
 
       // Safety timeout - if transition takes too long, force reveal (2s max)
       const safetyTimeout = setTimeout(() => {
-        console.warn('Safety timeout: forcing assistant reveal');
+        logger.warn('Safety timeout: forcing assistant reveal');
         setCanRevealAssistant(true);
         setPhase('responding');
       }, 2000);
@@ -217,6 +219,67 @@ export default function GuideChat() {
     }
   };
 
+  // All useMemo/useCallback hooks MUST be before any early returns
+  
+  // Detect message context for contextual status
+  const lastUserMessage = useMemo(() => 
+    messages.filter(m => m.role === 'user').pop(),
+    [messages]
+  );
+  
+  const messageContext: MessageContext = useMemo(() => 
+    lastUserMessage ? detectMessageContext(lastUserMessage.content) : 'default',
+    [lastUserMessage]
+  );
+  
+  const isDeepEmotional = useMemo(() => 
+    lastUserMessage ? hasDeepEmotionalContent(lastUserMessage.content) : false,
+    [lastUserMessage]
+  );
+
+  // Track which user messages have been "read" by the guide
+  const readMessageIds = useMemo(() => {
+    const userMsgIds = new Set<string>();
+    let foundAssistant = false;
+    
+    // Iterate backwards - mark user messages as read if an assistant message follows
+    for (let i = messages.length - 1; i >= 0; i--) {
+      if (messages[i].role === 'assistant') {
+        foundAssistant = true;
+      } else if (messages[i].role === 'user' && foundAssistant) {
+        userMsgIds.add(messages[i].id);
+      }
+    }
+    
+    // Also mark the last user message as read if we're in thinking/responding phase
+    if (lastUserMessage && (phase === 'thinking' || phase === 'responding' || phase === 'transitioning')) {
+      userMsgIds.add(lastUserMessage.id);
+    }
+    
+    return userMsgIds;
+  }, [messages, lastUserMessage, phase]);
+
+  // Get header status text - contextual based on user message
+  const getStatusText = useCallback(() => {
+    switch (phase) {
+      case 'reading':
+        if (messageContext === 'emotional' || isDeepEmotional) return 'lendo com atenção...';
+        return 'lendo...';
+      case 'thinking':
+        if (isDeepEmotional) return 'acolhendo suas palavras...';
+        if (messageContext === 'emotional') return 'refletindo com cuidado...';
+        if (messageContext === 'question') return 'pensando na resposta...';
+        return 'refletindo...';
+      case 'transitioning':
+      case 'responding':
+        if (isDeepEmotional) return 'compartilhando com carinho...';
+        return 'digitando...';
+      default:
+        return guide?.approach || '';
+    }
+  }, [phase, messageContext, isDeepEmotional, guide?.approach]);
+
+  // Early return AFTER all hooks
   if (!user) {
     navigate('/auth');
     return null;
@@ -247,20 +310,8 @@ export default function GuideChat() {
   // Show typing indicator only during reading and thinking - NOT transitioning (so it exits)
   const showTypingIndicator = phase === 'reading' || phase === 'thinking';
 
-  // Get header status text
-  const getStatusText = () => {
-    switch (phase) {
-      case 'reading':
-        return 'lendo...';
-      case 'thinking':
-        return 'refletindo...';
-      case 'transitioning':
-      case 'responding':
-        return 'digitando...';
-      default:
-        return guide?.approach || '';
-    }
-  };
+  // Determine typing indicator variant
+  const typingVariant = isDeepEmotional ? 'deep' : 'thinking';
 
   return (
     <TooltipProvider>
@@ -374,6 +425,9 @@ export default function GuideChat() {
                 guideEmoji={guide?.avatar_emoji}
                 guideName={guide?.name}
                 isStreaming={isStreaming && message.role === 'assistant' && index === visibleMessages.length - 1}
+                isChunk={message.isChunk}
+                isFirstChunk={message.isFirstChunk}
+                wasRead={message.role === 'user' && readMessageIds.has(message.id)}
               />
             ))}
           </AnimatePresence>
@@ -384,6 +438,7 @@ export default function GuideChat() {
               <TypingIndicator
                 guideEmoji={guide?.avatar_emoji}
                 thinkingPhrase={thinkingPhrase}
+                variant={typingVariant}
               />
             )}
           </AnimatePresence>

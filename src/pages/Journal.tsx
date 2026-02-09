@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Bold, Italic, List, Sparkles, Save, Mic, Loader2, BookOpen, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -14,6 +14,12 @@ import { ptBR } from 'date-fns/locale';
 import { FeatureGate } from '@/components/access/FeatureGate';
 import { UpgradeModal } from '@/components/access/UpgradeModal';
 import { useCanAccess } from '@/hooks/useFeatureAccess';
+import { PrivacyBadge } from '@/components/journal/PrivacyBadge';
+import { SafetyAlert } from '@/components/journal/SafetyAlert';
+import { WritingPromptCard } from '@/components/journal/WritingPromptCard';
+import { DeleteConfirmDialog } from '@/components/journal/DeleteConfirmDialog';
+import { JournalTips } from '@/components/journal/JournalTips';
+import { checkContentSafety, detectJournalEmotions, type SafetyCheck } from '@/lib/journalSafety';
 
 export default function Journal() {
   const navigate = useNavigate();
@@ -26,6 +32,7 @@ export default function Journal() {
   const [text, setText] = useState('');
   const [detectedEmotions, setDetectedEmotions] = useState<string[]>([]);
   const [showHistory, setShowHistory] = useState(false);
+  const [safety, setSafety] = useState<SafetyCheck>({ level: 'safe', message: '' });
 
   const wordCount = text.trim().split(/\s+/).filter(Boolean).length;
 
@@ -48,6 +55,7 @@ export default function Journal() {
       });
       setText('');
       setDetectedEmotions([]);
+      setSafety({ level: 'safe', message: '' });
     } catch (error) {
       // Error handled by hook
     }
@@ -61,31 +69,18 @@ export default function Journal() {
     }
   };
 
-  const detectEmotions = () => {
-    // Simple emotion detection simulation based on keywords
-    const lowerText = text.toLowerCase();
-    const emotions: string[] = [];
-    
-    if (lowerText.includes('feliz') || lowerText.includes('alegr')) emotions.push('Alegria');
-    if (lowerText.includes('trist') || lowerText.includes('choro')) emotions.push('Tristeza');
-    if (lowerText.includes('raiva') || lowerText.includes('irritad')) emotions.push('Raiva');
-    if (lowerText.includes('medo') || lowerText.includes('ansios')) emotions.push('Medo');
-    if (lowerText.includes('calm') || lowerText.includes('paz')) emotions.push('Calma');
-    if (lowerText.includes('amor') || lowerText.includes('carinho')) emotions.push('Amor');
-    
-    if (emotions.length === 0 && text.length > 20) {
-      emotions.push('Reflexivo');
-    }
-    
-    setDetectedEmotions(emotions);
+  const handleUsePrompt = (prompt: string) => {
+    setText(prev => prev ? `${prev}\n\n${prompt} ` : `${prompt} `);
   };
 
   useEffect(() => {
     const timer = setTimeout(() => {
       if (text.length > 10) {
-        detectEmotions();
+        setDetectedEmotions(detectJournalEmotions(text));
+        setSafety(checkContentSafety(text));
       } else {
         setDetectedEmotions([]);
+        setSafety({ level: 'safe', message: '' });
       }
     }, 500);
     return () => clearTimeout(timer);
@@ -176,12 +171,7 @@ export default function Journal() {
                         <p className="text-xs text-muted-foreground">
                           {format(new Date(entry.created_at), "EEEE, d 'de' MMMM 'às' HH:mm", { locale: ptBR })}
                         </p>
-                        <button
-                          onClick={() => handleDelete(entry.id)}
-                          className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        <DeleteConfirmDialog onConfirm={() => handleDelete(entry.id)} />
                       </div>
                       <p className="text-sm text-foreground line-clamp-3">
                         {entry.content}
@@ -231,12 +221,18 @@ export default function Journal() {
               exit={{ opacity: 0, y: -20 }}
               className="space-y-5"
             >
+              {/* Privacy Badge */}
+              <PrivacyBadge />
+
               {/* Date Card */}
               <div className="card-elevated p-4 text-center">
                 <p className="text-sm font-medium text-foreground capitalize">
                   {dateString}
                 </p>
               </div>
+
+              {/* Writing Prompt */}
+              {!text && <WritingPromptCard onUsePrompt={handleUsePrompt} />}
 
               {/* Formatting Bar */}
               <div className="flex items-center gap-1 p-2 rounded-xl bg-muted/50">
@@ -268,9 +264,12 @@ export default function Journal() {
                 />
               </div>
 
+              {/* Safety Alert */}
+              <SafetyAlert safety={safety} />
+
               {/* AI Detection Tag */}
               <AnimatePresence>
-                {detectedEmotions.length > 0 && (
+                {detectedEmotions.length > 0 && safety.level === 'safe' && (
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -281,7 +280,7 @@ export default function Journal() {
                       <Sparkles className="w-4 h-4 text-primary" />
                     </div>
                     <div>
-                      <p className="text-xs text-muted-foreground">IA detectou</p>
+                      <p className="text-xs text-muted-foreground">Emoções detectadas</p>
                       <p className="text-sm font-semibold text-foreground">
                         {detectedEmotions.join(', ')}
                       </p>
@@ -325,6 +324,9 @@ export default function Journal() {
                   </>
                 )}
               </Button>
+
+              {/* Journal Tips */}
+              <JournalTips />
             </motion.div>
           )}
         </AnimatePresence>

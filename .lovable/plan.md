@@ -1,260 +1,232 @@
 
-# Plano de Otimizacao Completa - ETHRA
+# Plano: Conversas Mais Humanas no /guide
 
-## Resumo Executivo
+## Resumo da Analise
 
-Apos analise detalhada do codigo, identifiquei otimizacoes em 6 categorias:
+Apos analise do sistema de chat do guia, identifiquei os seguintes componentes:
 
-| Categoria | Impacto | Prioridade |
-|-----------|---------|------------|
-| Performance | Alto | Alta |
-| Seguranca | Critico | Alta |
-| Qualidade de Codigo | Medio | Media |
-| Cache e Rede | Alto | Alta |
-| CSS e Bundle | Medio | Media |
-| UX/Acessibilidade | Medio | Media |
+| Componente | Funcao |
+|------------|--------|
+| `GuideChat.tsx` | Pagina principal com fases (reading→thinking→transitioning→responding) |
+| `useGuideChat.ts` | Hook com streaming, chunking de respostas e persistencia |
+| `useStreamingPacer.ts` | Controle de ritmo de digitacao com hesitacoes |
+| `useMessageChunker.ts` | Divide respostas longas em chunks naturais |
+| `useThinkingDelay.ts` | Frases de reflexao e deteccao de contexto emocional |
+| `MessageBubble.tsx` | Renderizacao das mensagens com indicador de memoria |
+| `TypingIndicator.tsx` | Animacao de "pensando/digitando" |
+| `guide-chat/index.ts` | Edge function com system prompt humanizado |
 
----
+### Pontos Fortes Existentes
+- Sistema de fases bem estruturado (reading→thinking→responding)
+- Streaming com pacing que simula digitacao humana
+- Frases de reflexao contextuais ("Hmm, interessante...")
+- Deteccao de conteudo emocional
+- Chunking de respostas longas
+- Indicador de memoria (sparkle quando guia lembra algo)
 
-## Fase 1: Seguranca (Prioridade Critica)
+### Oportunidades de Melhoria Identificadas
 
-### 1.1 Habilitar Protecao contra Senhas Vazadas
-
-O linter identificou que a protecao contra senhas vazadas esta desabilitada.
-
-**Acao**: Habilitar "Leaked Password Protection" nas configuracoes de autenticacao do backend.
-
-### 1.2 Substituir console.log por Logger Centralizado
-
-Encontrei **356 ocorrencias** de `console.log/console.error` em 24 arquivos. O projeto ja possui um utilitario de logger em `src/lib/logger.ts`, mas nao esta sendo usado consistentemente.
-
-**Arquivos afetados**:
-- `src/hooks/useAdminJourneys.ts`
-- `src/hooks/useEmotionEntries.ts`
-- `src/hooks/useGamificationStats.ts`
-- `src/hooks/useJourneys.ts`
-- `src/hooks/useUserJourney.ts`
-- `src/hooks/useFavorites.ts`
-- `src/hooks/useOnboarding.ts`
-- `src/contexts/AuthContext.tsx`
-- E mais 16 arquivos
-
-**Substituir**:
-```typescript
-// DE
-console.error('Error:', error);
-
-// PARA
-import { logger } from '@/lib/logger';
-logger.error('Error:', error);
-```
+1. **Variacoes de Abertura**: O guia pode parecer repetitivo ao iniciar respostas
+2. **Pausas Entre Mensagens**: Falta "pausa para respirar" entre chunks
+3. **Reacoes Emocionais Visuais**: Avatar nao reage ao conteudo emocional
+4. **Digitacao "Imperfeita"**: Ritmo muito uniforme, sem hesitacoes visiveis
+5. **Status Mais Expressivo**: "digitando..." e generico demais
+6. **Indicadores de Leitura**: Usuario nao ve que guia "leu" a mensagem
+7. **Micro-interacoes**: Faltam reacoes sutis como "..." antes de responder algo delicado
+8. **Markdown nas Respostas**: Respostas de IA nao sao renderizadas com formatacao
 
 ---
 
-## Fase 2: Performance de Rede e Cache
+## Fase 1: Melhorias no Sistema de Streaming e Pausas
 
-### 2.1 Configurar staleTime em Queries
+### 1.1 Pausas Mais Naturais Entre Chunks
 
-Algumas queries nao tem `staleTime` configurado, causando refetches desnecessarios.
+Adicionar indicador visual de "respiracao" entre chunks de mensagem.
 
-**Hooks a otimizar**:
-
-| Hook | staleTime Atual | staleTime Recomendado |
-|------|-----------------|----------------------|
-| `useBreathingTechniques` | 0 (default) | 10 minutos |
-| `useEmotionEntries` | 0 | 2 minutos |
-| `useFavoriteBreathings` | 0 | 5 minutos |
-| `useFavoriteMeditations` | 0 | 5 minutos |
-| `useJournalEntries` | 0 | 1 minuto |
-| `useMeditationTracks` | 0 | 10 minutos |
-
-**Exemplo de mudanca**:
+**useMessageChunker.ts** - Aumentar delays e adicionar variacao:
 ```typescript
-// useBreathingTechniques.ts
-return useQuery({
-  queryKey: ['breathing-techniques'],
-  queryFn: async () => { /* ... */ },
-  staleTime: 10 * 60 * 1000, // 10 minutos
-});
+// Delays mais longos e variaveis
+const baseDelay = index === 0 ? 2000 : 3500; // Mais tempo para refletir
+const emotionalBonus = hasEmotionalContent(chunk) ? 2000 : 0; // Dobrar para emocional
 ```
 
-### 2.2 Adicionar gcTime para Dados Estaticos
+### 1.2 Hesitacoes Visiveis no Streaming
 
-Conteudo que raramente muda (tecnicas, meditacoes, jornadas) deve ter `gcTime` maior:
-
+**useStreamingPacer.ts** - Mostrar "..." temporario durante hesitacoes:
 ```typescript
-// Para dados de conteudo estatico
-staleTime: 10 * 60 * 1000,  // 10 min
-gcTime: 30 * 60 * 1000,     // 30 min
-```
-
-### 2.3 Otimizar useInsightsData
-
-Este hook faz 3 queries separadas que poderiam ser paralelizadas com `Promise.all` ou combinadas:
-
-```typescript
-// Atual: 3 queries sequenciais
-const { data: emotionEntries } = useQuery({...});
-const { data: breathingSessions } = useQuery({...});
-const { data: hydrationEntries } = useQuery({...});
-
-// Otimizado: Query unica com dados combinados
-const { data: insightsData } = useQuery({
-  queryKey: ['insights-combined', user?.id, period],
-  queryFn: async () => {
-    const [emotions, breathing, hydration] = await Promise.all([
-      fetchEmotions(),
-      fetchBreathing(),
-      fetchHydration(),
-    ]);
-    return { emotions, breathing, hydration };
-  },
-});
+// Durante hesitacao, mostrar indicador visual
+if (hesitationDelay > 0) {
+  optionsRef.current?.onHesitate?.(true);
+  await sleep(hesitationDelay);
+  optionsRef.current?.onHesitate?.(false);
+}
 ```
 
 ---
 
-## Fase 3: Otimizacao de CSS (1354 linhas)
+## Fase 2: Avatar e Estados Emocionais
 
-### 3.1 Remover Duplicacoes de Keyframes
+### 2.1 Deteccao de Tom da Resposta
 
-Os keyframes estao duplicados entre `src/index.css` e `tailwind.config.ts`:
+Criar utilidade para detectar tom da resposta do guia e ajustar avatar:
 
-**Duplicados**:
-- `fade-in` / `fade-in-up`
-- `shimmer` (definido 2x)
-- `scale-in` / `scaleIn`
-- `slide-up` / `slideUp`
+**Novo: src/lib/emotionDetection.ts**
+```typescript
+export type ResponseTone = 'neutral' | 'empathic' | 'curious' | 'encouraging' | 'reflective';
 
-**Acao**: Consolidar todos os keyframes em `tailwind.config.ts` e remover duplicatas do CSS.
+export function detectResponseTone(content: string): ResponseTone {
+  const lowerContent = content.toLowerCase();
+  
+  if (/entendo|compreendo|sinto|imagino como/.test(lowerContent)) return 'empathic';
+  if (/pergunto|curioso|o que acha|gostaria de saber/.test(lowerContent)) return 'curious';
+  if (/parabéns|incrível|maravilha|excelente|ótimo/.test(lowerContent)) return 'encouraging';
+  if (/hmm|veja bem|interessante|pensando/.test(lowerContent)) return 'reflective';
+  
+  return 'neutral';
+}
+```
 
-### 3.2 Remover Classes CSS Nao Utilizadas
+### 2.2 Avatar Reativo ao Tom
 
-Identificar e remover classes que nao sao referenciadas:
-- `.glow-neon-teal` (provavelmente nao usado)
-- `.card-neon` (sem referencias encontradas)
-- Varios efeitos de glow redundantes
+**GuideAvatar.tsx** - Adicionar estados para diferentes tons:
+```typescript
+export type AvatarState = 'idle' | 'thinking' | 'speaking' | 'empathic' | 'curious' | 'encouraging';
 
-### 3.3 Mover Variaveis Duplicadas
-
-Algumas variaveis CSS sao definidas tanto no `:root` quanto em `.dark` com valores identicos. Consolidar.
+// Animacoes diferentes por estado
+case 'curious':
+  return { rotate: [0, 3, -3, 0], transition: { duration: 0.8 } };
+case 'encouraging':
+  return { scale: [1, 1.1, 1], transition: { duration: 0.5 } };
+```
 
 ---
 
-## Fase 4: Qualidade de Codigo
+## Fase 3: Status Mais Expressivos
 
-### 4.1 Memoizacao de Callbacks
+### 3.1 Frases de Status Contextuais
 
-Callbacks em componentes pesados devem usar `useCallback`:
-
-**Home.tsx** - Handlers que causam re-renders:
+**GuideChat.tsx** - Status mais humanos baseados no contexto:
 ```typescript
-// Adicionar useCallback
-const handleMoodCheck = useCallback(() => setShowMoodModal(true), []);
-const handleBreathing = useCallback(() => setShowBreathingSelector(true), []);
-const handleMeditation = useCallback(() => setShowMeditation(true), []);
-```
-
-### 4.2 Memoizacao de Valores Computados
-
-**useInsightsData.ts** - Calculos pesados que poderiam ser memoizados:
-```typescript
-// Usar useMemo para calculos complexos
-const emotionCounts = useMemo(() => 
-  getEmotionCounts(emotionEntries), 
-  [emotionEntries]
-);
-
-const patterns = useMemo(() => 
-  generatePatterns(emotionEntries, breathingSessions, hydrationEntries, emotionCounts, dyadOccurrences),
-  [emotionEntries, breathingSessions, hydrationEntries, emotionCounts, dyadOccurrences]
-);
-```
-
-### 4.3 Padronizar Tratamento de Erros
-
-Criar um padrao consistente para erros em hooks:
-
-```typescript
-// Criar utilidade padrao
-// src/lib/errorHandler.ts
-export const handleQueryError = (error: Error, context: string) => {
-  logger.error(`[${context}]`, error);
-  toast.error(`Erro: ${error.message}`);
+const getStatusText = () => {
+  const lastUserMessage = messages.filter(m => m.role === 'user').pop();
+  const context = lastUserMessage ? detectMessageContext(lastUserMessage.content) : 'default';
+  
+  switch (phase) {
+    case 'reading':
+      return context === 'emotional' ? 'lendo com atenção...' : 'lendo...';
+    case 'thinking':
+      if (context === 'emotional') return 'acolhendo suas palavras...';
+      if (context === 'question') return 'refletindo sobre sua pergunta...';
+      return 'preparando resposta...';
+    case 'responding':
+      return 'compartilhando...';
+    default:
+      return guide?.approach || 'online';
+  }
 };
+```
 
-// Uso nos hooks
-onError: (error) => handleQueryError(error, 'useJourneys'),
+### 3.2 Indicador de Leitura ("Visto")
+
+Adicionar feedback visual quando o guia "leu" a mensagem do usuario:
+
+**MessageBubble.tsx** - Adicionar checkmark de leitura em mensagens do usuario:
+```tsx
+{isUser && wasRead && (
+  <motion.span
+    initial={{ opacity: 0, scale: 0 }}
+    animate={{ opacity: 1, scale: 1 }}
+    className="text-xs text-secondary ml-1"
+  >
+    ✓✓
+  </motion.span>
+)}
 ```
 
 ---
 
-## Fase 5: Otimizacao de Componentes
+## Fase 4: Renderizacao de Markdown
 
-### 5.1 Lazy Load de Componentes Pesados
+### 4.1 Instalar Dependencia
 
-Componentes de overlay ja sao lazy loaded no App.tsx. Verificar:
-- `BreathPacer` (731 linhas) - ja em AnimatePresence
-- `MeditationPlayer` (442 linhas) - ja em AnimatePresence
-- `MoodCheckModal` - OK
-- Charts no Insights - considerar lazy load
-
-### 5.2 Otimizar Animacoes do Framer Motion
-
-**GardenWidget.tsx** - Animacoes infinitas que podem impactar bateria:
-```typescript
-// Atual - animacao sempre ativa
-animate={{ 
-  scale: [1, 1.2, 1],
-  opacity: [0.3, 0.5, 0.3]
-}}
-transition={{ duration: 3, repeat: Infinity }}
-
-// Otimizado - usar will-change e reduce-motion
-const prefersReducedMotion = useReducedMotion();
-
-animate={prefersReducedMotion ? {} : { 
-  scale: [1, 1.2, 1],
-  opacity: [0.3, 0.5, 0.3]
-}}
+```bash
+npm install react-markdown
 ```
 
-### 5.3 Virtualizar Listas Longas
+### 4.2 Renderizar Respostas com Formatacao
 
-Para listas que podem crescer (historico de emocoes, entradas do diario):
-```typescript
-// Considerar usar @tanstack/react-virtual para listas > 50 itens
-import { useVirtualizer } from '@tanstack/react-virtual';
+**MessageBubble.tsx** - Usar ReactMarkdown para respostas do guia:
+```tsx
+import ReactMarkdown from 'react-markdown';
+
+// Dentro do componente:
+{isUser ? (
+  <p className="whitespace-pre-wrap">{message.content}</p>
+) : (
+  <div className="prose prose-sm dark:prose-invert max-w-none">
+    <ReactMarkdown>{message.content}</ReactMarkdown>
+  </div>
+)}
 ```
 
 ---
 
-## Fase 6: Melhorias de UX/Acessibilidade
+## Fase 5: Micro-Interacoes e Detalhes
 
-### 6.1 Adicionar Error Boundaries Especificos
+### 5.1 "Pensando Mais" para Topicos Delicados
 
-Atualmente ha ErrorBoundary generico. Adicionar boundaries especificos:
-- Para graficos no Insights
-- Para o GuideChat
-- Para o BreathPacer
+Quando detectar conteudo emocional, adicionar pausa extra com frase especial:
 
-### 6.2 Melhorar Feedback de Loading
-
-Substituir Skeletons genericos por componentes especificos (ja criados na ultima iteracao):
-- `QuickActionCardSkeleton`
-- `GardenWidgetSkeleton`
-- `JournalEntrySkeleton`
-
-### 6.3 Implementar Retry Automatico
-
-Para queries criticas, adicionar retry:
+**useThinkingDelay.ts** - Frases para conteudo sensivel:
 ```typescript
-useQuery({
-  queryKey: ['active-user-journey'],
-  queryFn: async () => { /* ... */ },
-  retry: 3,
-  retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-});
+deepEmotional: [
+  'Preciso de um momento para responder com cuidado...',
+  'Isso merece uma resposta atenciosa...',
+  'Deixe-me formular isso com carinho...',
+],
+```
+
+### 5.2 Efeito de "Digitacao Interrompida"
+
+Simular quando o guia "para" de digitar brevemente para pensar:
+
+**useStreamingPacer.ts** - Pausas mais longas em pontos-chave:
+```typescript
+// Ao encontrar "..." no texto, pausa mais longa
+if (char === '…' || chunk.includes('...')) {
+  baseDelay = 800 + Math.random() * 600; // 800-1400ms
+  optionsRef.current?.onPause?.('reflecting');
+}
+```
+
+### 5.3 Indicador de "Pensando Profundamente"
+
+Quando a resposta demora mais que o esperado, mudar frase:
+
+**TypingIndicator.tsx** - Variante para reflexao profunda:
+```tsx
+{variant === 'deep' && (
+  <span className="text-xs text-primary/70 italic">
+    Refletindo profundamente...
+  </span>
+)}
+```
+
+---
+
+## Fase 6: Melhorias no System Prompt
+
+### 6.1 Instrucoes Adicionais para Humanizacao
+
+**guide-chat/index.ts** - Expandir instrucoes:
+```typescript
+// Adicionar ao system prompt:
+12. Nunca comece duas respostas consecutivas da mesma forma
+13. Use "..." para indicar que está pensando em algo delicado
+14. Faca perguntas de acompanhamento genuinas, nao genericas
+15. Varie a estrutura das respostas (às vezes curta, às vezes longa)
+16. Quando o usuario compartilhar algo pessoal, primeiro valide, depois responda
+17. Ocasionalmente use formatacao markdown para enfatizar pontos importantes (**negrito**, *italico*)
 ```
 
 ---
@@ -263,104 +235,63 @@ useQuery({
 
 | Arquivo | Alteracoes |
 |---------|------------|
-| `src/hooks/useBreathingTechniques.ts` | staleTime, logger |
-| `src/hooks/useEmotionEntries.ts` | staleTime, logger, retry |
-| `src/hooks/useFavorites.ts` | staleTime, logger |
-| `src/hooks/useGamificationStats.ts` | logger |
-| `src/hooks/useInsightsData.ts` | Combinar queries, useMemo |
-| `src/hooks/useJourneys.ts` | staleTime, logger |
-| `src/hooks/useJournalEntries.ts` | staleTime, logger |
-| `src/hooks/useMeditationTracks.ts` | staleTime, logger |
-| `src/hooks/useUserJourney.ts` | staleTime, logger |
-| `src/hooks/useOnboarding.ts` | logger |
-| `src/hooks/useAdminJourneys.ts` | logger |
-| `src/contexts/AuthContext.tsx` | logger |
-| `src/pages/Home.tsx` | useCallback |
-| `src/components/dashboard/GardenWidget.tsx` | useReducedMotion |
-| `src/index.css` | Remover duplicatas |
-| `tailwind.config.ts` | Consolidar keyframes |
+| `src/hooks/useMessageChunker.ts` | Delays maiores, pausas mais naturais |
+| `src/hooks/useStreamingPacer.ts` | Callbacks de hesitacao, pausas visiveis |
+| `src/hooks/useThinkingDelay.ts` | Frases para conteudo sensivel |
+| `src/components/guide/GuideAvatar.tsx` | Estados emocionais (curious, encouraging) |
+| `src/components/guide/MessageBubble.tsx` | Markdown, indicador de leitura, deteccao de tom |
+| `src/components/guide/TypingIndicator.tsx` | Variante deep, animacoes mais suaves |
+| `src/pages/GuideChat.tsx` | Status contextuais, estados do avatar |
+| `src/lib/emotionDetection.ts` | Nova utilidade para detectar tom |
+| `supabase/functions/guide-chat/index.ts` | Instrucoes expandidas no prompt |
+| `package.json` | Adicionar react-markdown |
 
 ---
 
-## Metricas de Sucesso
+## Dependencias Necessarias
 
-| Metrica | Antes | Depois (Esperado) |
-|---------|-------|-------------------|
-| Console logs em prod | 356 ocorrencias | 0 |
-| Queries sem staleTime | ~15 | 0 |
-| CSS duplicado | ~200 linhas | 0 |
-| Lighthouse Performance | ~75 | >85 |
-| First Contentful Paint | ~2.5s | <2s |
+```json
+{
+  "react-markdown": "^9.0.0"
+}
+```
+
+---
+
+## Resumo Visual das Melhorias
+
+```text
+ANTES                           DEPOIS
+────────────────────────────────────────────────────
+Status: "digitando..."          Status: "acolhendo suas palavras..."
+Avatar: sempre igual            Avatar: reage ao conteudo (empático/curioso)
+Texto: plaintext                Texto: markdown formatado
+Pausas: uniformes               Pausas: variaveis por contexto
+Resposta: aparece de uma vez    Resposta: chunks com respiração
+Leitura: invisivel              Leitura: ✓✓ quando guia leu
+Hesitacao: invisivel            Hesitacao: "..." temporário
+```
+
+---
+
+## Metricas de Humanizacao
+
+| Aspecto | Antes | Depois |
+|---------|-------|--------|
+| Variacoes de status | 4 | 8+ |
+| Estados do avatar | 4 | 6 |
+| Delay medio entre chunks | 2.5s | 3.5s |
+| Frases de reflexao | 18 | 30+ |
+| Indicadores visuais | 3 | 7 |
 
 ---
 
 ## Ordem de Implementacao
 
-```text
-1. Seguranca (Critico)
-   ├── Habilitar Leaked Password Protection
-   └── Substituir console.log por logger
+1. **Markdown** - Impacto visual imediato
+2. **Status contextuais** - Facil de implementar
+3. **Delays maiores** - Ajustes numericos
+4. **Avatar reativo** - Estados visuais
+5. **Indicador de leitura** - Detalhe de UX
+6. **System prompt** - Melhoria no backend
 
-2. Performance de Rede (Alto Impacto)
-   ├── Configurar staleTime em todas as queries
-   └── Otimizar useInsightsData
-
-3. Qualidade de Codigo (Medio Impacto)
-   ├── Adicionar useCallback nos handlers
-   └── Memoizar calculos pesados
-
-4. CSS/Bundle (Medio Impacto)
-   ├── Remover keyframes duplicados
-   └── Consolidar variaveis CSS
-
-5. UX (Polimento)
-   ├── Error boundaries especificos
-   └── Retry automatico
-```
-
----
-
-## Secao Tecnica
-
-### Calculo de staleTime Recomendado
-
-| Tipo de Dado | Frequencia de Mudanca | staleTime |
-|--------------|----------------------|-----------|
-| Conteudo estatico (tecnicas, meditacoes) | Raramente | 10+ minutos |
-| Dados do usuario (favoritos, jornadas) | Frequente mas controlado | 5 minutos |
-| Dados em tempo real (emocoes, diario) | Frequente | 1-2 minutos |
-| Estatisticas agregadas | Periodicamente | 5 minutos |
-
-### Estrutura do Logger
-
-```typescript
-// src/lib/logger.ts (existente)
-const logger = {
-  log: (...args) => isDevelopment && console.log(...args),
-  warn: (...args) => isDevelopment && console.warn(...args),
-  error: (...args) => {
-    console.error(...args);
-    // Futuramente: enviar para servico de monitoramento
-  },
-  debug: (...args) => isDevelopment && console.debug(...args),
-};
-```
-
-### Pattern para Queries Otimizadas
-
-```typescript
-// Template para hooks otimizados
-export function useOptimizedQuery<T>(queryKey: string[], queryFn: () => Promise<T>) {
-  const { user } = useAuth();
-  
-  return useQuery({
-    queryKey: [...queryKey, user?.id],
-    queryFn,
-    enabled: !!user?.id,
-    staleTime: 5 * 60 * 1000,    // 5 minutos
-    gcTime: 10 * 60 * 1000,      // 10 minutos
-    retry: 2,
-    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 10000),
-  });
-}
-```

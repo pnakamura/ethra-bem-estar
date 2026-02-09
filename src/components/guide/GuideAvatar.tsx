@@ -1,7 +1,7 @@
 import { motion, type TargetAndTransition } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
-export type AvatarState = 'idle' | 'thinking' | 'speaking' | 'empathic';
+export type AvatarState = 'idle' | 'thinking' | 'speaking' | 'empathic' | 'curious' | 'encouraging' | 'reflective';
 
 interface GuideAvatarProps {
   emoji: string;
@@ -45,7 +45,35 @@ export function GuideAvatar({
       case 'empathic':
         return {
           scale: 1.05,
-          transition: { duration: 0.4 },
+          transition: { duration: 0.4, ease: 'easeOut' as const },
+        };
+      case 'curious':
+        return {
+          rotate: [0, 3, -3, 0],
+          transition: {
+            duration: 0.8,
+            repeat: Infinity,
+            repeatDelay: 1,
+            ease: 'easeInOut' as const,
+          },
+        };
+      case 'encouraging':
+        return {
+          scale: [1, 1.12, 1],
+          transition: {
+            duration: 0.5,
+            repeat: 2,
+            ease: 'easeOut' as const,
+          },
+        };
+      case 'reflective':
+        return {
+          y: [0, -2, 0],
+          transition: {
+            duration: 2.5,
+            repeat: Infinity,
+            ease: 'easeInOut' as const,
+          },
         };
       default:
         return {
@@ -58,11 +86,15 @@ export function GuideAvatar({
   const getStateClass = () => {
     switch (state) {
       case 'thinking':
+      case 'reflective':
         return 'dark:guide-avatar-thinking';
       case 'speaking':
         return 'dark:guide-avatar-speaking';
       case 'empathic':
+      case 'encouraging':
         return 'dark:guide-avatar-empathic';
+      case 'curious':
+        return 'dark:guide-avatar-speaking';
       default:
         return '';
     }
@@ -80,7 +112,7 @@ export function GuideAvatar({
       animate={getAnimation()}
     >
       <motion.span
-        animate={state === 'thinking' ? {
+        animate={state === 'thinking' || state === 'reflective' ? {
           opacity: [1, 0.7, 1],
         } : {}}
         transition={{ duration: 1.5, repeat: Infinity }}

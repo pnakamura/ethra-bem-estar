@@ -1,10 +1,12 @@
-import { forwardRef } from 'react';
+import { forwardRef, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, CheckCheck } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 import { cn } from '@/lib/utils';
-import { GuideAvatar } from './GuideAvatar';
+import { GuideAvatar, type AvatarState } from './GuideAvatar';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { formatRelativeTime, formatFullDateTime } from '@/lib/formatTime';
+import { detectResponseTone } from '@/lib/emotionDetection';
 import type { ChatMessage } from '@/hooks/useGuideChat';
 
 interface MessageBubbleProps {
@@ -17,6 +19,8 @@ interface MessageBubbleProps {
   isChunk?: boolean;
   /** Whether this is the first chunk in a series (shows guide name) */
   isFirstChunk?: boolean;
+  /** Whether the guide has "read" this user message */
+  wasRead?: boolean;
 }
 
 // Patterns that indicate the guide is recalling conversation history
@@ -40,6 +44,17 @@ function hasMemoryReference(content: string): boolean {
   return memoryPatterns.some(pattern => lowerContent.includes(pattern));
 }
 
+// Map response tone to avatar state
+function toneToAvatarState(tone: ReturnType<typeof detectResponseTone>): AvatarState {
+  switch (tone) {
+    case 'empathic': return 'empathic';
+    case 'curious': return 'curious';
+    case 'encouraging': return 'encouraging';
+    case 'reflective': return 'reflective';
+    default: return 'idle';
+  }
+}
+
 export const MessageBubble = forwardRef<HTMLDivElement, MessageBubbleProps>(
   function MessageBubble(
     {
@@ -50,6 +65,7 @@ export const MessageBubble = forwardRef<HTMLDivElement, MessageBubbleProps>(
       isEmpathic = false,
       isChunk = false,
       isFirstChunk = true,
+      wasRead = false,
     },
     ref
   ) {
@@ -57,6 +73,19 @@ export const MessageBubble = forwardRef<HTMLDivElement, MessageBubbleProps>(
     const relativeTime = formatRelativeTime(message.createdAt);
     const fullDateTime = formatFullDateTime(message.createdAt);
     const showMemoryIndicator = !isUser && hasMemoryReference(message.content);
+
+    // Detect tone for avatar state (only for assistant messages)
+    const responseTone = useMemo(() => 
+      !isUser ? detectResponseTone(message.content) : 'neutral',
+      [isUser, message.content]
+    );
+
+    // Determine avatar state
+    const avatarState: AvatarState = isStreaming 
+      ? 'speaking' 
+      : isEmpathic 
+        ? 'empathic' 
+        : toneToAvatarState(responseTone);
 
     // Hide guide name and avatar for continuation chunks
     const showGuideHeader = !isUser && (!isChunk || isFirstChunk);
@@ -68,7 +97,7 @@ export const MessageBubble = forwardRef<HTMLDivElement, MessageBubbleProps>(
         animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
         transition={{
           duration: 0.65,
-          ease: [0.22, 1, 0.36, 1],
+          ease: [0.22, 1, 0.36, 1] as const,
           delay: isUser ? 0 : 0.15,
         }}
         className={cn(
@@ -80,7 +109,7 @@ export const MessageBubble = forwardRef<HTMLDivElement, MessageBubbleProps>(
       {!isUser && showGuideHeader && (
         <GuideAvatar
           emoji={guideEmoji}
-          state={isStreaming ? 'speaking' : isEmpathic ? 'empathic' : 'idle'}
+          state={avatarState}
         />
       )}
       {/* Spacer for continuation chunks to maintain alignment */}
@@ -117,7 +146,15 @@ export const MessageBubble = forwardRef<HTMLDivElement, MessageBubbleProps>(
               )}
             </div>
           )}
-          <p className="whitespace-pre-wrap">{message.content}</p>
+          
+          {/* Render content - markdown for assistant, plain text for user */}
+          {isUser ? (
+            <p className="whitespace-pre-wrap">{message.content}</p>
+          ) : (
+            <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-1 prose-p:leading-relaxed prose-strong:text-foreground prose-em:text-muted-foreground">
+              <ReactMarkdown>{message.content}</ReactMarkdown>
+            </div>
+          )}
 
           {/* Streaming indicator */}
           {isStreaming && !isUser && (
@@ -129,27 +166,43 @@ export const MessageBubble = forwardRef<HTMLDivElement, MessageBubbleProps>(
           )}
         </div>
 
-        {/* Timestamp with tooltip */}
-        <Tooltip delayDuration={200}>
-          <TooltipTrigger asChild>
-            <span
-              className={cn(
-                'text-xs font-body cursor-default select-none transition-opacity duration-200 hover:opacity-100',
-                isUser
-                  ? 'text-muted-foreground opacity-70 text-right'
-                  : 'text-muted-foreground opacity-70 text-left'
-              )}
+        {/* Timestamp with read indicator and tooltip */}
+        <div className={cn(
+          'flex items-center gap-1',
+          isUser ? 'justify-end' : 'justify-start'
+        )}>
+          <Tooltip delayDuration={200}>
+            <TooltipTrigger asChild>
+              <span
+                className={cn(
+                  'text-xs font-body cursor-default select-none transition-opacity duration-200 hover:opacity-100',
+                  'text-muted-foreground opacity-70'
+                )}
+              >
+                {relativeTime}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent
+              side={isUser ? 'left' : 'right'}
+              className="bg-popover border-border text-popover-foreground font-body text-xs"
             >
-              {relativeTime}
-            </span>
-          </TooltipTrigger>
-          <TooltipContent
-            side={isUser ? 'left' : 'right'}
-            className="bg-popover border-border text-popover-foreground font-body text-xs"
-          >
-            {fullDateTime}
-          </TooltipContent>
-        </Tooltip>
+              {fullDateTime}
+            </TooltipContent>
+          </Tooltip>
+          
+          {/* Read indicator for user messages */}
+          {isUser && wasRead && (
+            <motion.span
+              initial={{ opacity: 0, scale: 0 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.5, type: 'spring', stiffness: 300 }}
+              className="text-secondary"
+              title="Mensagem lida"
+            >
+              <CheckCheck className="w-3.5 h-3.5" />
+            </motion.span>
+          )}
+        </div>
       </div>
     </motion.div>
   );
